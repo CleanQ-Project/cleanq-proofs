@@ -34,7 +34,7 @@ inductive_set refinement_s ::
   and \<Gamma>a :: "('sa,'pa,'fa) Semantic.body"
   and \<Gamma>c :: "('sc,'pc,'fc) Semantic.body"
   where Step:
-    "(\<And>xsa xsc xsc' cc'. (xsa,xsc) \<in> sr \<and> SmallStep.step \<Gamma>c (cc,xsc) (cc',xsc') \<Longrightarrow>
+    "(\<And>xsa xsc xsc' cc'. (xsa,xsc) \<in> sr \<Longrightarrow> SmallStep.step \<Gamma>c (cc,xsc) (cc',xsc') \<Longrightarrow>
       (\<exists>xsa' ca'. (xsa',xsc') \<in> sr \<and>
                   SmallStep.step \<Gamma>a (ca,xsa) (ca',xsa') \<and>
                   (ca',cc') \<in> refinement_s sr \<Gamma>a \<Gamma>c)) \<Longrightarrow>
@@ -287,8 +287,6 @@ where
      ((\<exists>sa. xsa = Semantic.Abrupt sa) \<longleftrightarrow> (\<exists>sc. xsc = Semantic.Abrupt sc)) \<and>
      ((\<exists>fa. xsa = Semantic.Fault fa) \<longleftrightarrow> (\<exists>fc. xsc = Semantic.Fault fc)) \<and>
      (xsa = Semantic.Stuck \<longleftrightarrow> xsc = Semantic.Stuck)))"
-
-term "(A::(('a\<times>'b) set)) `` B"
 
 definition
   separable_sr :: "('sa \<times> 'sc) set \<Rightarrow> ('fa \<times> 'fc) set \<Rightarrow> ('sa,'fa,'sc,'fc) state_rel_s"
@@ -566,6 +564,88 @@ proof(rule HoarePartialDef.validI)
     with xsr' have "xsc' \<in> Semantic.xstate.Abrupt ` sr `` A"
       unfolding separable_sr_def by(auto)
     thus ?thesis by(auto)
+  qed
+qed
+
+text \<open>Refinement composes transitively.\<close>
+lemma refinement_s_trans:
+  "refinement_s srab \<Gamma>a \<Gamma>b O refinement_s srbc \<Gamma>b \<Gamma>c \<subseteq> refinement_s (srab O srbc) \<Gamma>a \<Gamma>c"
+proof
+  fix x
+  assume "x \<in> refinement_s srab \<Gamma>a \<Gamma>b O refinement_s srbc \<Gamma>b \<Gamma>c"
+  then obtain ca cc
+    where "(ca,cc) \<in> refinement_s srab \<Gamma>a \<Gamma>b O refinement_s srbc \<Gamma>b \<Gamma>c"
+      and rw_x: "x = (ca,cc)"
+    by(cases x, auto)
+  then obtain cb
+    where refines_ab: "(ca,cb) \<in> refinement_s srab \<Gamma>a \<Gamma>b"
+      and refines_bc: "(cb,cc) \<in> refinement_s srbc \<Gamma>b \<Gamma>c"
+    by(auto)
+
+  from refines_bc refines_ab
+  show "x \<in> refinement_s (srab O srbc) \<Gamma>a \<Gamma>c"
+    unfolding rw_x
+  proof(induct cb cc arbitrary: ca rule:refinement_s.induct[case_names Step_c])
+    case (Step_c cc cb)
+
+    show ?case
+    proof(rule refinement_s.Step)
+      fix xsa xsc xsc' cc'
+      assume "(xsa, xsc) \<in> srab O srbc"
+      then obtain xsb
+        where sr_ab: "(xsa,xsb) \<in> srab"
+          and sr_bc: "(xsb,xsc) \<in> srbc"
+        by(auto)
+
+      assume step_c: "SmallStep.step \<Gamma>c (cc, xsc) (cc', xsc')"
+      from Step_c.hyps(1)[OF sr_bc step_c]
+      obtain xsb' cb'
+        where sr_bc': "(xsb', xsc') \<in> srbc"
+          and step_b: "SmallStep.step \<Gamma>b (cb,xsb) (cb',xsb')"
+          and refines_bc': "(cb',cc') \<in> refinement_s srbc \<Gamma>b \<Gamma>c"
+          and IH: "\<And>ca'. (ca',cb') \<in> refinement_s srab \<Gamma>a \<Gamma>b \<Longrightarrow>
+                          (ca',cc') \<in> refinement_s (srab O srbc) \<Gamma>a \<Gamma>c"
+        by(blast)
+
+      from Step_c.prems sr_ab step_b
+      obtain xsa' ca'
+        where sr_ab': "(xsa',xsb') \<in> srab"
+          and step_a: "SmallStep.step \<Gamma>a (ca,xsa) (ca',xsa')"
+          and refines_ab': "(ca',cb') \<in> refinement_s srab \<Gamma>a \<Gamma>b"
+        by(blast elim:refinement_s_stepE)
+
+      from sr_ab' sr_bc'
+      have "(xsa', xsc') \<in> srab O srbc"
+        by(auto)
+      moreover note step_a
+      moreover from refines_ab'
+      have "(ca', cc') \<in> refinement_s (srab O srbc) \<Gamma>a \<Gamma>c"
+        by(rule IH)
+      ultimately show "\<exists>xsa' ca'. (xsa', xsc') \<in> srab O srbc \<and>
+                                  SmallStep.step \<Gamma>a (ca, xsa) (ca', xsa') \<and>
+                                  (ca', cc') \<in> refinement_s (srab O srbc) \<Gamma>a \<Gamma>c"
+        by(blast)
+    next
+      from Step_c.hyps have "(cc = Language.Throw) = (cb = Language.Throw)"
+        by(auto)
+      also from Step_c.prems have "... = (ca = Language.Throw)"
+        by(auto elim:refinement_s_throwaE refinement_s_throwcE)
+      finally show "(cc = Language.Throw) = (ca = Language.Throw)" .
+    next
+      fix xsa xsc
+      assume sr_ac: "(xsa, xsc) \<in> srab O srbc"
+         and final_c: "SmallStep.final (cc, xsc)"
+
+      from sr_ac obtain xsb
+        where sr_ab: "(xsa, xsb) \<in> srab"
+          and sr_bc: "(xsb, xsc) \<in> srbc"
+        by(auto)
+
+      from final_c sr_bc Step_c.hyps have "SmallStep.final (cb, xsb)"
+        by(blast)
+      with sr_ab Step_c.prems show "SmallStep.final (ca, xsa)"
+        by(auto elim:refinement_s_finalE)
+    qed
   qed
 qed
 
