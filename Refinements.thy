@@ -649,4 +649,114 @@ proof
   qed
 qed
 
+lemma refinement_s_SkipI:
+  shows "(Language.Skip, Language.Skip) \<in> refinement_s xsr \<Gamma>a \<Gamma>c"
+proof(rule refinement_s.Step)
+  show "(SKIP = THROW) = (SKIP = THROW)" by(auto)
+next
+  fix xsa
+  show "SmallStep.final (SKIP, xsa)"
+    unfolding SmallStep.final_def by(simp)
+next
+  fix xsa xsc xsc' cc'
+  assume stepc: "SmallStep.step \<Gamma>c(Language.com.Skip, xsc) (cc', xsc')"
+  thus "\<exists>xsa' ca'.
+          (xsa', xsc') \<in> xsr \<and>
+          SmallStep.step \<Gamma>a (Language.com.Skip, xsa) (ca', xsa') \<and>
+          (ca', cc') \<in> refinement_s xsr \<Gamma>a \<Gamma>c"
+    by(blast elim:SmallStep.step.cases)
+qed
+
+lemma refinement_s_BasicI:
+  assumes fun_rel: "\<And>sa sc. (sa,sc) \<in> sr \<Longrightarrow> (f sa, g sc) \<in> sr"
+  shows "(Language.Basic f, Language.Basic g) \<in> refinement_s (separable_sr sr fr) \<Gamma>a \<Gamma>c"
+proof(rule refinement_s.Step)
+  show "(Language.com.Basic g = THROW) = (Language.com.Basic f = THROW)"
+    by(auto)
+next
+  fix xsa xsc
+  assume "SmallStep.final (Language.com.Basic g, xsc)"
+  thus "SmallStep.final (Language.com.Basic f, xsa)"
+    unfolding SmallStep.final_def by(auto)
+next
+  fix xsa xsc xsc' cc'
+  assume sr: "(xsa, xsc) \<in> separable_sr sr fr"
+     and stepc: "SmallStep.step \<Gamma>c(Language.com.Basic g, xsc) (cc', xsc')"
+
+  show "\<exists>xsa' ca'.
+          (xsa', xsc') \<in> separable_sr sr fr \<and>
+          SmallStep.step \<Gamma>a (Language.com.Basic f, xsa) (ca', xsa') \<and>
+          (ca', cc') \<in> refinement_s (separable_sr sr fr) \<Gamma>a \<Gamma>c"
+  proof(cases xsc)
+    case (Normal sc)
+    with sr obtain sa where rw_xsa: "xsa = Semantic.Normal sa"
+      unfolding separable_sr_def by(auto)
+
+    from Normal stepc
+    have rw_cc': "cc' = Language.Skip" and rw_xsc': "xsc' = Semantic.Normal (g sc)"
+      by(auto elim:SmallStep.step.cases)
+
+    from sr have "(sa,sc) \<in> sr"
+      unfolding rw_xsa Normal separable_sr_def by(auto)
+    hence "(Semantic.Normal (f sa), xsc') \<in> separable_sr sr fr"
+      unfolding separable_sr_def rw_xsc' by(auto elim:fun_rel)
+    moreover have "SmallStep.step \<Gamma>a (Language.Basic f, xsa) (Language.Skip, Semantic.Normal (f sa))"
+      unfolding rw_xsa by(rule SmallStep.step.Basic)
+    moreover have "(Language.Skip, cc') \<in> refinement_s (separable_sr sr fr) \<Gamma>a \<Gamma>c"
+      unfolding rw_cc' by(rule refinement_s_SkipI)
+    ultimately show ?thesis by(blast)
+
+  next
+    case (Abrupt sc)
+    with sr obtain sa where rw_xsa: "xsa = Semantic.Abrupt sa"
+      unfolding separable_sr_def by(auto)
+
+    from Abrupt stepc
+    have rw_cc': "cc' = Language.Skip" and rw_xsc': "xsc' = Semantic.Abrupt sc"
+      by(auto elim:SmallStep.step.cases)
+
+    from sr Abrupt rw_xsc'
+    have "(Semantic.Abrupt sa,xsc') \<in> separable_sr sr fr" by(simp add:rw_xsa)
+    moreover have "SmallStep.step \<Gamma>a (Language.Basic f, xsa) (Language.Skip, Semantic.Abrupt sa)"
+      unfolding rw_xsa by(auto intro: SmallStep.step.AbruptProp)
+    moreover have "(Language.Skip, cc') \<in> refinement_s (separable_sr sr fr) \<Gamma>a \<Gamma>c"
+      unfolding rw_cc' by(rule refinement_s_SkipI)
+    ultimately show ?thesis by(blast)
+
+  next
+    case (Fault fc)
+    with sr obtain fa where rw_xsa: "xsa = Semantic.Fault fa"
+      unfolding separable_sr_def by(auto)
+
+    from Fault stepc
+    have rw_cc': "cc' = Language.Skip" and rw_xsc': "xsc' = Semantic.Fault fc"
+      by(auto elim:SmallStep.step.cases)
+
+    from sr Fault rw_xsc'
+    have "(Semantic.Fault fa,xsc') \<in> separable_sr sr fr" by(simp add:rw_xsa)
+    moreover have "SmallStep.step \<Gamma>a (Language.Basic f, xsa) (Language.Skip, Semantic.Fault fa)"
+      unfolding rw_xsa by(auto intro: SmallStep.step.FaultProp)
+    moreover have "(Language.Skip, cc') \<in> refinement_s (separable_sr sr fr) \<Gamma>a \<Gamma>c"
+      unfolding rw_cc' by(rule refinement_s_SkipI)
+    ultimately show ?thesis by(blast)
+
+  next
+    case Stuck
+    with sr have rw_xsa: "xsa = Semantic.Stuck"
+      unfolding separable_sr_def by(auto)
+
+    from Stuck stepc
+    have rw_cc': "cc' = Language.Skip" and rw_xsc': "xsc' = Semantic.Stuck"
+      by(auto elim:SmallStep.step.cases)
+
+    from sr Stuck rw_xsc'
+    have "(Semantic.Stuck,xsc') \<in> separable_sr sr fr" by(simp add:rw_xsa)
+    moreover have "SmallStep.step \<Gamma>a (Language.Basic f, xsa) (Language.Skip, Semantic.Stuck)"
+      unfolding rw_xsa by(auto intro: SmallStep.step.StuckProp)
+    moreover have "(Language.Skip, cc') \<in> refinement_s (separable_sr sr fr) \<Gamma>a \<Gamma>c"
+      unfolding rw_cc' by(rule refinement_s_SkipI)
+    ultimately show ?thesis by(blast)
+  qed
+qed
+
 end
