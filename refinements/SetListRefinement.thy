@@ -13,7 +13,7 @@
 
 
 theory SetListRefinement imports 
-  Refinements
+  "../Refinements"
 begin
 
 text \<open>State definiton.\<close>
@@ -43,18 +43,18 @@ fun I2 :: "'a SetRB \<Rightarrow> bool"
 fun I3 :: "'a ListRB \<Rightarrow> bool"
   where "I3 st_list \<longleftrightarrow> distinct (lTXY st_list) \<and> distinct (lTYX st_list)"
 
-definition sr_set_list_enq :: "'a \<Rightarrow> 'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
-  where "sr_set_list_enq buf K = {(st_ab, st_list). (SX st_ab, TXY st_ab, SY st_ab, TYX st_ab) = 
+definition sr_set_list_enq :: "'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
+  where "sr_set_list_enq K = {(st_ab, st_list). (SX st_ab, TXY st_ab, SY st_ab, TYX st_ab) = 
                               (lSX st_list, set (lTXY st_list), lSY st_list, set (lTYX st_list)) 
-                              \<and> I1 st_ab K \<and> I2 st_ab \<and> I3 st_list 
-                              \<and> buf \<in> (lSX st_list) \<and> distinct ((lTXY st_list) @ [buf])}"
+                              \<and> I1 st_ab K \<and> I2 st_ab \<and> I3 st_list}"
+(*                            \<and> buf \<in> (lSX st_list) \<and> distinct ((lTXY st_list) @ [buf])}" *)
 
 
-definition sr_set_list_deq :: "'a \<Rightarrow> 'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
-  where "sr_set_list_deq buf K = {(st_ab, st_list). (SX st_ab, TXY st_ab, SY st_ab, TYX st_ab) = 
+definition sr_set_list_deq :: "'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
+  where "sr_set_list_deq K = {(st_ab, st_list). (SX st_ab, TXY st_ab, SY st_ab, TYX st_ab) = 
                                   (lSX st_list, set (lTXY st_list), lSY st_list, set (lTYX st_list)) 
-                                  \<and> I1 st_ab K \<and> I2 st_ab \<and> I3 st_list 
-                                  \<and> buf \<notin> (lSX st_list) \<and> hd (lTXY st_list) = buf}"
+                                  \<and> I1 st_ab K \<and> I2 st_ab \<and> I3 st_list }"
+(*                                \<and> buf \<notin> (lSX st_list) \<and> hd (lTXY st_list) = buf}" *)
 
 definition fr_id :: "'a \<Rightarrow> 'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
   where "fr_id = sr_set_list_enq "
@@ -77,7 +77,7 @@ definition setRB_dequeuex :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
 
 lemma
   setListRefinement_enqueue: "(Language.Basic (setRB_enqueuex buf), Language.Basic (listRB_enqueuex buf)) 
-        \<in> refinement_s (separable_sr (sr_set_list_enq buf K) (fr_id buf K)) \<Gamma>a \<Gamma>c"
+        \<in> refinement_s (separable_sr (sr_set_list_enq K) (fr_id K)) \<Gamma>a \<Gamma>c"
   apply(rule refinement_s_BasicI) 
   try
 proof
@@ -85,7 +85,7 @@ proof
 
 lemma
   setListRefinement_dequeue: "(Language.Basic (setRB_dequeuex buf), Language.Basic (listRB_dequeuex buf)) 
-        \<in> refinement_s (separable_sr (sr_set_list_deq buf K) (fr_id buf K)) \<Gamma>a \<Gamma>c"
+        \<in> refinement_s (separable_sr (sr_set_list_deq K) (fr_id K)) \<Gamma>a \<Gamma>c"
   apply(rule refinement_s_BasicI) 
   try
 proof
