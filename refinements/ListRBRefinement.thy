@@ -104,4 +104,6 @@ definition sr_list_rb :: "'a set \<Rightarrow> ('a ListRB \<times> 'a abstractSt
 definition id_state :: "'a set \<Rightarrow> ('a ListRB \<times> 'a abstractState) set"
   where "id_state = sr_list_rb"
 
+end (*Modulus end *)
+
 end

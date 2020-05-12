@@ -41,23 +41,29 @@ fun I2 :: "'a SetRB \<Rightarrow> bool"
     TXY rb \<inter> TYX rb = {}"
 
 fun I3 :: "'a ListRB \<Rightarrow> bool"
-  where "I3 st_list \<longleftrightarrow> distinct (lTXY st_list) \<and> distinct (lTYX st_list)"
-
-definition sr_set_list_enq :: "'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
-  where "sr_set_list_enq K = {(st_ab, st_list). (SX st_ab, TXY st_ab, SY st_ab, TYX st_ab) = 
-                              (lSX st_list, set (lTXY st_list), lSY st_list, set (lTYX st_list)) 
-                              \<and> I1 st_ab K \<and> I2 st_ab \<and> I3 st_list}"
-(*                            \<and> buf \<in> (lSX st_list) \<and> distinct ((lTXY st_list) @ [buf])}" *)
+  where "I3 st_list \<longleftrightarrow> distinct (lTXY st_list @ lTYX st_list)"
 
 
-definition sr_set_list_deq :: "'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
-  where "sr_set_list_deq K = {(st_ab, st_list). (SX st_ab, TXY st_ab, SY st_ab, TYX st_ab) = 
-                                  (lSX st_list, set (lTXY st_list), lSY st_list, set (lTYX st_list)) 
-                                  \<and> I1 st_ab K \<and> I2 st_ab \<and> I3 st_list }"
-(*                                \<and> buf \<notin> (lSX st_list) \<and> hd (lTXY st_list) = buf}" *)
+definition sr_set_list :: "'a ListRB \<Rightarrow> 'a SetRB"
+  where "sr_set_list st_c = \<lparr>SX = lSX st_c, SY = lSY st_c, 
+                             TXY = set (lTXY st_c), TYX = set (lTYX st_c)\<rparr>"
 
-definition fr_id :: "'a \<Rightarrow> 'a set \<Rightarrow> ('a SetRB \<times> 'a ListRB) set"
-  where "fr_id = sr_set_list_enq "
+(* fun I1_img :: "'a ListRB \<Rightarrow> 'a set \<Rightarrow> bool"
+  where "I1_img rb K \<longleftrightarrow> I1 (sr_set_list rb) K" *)
+
+text \<open>The union of all sets is constant. Image for ListRB\<close>
+fun I1_img :: "'a ListRB \<Rightarrow> 'a set \<Rightarrow> bool"
+  where "I1_img rb K \<longleftrightarrow> ((lSX rb) \<union> (lSY rb) \<union> set (lTXY rb) \<union> set (lTYX rb)) = K"
+
+text \<open>All pairwise intersections are empty. Image for ListRB.\<close>
+fun I2_img :: "'a ListRB \<Rightarrow> bool"
+  where "I2_img rb \<longleftrightarrow> lSX rb \<inter> lSY rb = {} \<and> lSX rb \<inter> set (lTXY rb) = {} \<and> lSX rb \<inter> set (lTYX rb) = {} \<and> 
+    lSY rb \<inter> set (lTXY rb) = {} \<and> lSY rb \<inter> set (lTYX rb) = {} \<and> 
+    set (lTXY rb) \<inter> set (lTYX rb) = {}"
+
+
+definition fr_id :: "'a ListRB \<Rightarrow> 'a SetRB"
+  where "fr_id = sr_set_list"
 
 definition listRB_enqueuex :: "'a \<Rightarrow> 'a ListRB \<Rightarrow> 'a ListRB"
   where "listRB_enqueuex b st_list =  \<lparr> lSX = (lSX st_list)-{b}, lSY = (lSY st_list),
@@ -75,21 +81,20 @@ definition setRB_dequeuex :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
   where "setRB_dequeuex b rb =  \<lparr>  SX = (SX rb) \<union> {(b)},  SY = (SY rb), TXY = ((TXY rb) \<union> {(b)}),  
                                    TYX = (TYX rb) - {b} \<rparr>"
 
-lemma
-  setListRefinement_enqueue: "(Language.Basic (setRB_enqueuex buf), Language.Basic (listRB_enqueuex buf)) 
-        \<in> refinement_s (separable_sr (sr_set_list_enq K) (fr_id K)) \<Gamma>a \<Gamma>c"
-  apply(rule refinement_s_BasicI) 
-  try
-proof
-  oops  
+definition set_pre_enq :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a SetRB, 'a SetRB) Semantic.xstate set"        
+  where "set_pre_enq K buf = Semantic.Normal ` {rb. I1 rb K \<and> I2 rb \<and> buf \<in> SX rb \<and> buf \<notin> TXY rb}"
+
+definition list_pre_enq :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a ListRB, 'a ListRB) Semantic.xstate set"        
+  where "list_pre_enq K buf = Semantic.Normal ` {rb. I1_img rb K \<and> I2_img rb \<and> I3 rb \<and>
+                                            buf \<in> lSX rb \<and> buf \<notin> set (lTXY rb)}"
 
 lemma
-  setListRefinement_dequeue: "(Language.Basic (setRB_dequeuex buf), Language.Basic (listRB_dequeuex buf)) 
-        \<in> refinement_s (separable_sr (sr_set_list_deq K) (fr_id K)) \<Gamma>a \<Gamma>c"
-  apply(rule refinement_s_BasicI) 
-  try
-proof
-  oops
-
+  setListRefinement_enqueue: "((\<Gamma>a, set_pre_enq K buf, Language.Basic (setRB_enqueuex buf)), 
+                               (\<Gamma>c, list_pre_enq K buf, Language.Basic (listRB_enqueuex buf)))
+                               \<in> refinement_s (separable_lift sr_set_list fr_id)"
+apply(rule refinement_s_BasicI) (* Problem applying this after unfolding*)
+  unfolding list_pre_enq_def separable_lift_def sr_set_list_def listRB_enqueuex_def setRB_enqueuex_def 
+  set_pre_enq_def
+  by(auto)
 
 end

@@ -120,12 +120,17 @@ fun I2_img :: "'a abstractState \<Rightarrow> bool"
     SY rb \<inter> set (slice_xy rb) = {} \<and> SY rb \<inter> set (slice_yx rb) = {} \<and> 
     set (slice_xy rb) \<inter> set (slice_yx rb) = {}"
 
+text \<open>Elements in the ring buffers are distinct.\<close>
+fun I3_img :: "'a abstractState \<Rightarrow> bool"
+  where "I3_img rb \<longleftrightarrow> distinct ((slice_xy rb)@(slice_yx rb))"
+
+
 text \<open>client TX = server RX and client RX = server TX.\<close>
 fun I4 :: "'a abstractState \<Rightarrow> bool"
   where "I4 st \<longleftrightarrow> (ring (tx (client st))) = (ring (rx (server st))) \<and>
                    (ring (tx (server st))) = (ring (rx (client st)))"
 
-text \<open>Ring buffer state is valid\<close>
+text \<open>Ring buffer state is valid (and everything stays that way)\<close>
 fun I5 :: "'a abstractState \<Rightarrow> bool"
   where "I5 st \<longleftrightarrow> (direction (tx (client st))) = dir_tx \<and>
                    (direction (tx (server st))) = dir_tx \<and>
@@ -147,6 +152,6 @@ definition sr_abstract_concret :: "(word32 buf) set \<Rightarrow> (('b globals_s
   where "sr_abstract_concret SK glob = {(st_ab, st_c). (SX st_ab, SY st_ab, client st_ab, server st_ab) = 
                                     (cSX st_c, cSY st_c, qp_lift glob (cclient st_c), 
                                      qp_lift glob (cserver st_c)) \<and> I1_img st_ab SK \<and> I2_img st_ab \<and> 
-                                     I4 st_ab \<and> I5 st_ab}"
+                                     I3_img st_ab \<and> I4 st_ab \<and> I5 st_ab}"
 end
 
