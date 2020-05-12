@@ -24,6 +24,14 @@ lemma add_refines:
       \<in> refinement_s (separable_lift lift_mod_2 id)"
   unfolding lift_mod_2_def by(auto intro: refinement_s_BasicI)
 
+(*
+lemma add_c_valid:
+  "HoarePartialDef.valid \<Gamma>c {} {n. n mod 4 = 0} (Language.Basic (\<lambda>n. n + 2)) {n. n mod 4 = 2} {}"
+  thm hoare_sound
+  term cvalid
+  apply(hoare)
+*)
+
 lemma double_refines:
   "((\<Gamma>a,UNIV,Language.Basic (\<lambda>n. 0)), (\<Gamma>c,UNIV,Language.Basic (\<lambda>n. n * 2)))
       \<in> refinement_s (separable_lift lift_mod_2 id)"

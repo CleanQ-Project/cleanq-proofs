@@ -1472,4 +1472,417 @@ proof(rule refinement_s_noStuck_noAbrupt_SeqI[where P1a="P1a \<inter> noFault" a
     unfolding noFault_def by(auto)
 qed
 
+lemma refinement_s_SeqI':
+  assumes refines_c1: "((\<Gamma>a,P1a,c1a),(\<Gamma>c,P1c,c1c)) \<in> refinement_s (separable_lift sl fl)"
+      and refines_c2: "((\<Gamma>a,P2a,c2a),(\<Gamma>c,P2c,c2c)) \<in> refinement_s (separable_lift sl fl)"
+      and valid: "HoarePartialDef.valid \<Gamma>c F P c1c Q A"
+      and preFault: "\<And>fc. Semantic.Fault fc \<in> P1c \<Longrightarrow> fc \<in> F"
+      and preAbrupt: "\<And>sc. Semantic.Abrupt sc \<in> P1c \<Longrightarrow> sc \<in> A"
+      and preNormal: "\<And>sc. Semantic.Normal sc \<in> P1c \<Longrightarrow> sc \<in> P"
+      and propStuck: "(\<forall>xsc. xsc \<in> P1c \<longrightarrow> \<not>Semantic.exec \<Gamma>c c1c xsc Semantic.Stuck) \<or>
+                      Semantic.Stuck \<in> P2c"
+      and postFault: "\<And>fc. fc \<in> F \<Longrightarrow> Semantic.Fault fc \<in> P2c"
+      and postAbrupt: "\<And>sc. sc \<in> A \<Longrightarrow> Semantic.Abrupt sc \<in> P2c"
+      and postNormal: "\<And>sc. sc \<in> Q \<Longrightarrow> Semantic.Normal sc \<in> P2c"
+    shows "((\<Gamma>a,P1a,Language.Seq c1a c2a), (\<Gamma>c,P1c,Language.Seq c1c c2c))
+            \<in> refinement_s (separable_lift sl fl)"
+  using refines_c1 refines_c2 valid preNormal preAbrupt preFault propStuck
+proof(induct arbitrary:P)
+  case (Step P1c \<Gamma>c c1c \<Gamma>a c1a P1a)
+
+  show ?case
+  proof(rule refinement_s.Step)
+    show "(Language.Seq c1c c2c = THROW) = (Language.Seq c1a c2a = THROW)" by(auto)
+
+  next
+    fix xsa xsc
+    assume "Language.Seq c1c c2c = Language.Skip"
+    thus "Language.Seq c1a c2a = Language.Skip"
+      by(simp)
+
+  next
+    from Step.hyps(2) show "separable_lift sl fl ` P1c \<subseteq> P1a" .
+
+  next
+    fix xsc xsc' cc'
+    assume Pc: "xsc \<in> P1c"
+       and stepc: "SmallStep.step \<Gamma>c (Language.Seq c1c c2c, xsc) (cc', xsc')"
+
+    from stepc
+    show "\<exists>ca'.
+            SmallStep.step \<Gamma>a (Language.Seq c1a c2a, separable_lift sl fl xsc)
+                              (ca', separable_lift sl fl xsc') \<and>
+            ((\<Gamma>a, {separable_lift sl fl xsc'}, ca'), \<Gamma>c, {xsc'}, cc')
+              \<in> refinement_s (separable_lift sl fl)"
+    proof(cases rule:SmallStep.step.cases)
+      case (Seq c1c')
+
+      from Step.hyps(1)[OF Pc Seq(2)] Step.prems(1) obtain c1a'
+        where step_c1a: "SmallStep.step \<Gamma>a (c1a, separable_lift sl fl xsc)
+                                           (c1a', separable_lift sl fl xsc')"
+          and refines_c1a': "((\<Gamma>a, {separable_lift sl fl xsc'}, c1a'), (\<Gamma>c, {xsc'}, c1c'))
+                              \<in> refinement_s (separable_lift sl fl)"
+          and IH: "\<forall>P. HoarePartialDef.valid \<Gamma>c F P c1c' Q A \<longrightarrow>
+                      (\<forall>sa'. Semantic.Normal sa' \<in> {xsc'} \<longrightarrow> sa' \<in> P) \<longrightarrow>
+                      (\<forall>sa'. Semantic.Abrupt sa' \<in> {xsc'} \<longrightarrow> sa' \<in> A) \<longrightarrow>
+                      (\<forall>fa'. Semantic.xstate.Fault fa' \<in> {xsc'} \<longrightarrow> fa' \<in> F) \<longrightarrow>
+                      ((\<forall>xsc. xsc \<in> {xsc'} \<longrightarrow> \<not> Semantic.exec \<Gamma>c c1c' xsc Semantic.xstate.Stuck) \<or>
+                          Semantic.xstate.Stuck \<in> P2c) \<longrightarrow>
+                      ((\<Gamma>a, {separable_lift sl fl xsc'}, Language.Seq c1a' c2a),
+                       (\<Gamma>c, {xsc'}, Language.Seq c1c' c2c)) \<in> refinement_s (separable_lift sl fl)"
+        by(blast)
+
+      from step_c1a have "SmallStep.step \<Gamma>a (Language.Seq c1a c2a, separable_lift sl fl xsc)
+                                            (Language.Seq c1a' c2a, separable_lift sl fl xsc')"
+        by(rule SmallStep.step.Seq)
+      moreover {
+        let ?P' = "case xsc' of Semantic.Normal sc' \<Rightarrow> {sc'} | _ \<Rightarrow> {}"
+        have "HoarePartialDef.valid \<Gamma>c F ?P' c1c' Q A"
+        proof(cases xsc')
+          case (Normal sc')
+          hence rw_xsa': "separable_lift sl fl xsc' = Semantic.Normal (sl sc')"
+            by(simp add:separable_lift_def)
+
+          from step_c1a rw_xsa' obtain sa
+            where rw_xsa_initial: "separable_lift sl fl xsc = Semantic.Normal sa"
+            by(auto elim:step_NormalE)
+          then obtain sc
+            where rw_xsc: "xsc = Semantic.Normal sc"
+            by(auto elim:mode_preserving_NormalaE[OF separable_lift_mp])
+          with rw_xsa_initial have rw_sa: "sa = sl sc"
+            by(simp add:separable_lift_def)
+          with rw_xsa_initial have rw_xsa: "separable_lift sl fl xsc = Semantic.Normal (sl sc)"
+            by(simp)
+
+          from Pc have "Semantic.xstate.Normal sc \<in> P1c"
+            by(simp add:rw_xsc)
+          hence P: "sc \<in> P"
+            by(rule Step.prems(3))
+
+          from Step.prems(2) Seq(2)[unfolded rw_xsc Normal] P
+          have "HoarePartialDef.valid \<Gamma>c F {sc'} c1c' Q A"
+            by(rule valid_step)
+          with Normal show ?thesis by(simp)
+
+        next
+          case (Abrupt sc')
+          then show ?thesis by(simp add:valid_s_emptypre)
+
+        next
+          case (Fault x3)
+          then show ?thesis by(simp add:valid_s_emptypre)
+
+        next
+          case Stuck
+          then show ?thesis by(simp add:valid_s_emptypre)
+        qed
+        moreover have "\<forall>sc'. Semantic.xstate.Normal sc' \<in> {xsc'} \<longrightarrow> sc' \<in> ?P'"
+          by(cases xsc', simp_all add:separable_lift_def)
+        moreover have "\<forall>sc'. Semantic.Abrupt sc' \<in> {xsc'} \<longrightarrow> sc' \<in> A"
+        proof(clarify)
+          fix sc
+          assume abr: "xsc' = Semantic.Abrupt sc"
+
+          from Seq(2) have [symmetric] : "xsc = Semantic.Abrupt sc"
+            unfolding abr by(rule step_AbruptE)
+          also note Pc
+          finally show "sc \<in> A"
+            by(rule Step.prems(4))
+        qed
+        moreover have "(\<forall>fc'. Semantic.xstate.Fault fc' \<in> {xsc'} \<longrightarrow> fc' \<in> F)"
+        proof(clarify, rule contrapos_pp, assumption)
+          fix fc'
+          assume fault: "xsc' = Semantic.Fault fc'"
+             and nF: "fc' \<notin> F"
+
+          from Seq(2) fault
+          have fault_step: "SmallStep.step  \<Gamma>c (c1c, xsc) (c1c', Semantic.Fault fc')"
+            by(simp)
+          moreover have "Semantic.exec \<Gamma>c c1c' (Semantic.Fault fc') (Semantic.Fault fc')"
+            by(auto)
+          ultimately
+          have execc: "Semantic.exec \<Gamma>c c1c xsc (Semantic.Fault fc')"
+            by(rule step_extend)
+
+          from Pc have "separable_lift sl fl xsc \<in> separable_lift sl fl ` P1c"
+            by(auto)
+          also note Step.hyps(2)
+          finally have P1a: "separable_lift sl fl xsc \<in> P1a" .
+
+          from fault_step
+          show "xsc' \<noteq> Semantic.xstate.Fault fc'"
+          proof(cases rule:step_FaultE)
+            case FaultProp
+            with Step.prems(5) Pc have "fc' \<in> F"
+              by(auto)
+            with nF show ?thesis
+              by(auto)
+          next
+            case (NewFault s)
+            with Step.prems(3) Pc
+            have "xsc \<in> Semantic.xstate.Normal ` P"
+              by(auto)
+            moreover from nF have "Semantic.xstate.Fault fc' \<notin> Semantic.xstate.Fault ` F"
+              by(auto)
+            moreover note Step.prems(2) execc
+            ultimately show ?thesis
+              by(auto elim:valid_sE)
+          qed
+        qed
+        moreover from Step.prems(6)
+        have "((\<forall>xsc. xsc \<in> {xsc'} \<longrightarrow> \<not> Semantic.exec \<Gamma>c c1c' xsc Semantic.xstate.Stuck) \<or>
+              Semantic.xstate.Stuck \<in> P2c)"
+        proof
+          assume "Semantic.xstate.Stuck \<in> P2c"
+          thus ?thesis by(auto)
+        next
+          assume nostuck: "\<forall>xsc. xsc \<in> P1c \<longrightarrow> \<not> Semantic.exec \<Gamma>c c1c xsc Semantic.xstate.Stuck"
+          hence "\<forall>xsc. xsc \<in> {xsc'} \<longrightarrow> \<not> \<Gamma>c\<turnstile> \<langle>c1c',xsc\<rangle> \<Rightarrow> Semantic.xstate.Stuck"
+          proof(rule contrapos_pp)
+            assume "\<not> (\<forall>xsc. xsc \<in> {xsc'} \<longrightarrow> \<not> \<Gamma>c\<turnstile> \<langle>c1c',xsc\<rangle> \<Rightarrow> Semantic.xstate.Stuck)"
+            hence "\<Gamma>c\<turnstile> \<langle>c1c',xsc'\<rangle> \<Rightarrow> Semantic.xstate.Stuck"
+              by(blast)
+            with Seq(2) have "\<Gamma>c\<turnstile> \<langle>c1c,xsc\<rangle> \<Rightarrow> Semantic.xstate.Stuck"
+              by(rule step_extend)
+            with Pc show "\<not> (\<forall>xsc. xsc \<in> P1c \<longrightarrow> \<not> \<Gamma>c\<turnstile> \<langle>c1c,xsc\<rangle> \<Rightarrow> Semantic.xstate.Stuck)"
+              by(blast)
+          qed
+          thus ?thesis by(auto)
+        qed
+        ultimately have "((\<Gamma>a, {separable_lift sl fl xsc'}, Language.Seq c1a' c2a),
+                          (\<Gamma>c, {xsc'}, Language.Seq c1c' c2c))
+                            \<in> refinement_s (separable_lift sl fl)"
+          using IH by(auto)
+      }
+      ultimately show "\<exists>ca'.
+        SmallStep.step \<Gamma>a (c1a;; c2a, separable_lift sl fl xsc) (ca', separable_lift sl fl xsc') \<and>
+        ((\<Gamma>a,{separable_lift sl fl xsc'},ca'), (\<Gamma>c,{xsc'},cc'))
+          \<in> refinement_s (separable_lift sl fl)"
+        by(auto simp:Seq)
+
+    next
+      case SeqSkip
+      with Step have skipa: "c1a = Language.Skip" by(blast)
+
+      have "SmallStep.step \<Gamma>a (c1a;; c2a, separable_lift sl fl xsc)
+                              (c2a, separable_lift sl fl xsc')"
+        unfolding SeqSkip skipa
+        by(rule SmallStep.step.SeqSkip)
+      moreover {
+        have execc: "Semantic.exec \<Gamma>c c1c xsc xsc"
+          unfolding SeqSkip
+          by(cases xsc, auto intro:Semantic.exec.Skip)
+
+        have "xsc \<in> P2c"
+        proof(cases xsc)
+          case (Normal sc)
+          with Pc have "Semantic.xstate.Normal sc \<in> P1c" by(simp)
+          hence "sc \<in> P" by(rule Step.prems(3))
+          hence P: "xsc \<in> Semantic.Normal ` P" by(simp add:Normal)
+
+          from Normal have nofault: "xsc \<notin> Semantic.xstate.Fault ` F" by(auto)
+
+          from Step.prems(2) execc P nofault show ?thesis
+            by(cases rule:valid_sE, auto simp:Normal intro:postNormal)
+
+        next
+          case (Abrupt sc)
+          with Pc have "Semantic.xstate.Abrupt sc \<in> P1c" by(simp)
+          hence "sc \<in> A" by(rule Step.prems(4))
+          thus ?thesis unfolding Abrupt by(rule postAbrupt)
+
+        next
+          case (Fault fc)
+          with Pc have "Semantic.xstate.Fault fc \<in> P1c" by(simp)
+          hence "fc \<in> F" by(rule Step.prems(5))
+          thus ?thesis unfolding Fault by(rule postFault)
+
+        next
+          case Stuck
+
+          from Step.prems(6)
+          show "xsc \<in> P2c"
+            unfolding Stuck
+          proof
+            assume "Semantic.xstate.Stuck \<in> P2c"
+            thus "Semantic.xstate.Stuck \<in> P2c" .
+          next
+            assume ns: "\<forall>xsc. xsc \<in> P1c \<longrightarrow> \<not> \<Gamma>c\<turnstile> \<langle>c1c,xsc\<rangle> \<Rightarrow> Semantic.Stuck"
+
+            have "Semantic.exec \<Gamma>c c1c xsc Semantic.Stuck"
+              unfolding Stuck by(rule Semantic.exec.StuckProp)
+            with Pc ns
+            show "Semantic.xstate.Stuck \<in> P2c"
+              by(auto)
+          qed
+        qed
+        hence "((\<Gamma>a, {separable_lift sl fl xsc'}, c2a), (\<Gamma>c, {xsc'}, cc'))
+                        \<in> refinement_s (separable_lift sl fl)"
+          unfolding SeqSkip by(auto intro:refinement_s_strengthen[OF Step.prems(1)])
+      }
+      ultimately show ?thesis by(blast)
+
+    next
+      case (SeqThrow sc)
+
+      from SeqThrow
+      have normala: "separable_lift sl fl xsc = Semantic.Normal (sl sc)"
+       and normala': "separable_lift sl fl xsc' = Semantic.Normal (sl sc)"
+        unfolding separable_lift_def by(auto)
+
+      from SeqThrow Step.hyps
+      have throwa: "c1a = Language.Throw"
+        by(simp)
+
+      have "SmallStep.step \<Gamma>a (Language.Seq c1a c2a, separable_lift sl fl xsc)
+                              (Language.Throw, separable_lift sl fl xsc')"
+        unfolding throwa normala normala'
+        by(rule SmallStep.step.SeqThrow)
+      moreover have "((\<Gamma>a, {separable_lift sl fl xsc'}, Language.Throw),
+                      (\<Gamma>c, {xsc'}, cc')) \<in> refinement_s (separable_lift sl fl)"
+      proof(rule refinement_s.Step)
+        show "separable_lift sl fl ` {xsc'} \<subseteq> {separable_lift sl fl xsc'}"
+          by(auto)
+        show "(cc' = THROW) = (THROW = THROW)"
+          by(simp add:SeqThrow)
+
+        assume "cc' = SKIP" thus "THROW = SKIP"
+          by(simp add:SeqThrow)
+
+      next
+        fix xsc'_h xsc'' cc''
+        assume "xsc'_h \<in> {xsc'}"
+           and "SmallStep.step \<Gamma>c (cc',xsc'_h) (cc'',xsc'')"
+        hence "SmallStep.step \<Gamma>c (cc',xsc') (cc'',xsc'')"
+          by(simp)
+        then show "\<exists>ca'.
+          SmallStep.step \<Gamma>a (Language.Throw, separable_lift sl fl xsc'_h)
+                            (ca', separable_lift sl fl xsc'') \<and>
+             ((\<Gamma>a, {separable_lift sl fl xsc''}, ca'), (\<Gamma>c, {xsc''}, cc''))
+                  \<in> refinement_s (separable_lift sl fl)"
+          unfolding SeqThrow by(cases)
+      qed
+      ultimately show "\<exists>ca'.
+        SmallStep.step \<Gamma>a (Language.Seq c1a c2a, separable_lift sl fl xsc)
+                          (ca', separable_lift sl fl xsc') \<and>
+        ((\<Gamma>a, {separable_lift sl fl xsc'}, ca'), (\<Gamma>c, {xsc'}, cc'))
+               \<in> refinement_s (separable_lift sl fl)"
+        by(blast)
+  
+    next
+      case (FaultProp f)
+      then show ?thesis
+        using redex_Seq_ne by(auto)
+  
+    next
+      case StuckProp
+      then show ?thesis
+        using redex_Seq_ne by(auto)
+  
+    next
+      case (AbruptProp f)
+      then show ?thesis
+        using redex_Seq_ne by(auto)
+    qed
+  qed
+qed
+
+lemma refinement_s_noAbrupt_SeqI':
+  assumes refines_c1: "((\<Gamma>a,P1a \<inter> noAbrupt,c1a),(\<Gamma>c,P1c \<inter> noAbrupt,c1c))
+                          \<in> refinement_s (separable_lift sl fl)"
+      and refines_c2: "((\<Gamma>a,P2a \<inter> noAbrupt,c2a),(\<Gamma>c,P2c \<inter> noAbrupt,c2c))
+                          \<in> refinement_s (separable_lift sl fl)"
+      and valid: "HoarePartialDef.valid \<Gamma>c F P c1c Q {}"
+      and preFault: "\<And>fc. Semantic.Fault fc \<in> P1c \<Longrightarrow> fc \<in> F"
+      and preNormal: "\<And>sc. Semantic.Normal sc \<in> P1c \<Longrightarrow> sc \<in> P"
+      and propStuck: "(\<forall>xsc. xsc \<in> P1c \<longrightarrow> \<not>Semantic.exec \<Gamma>c c1c xsc Semantic.Stuck) \<or>
+                      Semantic.Stuck \<in> P2c"
+      and postFault: "\<And>fc. fc \<in> F \<Longrightarrow> Semantic.Fault fc \<in> P2c"
+      and postNormal: "\<And>sc. sc \<in> Q \<Longrightarrow> Semantic.Normal sc \<in> P2c"
+    shows "((\<Gamma>a,P1a \<inter> noAbrupt,Language.Seq c1a c2a), (\<Gamma>c,P1c \<inter> noAbrupt,Language.Seq c1c c2c))
+            \<in> refinement_s (separable_lift sl fl)"
+proof(rule refinement_s_SeqI'[where P1a="P1a \<inter> noAbrupt" and P1c="P1c \<inter> noAbrupt" and
+                                    P2a="P2a \<inter> noAbrupt" and P2c="P2c \<inter> noAbrupt" and A="{}",
+                              OF refines_c1 refines_c2 valid])
+  from preFault show "\<And>fc. Semantic.xstate.Fault fc \<in> P1c \<inter> noAbrupt \<Longrightarrow> fc \<in> F"
+    unfolding noAbrupt_def by(auto)
+  show "\<And>sc. Abrupt sc \<in> P1c \<inter> noAbrupt \<Longrightarrow> sc \<in> {}"
+    unfolding noAbrupt_def by(auto)
+  from preNormal show "\<And>sc. Semantic.xstate.Normal sc \<in> P1c \<inter> noAbrupt \<Longrightarrow> sc \<in> P"
+    unfolding noAbrupt_def by(auto)
+  from propStuck show "(\<forall>xsc. xsc \<in> P1c \<inter> noAbrupt \<longrightarrow> \<not> \<Gamma>c\<turnstile> \<langle>c1c,xsc\<rangle> \<Rightarrow> Semantic.xstate.Stuck) \<or>
+                       Semantic.xstate.Stuck \<in> P2c \<inter> noAbrupt"
+    unfolding noAbrupt_def by(auto)
+  from postFault show "\<And>fc. fc \<in> F \<Longrightarrow> Semantic.xstate.Fault fc \<in> P2c \<inter> noAbrupt"
+    unfolding noAbrupt_def by(auto)
+  show "\<And>sc. sc \<in> {} \<Longrightarrow> Abrupt sc \<in> P2c \<inter> noAbrupt"
+    unfolding noAbrupt_def by(auto)
+  from postNormal show "\<And>sc. sc \<in> Q \<Longrightarrow> Semantic.xstate.Normal sc \<in> P2c \<inter> noAbrupt"
+    unfolding noAbrupt_def by(auto)
+qed
+
+lemma refinement_s_noStuck_noAbrupt_SeqI':
+  assumes refines_c1: "((\<Gamma>a,P1a \<inter> noStuck \<inter> noAbrupt,c1a),(\<Gamma>c,P1c \<inter> noStuck \<inter> noAbrupt,c1c))
+                          \<in> refinement_s (separable_lift sl fl)"
+      and refines_c2: "((\<Gamma>a,P2a \<inter> noStuck \<inter> noAbrupt,c2a),(\<Gamma>c,P2c \<inter> noStuck \<inter> noAbrupt,c2c))
+                          \<in> refinement_s (separable_lift sl fl)"
+      and valid: "HoarePartialDef.valid \<Gamma>c F P c1c Q {}"
+      and preFault: "\<And>fc. Semantic.Fault fc \<in> P1c \<Longrightarrow> fc \<in> F"
+      and preNormal: "\<And>sc. Semantic.Normal sc \<in> P1c \<Longrightarrow> sc \<in> P"
+      and noStuck: "\<And>xsc. xsc \<in> P1c \<Longrightarrow> xsc \<noteq> Semantic.Stuck \<Longrightarrow>
+                            \<not> Semantic.exec \<Gamma>c c1c xsc Semantic.Stuck"
+      and postFault: "\<And>fc. fc \<in> F \<Longrightarrow> Semantic.Fault fc \<in> P2c"
+      and postNormal: "\<And>sc. sc \<in> Q \<Longrightarrow> Semantic.Normal sc \<in> P2c"
+    shows "((\<Gamma>a,P1a \<inter> noStuck \<inter> noAbrupt,Language.Seq c1a c2a),
+           (\<Gamma>c,P1c \<inter> noStuck \<inter> noAbrupt,Language.Seq c1c c2c))
+            \<in> refinement_s (separable_lift sl fl)"
+proof(rule refinement_s_noAbrupt_SeqI'[where P1a="P1a \<inter> noStuck" and P1c="P1c \<inter> noStuck" and
+                                             P2a="P2a \<inter> noStuck" and P2c="P2c \<inter> noStuck",
+                                       OF refines_c1 refines_c2 valid])
+  from preFault show "\<And>fc. Semantic.xstate.Fault fc \<in> P1c \<inter> noStuck \<Longrightarrow> fc \<in> F"
+    unfolding noStuck_def by(auto)
+  from preNormal show "\<And>sc. Semantic.xstate.Normal sc \<in> P1c \<inter> noStuck \<Longrightarrow> sc \<in> P"
+    unfolding noStuck_def by(auto)
+  from noStuck show "(\<forall>xsc. xsc \<in> P1c \<inter> noStuck \<longrightarrow> \<not> \<Gamma>c\<turnstile> \<langle>c1c,xsc\<rangle> \<Rightarrow> Semantic.xstate.Stuck) \<or>
+                     Semantic.xstate.Stuck \<in> P2c \<inter> noStuck"
+    unfolding noStuck_def by(auto)
+  from postFault show "\<And>fc. fc \<in> F \<Longrightarrow> Semantic.xstate.Fault fc \<in> P2c \<inter> noStuck"
+    unfolding noStuck_def by(auto)
+  from postNormal show "\<And>sc. sc \<in> Q \<Longrightarrow> Semantic.xstate.Normal sc \<in> P2c \<inter> noStuck"
+    unfolding noStuck_def by(auto)
+qed
+
+lemma refinement_s_noFault_noStuck_noAbrupt_SeqI':
+  assumes refines_c1: "((\<Gamma>a,P1a \<inter> noFault \<inter> noStuck \<inter> noAbrupt,c1a),
+                        (\<Gamma>c,P1c \<inter> noFault \<inter> noStuck \<inter> noAbrupt,c1c))
+                          \<in> refinement_s (separable_lift sl fl)"
+      and refines_c2: "((\<Gamma>a,P2a \<inter> noFault \<inter> noStuck \<inter> noAbrupt,c2a),
+                        (\<Gamma>c,P2c \<inter> noFault \<inter> noStuck \<inter> noAbrupt,c2c))
+                          \<in> refinement_s (separable_lift sl fl)"
+      and valid: "HoarePartialDef.valid \<Gamma>c {} P c1c Q {}"
+      and preNormal: "\<And>sc. Semantic.Normal sc \<in> P1c \<Longrightarrow> sc \<in> P"
+      and noStuck: "\<And>xsc. xsc \<in> P1c \<Longrightarrow> xsc \<noteq> Semantic.Stuck \<Longrightarrow> \<nexists>fc. xsc = Semantic.Fault fc \<Longrightarrow>
+                            \<not> Semantic.exec \<Gamma>c c1c xsc Semantic.Stuck"
+      and postNormal: "\<And>sc. sc \<in> Q \<Longrightarrow> Semantic.Normal sc \<in> P2c"
+    shows "((\<Gamma>a,P1a \<inter> noFault \<inter> noStuck \<inter> noAbrupt,Language.Seq c1a c2a),
+           (\<Gamma>c,P1c \<inter> noFault \<inter> noStuck \<inter> noAbrupt,Language.Seq c1c c2c))
+            \<in> refinement_s (separable_lift sl fl)"
+proof(rule refinement_s_noStuck_noAbrupt_SeqI'[where P1a="P1a \<inter> noFault" and P1c="P1c \<inter> noFault" and
+                                                     P2a="P2a \<inter> noFault" and P2c="P2c \<inter> noFault" and
+                                                     F="{}",
+                                               OF refines_c1 refines_c2 valid])
+  show "\<And>fc. Semantic.xstate.Fault fc \<in> P1c \<inter> noFault \<Longrightarrow> fc \<in> {}"
+    unfolding noFault_def by(auto)
+  from preNormal show "\<And>sc. Semantic.xstate.Normal sc \<in> P1c \<inter> noFault \<Longrightarrow> sc \<in> P"
+    unfolding noFault_def by(auto)
+  from noStuck show "\<And>xsc. xsc \<in> P1c \<inter> noFault \<Longrightarrow>
+                           xsc \<noteq> Semantic.xstate.Stuck \<Longrightarrow>
+                           \<not> \<Gamma>c\<turnstile> \<langle>c1c,xsc\<rangle> \<Rightarrow> Semantic.xstate.Stuck"
+    unfolding noFault_def by(auto)
+  show "\<And>fc. fc \<in> {} \<Longrightarrow> Semantic.xstate.Fault fc \<in> P2c \<inter> noFault"
+    unfolding noFault_def by(auto)
+  from postNormal show "\<And>sc. sc \<in> Q \<Longrightarrow> Semantic.xstate.Normal sc \<in> P2c \<inter> noFault"
+    unfolding noFault_def by(auto)
+qed
+
 end
