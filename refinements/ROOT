@@ -1,0 +1,11 @@
+session "CleanQ" = "HOL" +
+    options [document = pdf, document_output = "../build/cleanq"]
+    sessions
+        "HOL-Library"
+        "HOL-Statespace"
+    theories [document = false]
+        "../Simpl/Vcg"
+    theories 
+        SetRBModel 
+    document_files (in ".")
+        "root.tex"
