@@ -12,20 +12,26 @@
 
 
 
-theory SetRBModel 
+section "CleanQ Abstract Set Model"
+
+text \<open>
+  We define
+\<close>
+
+theory CleanQ_SetModel
 (*<*)
-imports
-  "../Simpl/Vcg"
+  imports  "../Simpl/Vcg"
 (*>*)
 begin
 
 
-(* ============================================================================================== *)
-section \<open>State Definition\<close>
-(* ============================================================================================== *)
+
+(* ==================================================================================== *)
+subsection \<open>State Definition\<close>
+(* ==================================================================================== *)
 
 
-subsection \<open>Abstract Queue Definition\<close>
+subsubsection \<open>Abstract Queue Definition\<close>
 
 text \<open>The "SetRB" defines the base state with four sets:
   * SX: this is the set of buffers owned by X.
@@ -49,27 +55,29 @@ record 'g SetRB_vars =
   
 
 
-(* ============================================================================================== *)
-section \<open>State Invariants\<close>
-(* ============================================================================================== *)
+(* ==================================================================================== *)
+subsection \<open>State Invariants\<close>
+(* ==================================================================================== *)
 
 
-(* ---------------------------------------------------------------------------------------------- *)
-subsection \<open>I1: Constant Union\<close>
-(* ---------------------------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>I1: Constant Union\<close>
+(* ------------------------------------------------------------------------------------ *)
 
-text \<open>The union of all sets is constant. This ensures that elements are not lost during the 
-ownership transfer\<close>
+text \<open>
+  The union of all sets is constant. This ensures that elements are not lost during 
+  the ownership transfer
+\<close>
 
 fun I1 :: "'a SetRB \<Rightarrow> 'a set \<Rightarrow> bool"
   where "I1 rb K \<longleftrightarrow> ((SX rb) \<union> (SY rb) \<union> (TXY rb) \<union> (TYX rb)) = K"
 
 
-(* ---------------------------------------------------------------------------------------------- *)
-subsection \<open>I2: No Double Presence\<close>
-(* ---------------------------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>I2: No Double Presence\<close>
+(* ------------------------------------------------------------------------------------ *)
 
-text \<open>All pairwise intersections are empty. An element cannot be in one than more sets. 
+text \<open>All pairwise intersubsections are empty. An element cannot be in one than more sets. 
 This is required as the element cannot be owned by more than one agent.\<close>
 
 fun I2 :: "'a SetRB \<Rightarrow> bool"
@@ -77,27 +85,28 @@ fun I2 :: "'a SetRB \<Rightarrow> bool"
                    SY rb \<inter> TXY rb = {} \<and> SY rb \<inter> TYX rb = {} \<and> TXY rb \<inter> TYX rb = {}"
 
 
-(* ---------------------------------------------------------------------------------------------- *)
-subsection \<open>SetRB Invariants\<close>
-(* ---------------------------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>SetRB Invariants\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 fun SetRB_Invariants :: "'a set \<Rightarrow> 'a SetRB \<Rightarrow> bool"
   where "SetRB_Invariants K rb \<longleftrightarrow> I1 rb K \<and> I2 rb"
 
 
-(* ============================================================================================== *)
-section \<open>State Operations\<close>
-(* ============================================================================================== *)
+(* ==================================================================================== *)
+subsection \<open>State Operations\<close>
+(* ==================================================================================== *)
 
 
-(* ---------------------------------------------------------------------------------------------- *)
-subsection \<open>Enqueue Operation\<close>
-(* ---------------------------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Enqueue Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 text \<open>
-  The enqueue operation initiates a transfer of ownership from X -> Y (enq\_x), or the other way 
-  from Y -> X (enq\_y). This corresponds to removing the element from set SX and inserting it into 
-  set TXY, or removing it from the set XY and inserting it to TYX respectively.
+  The enqueue operation initiates a transfer of ownership from X -> Y (enq\_x), or the 
+  other way from $Y \rightarrow X$ (enq\_y). This corresponds to removing the element from 
+  set SX and inserting it into set TXY, or removing it from the set XY and inserting it to 
+  TYX respectively.
 \<close>
 
 definition SetRB_enq_x :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
@@ -181,13 +190,15 @@ lemma "\<Gamma>\<turnstile> \<lbrace> SetRB_Invariants K \<acute>RB  \<rbrace>
 
 
 
-(* ---------------------------------------------------------------------------------------------- *)
-subsection \<open>Dequeue Operation\<close>
-(* ---------------------------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Dequeue Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 
-text \<open>The dequeue operation completes a transfer of ownership from Y -> X. This corresponds to
-removing the element from set TYX and inserting it into set SX.\<close>
+text \<open>
+  The dequeue operation completes a transfer of ownership from $Y \rightarrow  X$. This 
+  corresponds to removing the element from set TYX and inserting it into set SX.
+\<close>
 
 definition SetRB_dequeuex :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
   where "SetRB_dequeuex b rb =  \<lparr>  SX = (SX rb) \<union> {(b)},  SY = (SY rb), TXY = (TXY rb),  
@@ -237,14 +248,14 @@ lemma "\<Gamma>\<turnstile> \<lbrace> SetRB_Invariants K \<acute>RB  \<rbrace>
   by (meson SetRB_dequeuex_Invariants)
 
 
-(* ============================================================================================== *)
-section \<open>Basic Integration\<close>
-(* ============================================================================================== *)
+(* ==================================================================================== *)
+subsection \<open>Basic Integration\<close>
+(* ==================================================================================== *)
 
 
-(* ---------------------------------------------------------------------------------------------- *)
-subsection \<open>Enqueue Operation\<close>
-(* ---------------------------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Enqueue Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 definition SetRB_enqueuex_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a SetRB, 'a SetRB) Semantic.xstate set"
   where "SetRB_enqueuex_pre K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> SX rb }"
@@ -254,9 +265,9 @@ definition SetRB_enqueuex_post :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a Set
 
 
 
-(* ---------------------------------------------------------------------------------------------- *)
-subsection \<open>Dequeue Operation\<close>
-(* ---------------------------------------------------------------------------------------------- *)
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Dequeue Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 
 definition SetRB_dequeuex_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a SetRB, 'a SetRB) Semantic.xstate set"
