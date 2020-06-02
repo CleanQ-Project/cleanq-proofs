@@ -48,9 +48,6 @@ definition sr_set_list :: "'a ListRB \<Rightarrow> 'a SetRB"
   where "sr_set_list st_c = \<lparr>SX = lSX st_c, SY = lSY st_c, 
                              TXY = set (lTXY st_c), TYX = set (lTYX st_c)\<rparr>"
 
-(* fun I1_img :: "'a ListRB \<Rightarrow> 'a set \<Rightarrow> bool"
-  where "I1_img rb K \<longleftrightarrow> I1 (sr_set_list rb) K" *)
-
 text \<open>The union of all sets is constant. Image for ListRB\<close>
 fun I1_img :: "'a ListRB \<Rightarrow> 'a set \<Rightarrow> bool"
   where "I1_img rb K \<longleftrightarrow> ((lSX rb) \<union> (lSY rb) \<union> set (lTXY rb) \<union> set (lTYX rb)) = K"
@@ -83,11 +80,21 @@ definition setRB_enqueuey :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
 
 definition listRB_dequeuex :: "'a \<Rightarrow> 'a ListRB \<Rightarrow> 'a ListRB"
   where "listRB_dequeuex buf st_list =  \<lparr> lSX = (lSX st_list) \<union> {buf}, lSY = (lSY st_list),
-                                          lTXY = (lTXY st_list), lTYX = (take 1 (lTYX st_list))\<rparr>" 
+                                          lTXY = (lTXY st_list), lTYX = (remove1 buf (lTYX st_list))\<rparr>" 
+
 
 definition setRB_dequeuex :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
-  where "setRB_dequeuex b rb =  \<lparr>  SX = (SX rb) \<union> {(b)},  SY = (SY rb), TXY = (TXY rb),  
+  where "setRB_dequeuex b rb =  \<lparr>  SX = (SX rb) \<union> {b},  SY = (SY rb), TXY = (TXY rb),  
                                    TYX = (TYX rb) - {b} \<rparr>"
+
+definition listRB_dequeuey :: "'a \<Rightarrow> 'a ListRB \<Rightarrow> 'a ListRB"
+  where "listRB_dequeuey buf st_list =  \<lparr> lSX = (lSX st_list), lSY = (lSY st_list) \<union> {buf},
+                                          lTXY = (remove1 buf (lTXY st_list)), lTYX = (lTYX st_list) \<rparr>" 
+
+definition setRB_dequeuey :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
+  where "setRB_dequeuey b rb =  \<lparr>  SX = (SX rb),  SY = (SY rb) \<union> {b} , TXY = (TXY rb) - {b},  
+                                   TYX = TYX rb \<rparr>"
+
 
 definition set_pre_enq_x :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a SetRB, 'a SetRB) Semantic.xstate set"        
   where "set_pre_enq_x K buf = Semantic.Normal ` {rb. I1 rb K \<and> I2 rb \<and> buf \<in> SX rb \<and> buf \<notin> TXY rb}"
@@ -101,14 +108,21 @@ definition set_pre_enq_y :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a SetRB, 'a
 
 definition list_pre_enq_y :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a ListRB, 'a ListRB) Semantic.xstate set"        
   where "list_pre_enq_y K buf = Semantic.Normal ` {rb. I1_img rb K \<and> I2_img rb \<and> I3 rb \<and>
-                                            buf \<in> lSY rb \<and> buf \<notin> set (lTYX rb)}"
+                                                   buf \<in> lSY rb \<and> buf \<notin> set (lTYX rb)}"
 
 definition set_pre_deq_x :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a SetRB, 'a SetRB) Semantic.xstate set"        
   where "set_pre_deq_x K buf = Semantic.Normal ` {rb. I1 rb K \<and> I2 rb \<and> buf \<notin> SX rb \<and> buf \<in> TYX rb}"
 
 definition list_pre_deq_x :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a ListRB, 'a ListRB) Semantic.xstate set"        
   where "list_pre_deq_x K buf = Semantic.Normal ` {rb. I1_img rb K \<and> I2_img rb \<and> I3 rb \<and>
-                                            buf \<notin> lSX rb \<and> buf \<in> (set (take 1 (lTYX rb)))}"
+                                                   buf \<in> set (lTYX rb) \<and> buf = hd (lTYX rb) \<and> buf \<notin> lSX rb }"
+
+definition set_pre_deq_y :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a SetRB, 'a SetRB) Semantic.xstate set"        
+  where "set_pre_deq_y K buf = Semantic.Normal ` {rb. I1 rb K \<and> I2 rb \<and> buf \<notin> SY rb \<and> buf \<in> TXY rb}"
+
+definition list_pre_deq_y :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a ListRB, 'a ListRB) Semantic.xstate set"        
+  where "list_pre_deq_y K buf = Semantic.Normal ` {rb. I1_img rb K \<and> I2_img rb \<and> I3 rb \<and>
+                                                   buf \<in> set (lTXY rb) \<and> buf = hd (lTXY rb) \<and> buf \<notin> lSY rb }"
 
 lemma
   setListRefinement_enqueuex: "((\<Gamma>a, set_pre_enq_x K buf, Language.Basic (setRB_enqueuex buf)), 
@@ -134,40 +148,16 @@ lemma
                                \<in> refinement_s (separable_lift sr_set_list fr_id)"
 apply(rule refinement_s_BasicI) (* Problem applying this after unfolding*)
   unfolding list_pre_deq_x_def separable_lift_def sr_set_list_def listRB_dequeuex_def setRB_dequeuex_def 
-proof(auto) 
-  show "\<And>x xa.
-       K = lSX x \<union> lSY x \<union> set (lTXY x) \<union> set (lTYX x) \<Longrightarrow>
-       lSX x \<inter> lSY x = {} \<Longrightarrow>
-       lSX x \<inter> set (lTXY x) = {} \<Longrightarrow>
-       lSX x \<inter> set (lTYX x) = {} \<Longrightarrow>
-       lSY x \<inter> set (lTXY x) = {} \<Longrightarrow>
-       lSY x \<inter> set (lTYX x) = {} \<Longrightarrow>
-       distinct (lTXY x) \<Longrightarrow>
-       distinct (lTYX x) \<Longrightarrow>
-       set (lTXY x) \<inter> set (lTYX x) = {} \<Longrightarrow>
-       buf \<notin> lSX x \<Longrightarrow> buf \<in> set (take (Suc 0) (lTYX x)) \<Longrightarrow> xa \<in> set (take (Suc 0) (lTYX x)) \<Longrightarrow> xa \<in> set (lTYX x)"
-    apply(rule List.in_set_takeD)
-    by(auto)
-next
-  show"\<And>x. K = lSX x \<union> lSY x \<union> set (lTXY x) \<union> set (lTYX x) \<Longrightarrow>
-         lSX x \<inter> lSY x = {} \<Longrightarrow>
-         lSX x \<inter> set (lTXY x) = {} \<Longrightarrow>
-         lSX x \<inter> set (lTYX x) = {} \<Longrightarrow>
-         lSY x \<inter> set (lTXY x) = {} \<Longrightarrow>
-         lSY x \<inter> set (lTYX x) = {} \<Longrightarrow>
-         distinct (lTXY x) \<Longrightarrow>
-         distinct (lTYX x) \<Longrightarrow>
-         set (lTXY x) \<inter> set (lTYX x) = {} \<Longrightarrow> buf \<notin> lSX x \<Longrightarrow> buf \<in> set (take (Suc 0) (lTYX x)) \<Longrightarrow> False"
-    try
+  set_pre_deq_x_def
+  by(auto)
 
-  
-
-  fix buf::'a
-  assume buf_hd: "\<And>x xa. buf \<in> set (take (Suc 0) (lTXY x)) \<and> xa \<in> set (take (Suc 0) (lTXY x))" 
-  show "xa = buf"
-
-  from buf_hd have "xa = buf"
-    by (metis ListRB.select_convs(3) in_set_insert insert_Nil not_Cons_self2 take_eq_Nil)
-
+lemma
+  setListRefinement_dequeuey: "((\<Gamma>a, set_pre_deq_y K buf, Language.Basic (setRB_dequeuey buf)), 
+                               (\<Gamma>c, list_pre_deq_y K buf, Language.Basic (listRB_dequeuey buf)))
+                               \<in> refinement_s (separable_lift sr_set_list fr_id)"
+apply(rule refinement_s_BasicI) (* Problem applying this after unfolding*)
+  unfolding list_pre_deq_y_def separable_lift_def sr_set_list_def listRB_dequeuey_def setRB_dequeuey_def 
+  set_pre_deq_y_def
+  by(auto)
 
 end
