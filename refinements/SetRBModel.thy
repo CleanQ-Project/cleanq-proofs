@@ -12,8 +12,11 @@
 
 
 
-theory SetRBModel imports 
-  "../Refinements" "../Simpl/Vcg"
+theory SetRBModel 
+(*<*)
+imports
+  "../Simpl/Vcg"
+(*>*)
 begin
 
 
@@ -91,49 +94,90 @@ section \<open>State Operations\<close>
 subsection \<open>Enqueue Operation\<close>
 (* ---------------------------------------------------------------------------------------------- *)
 
-text \<open>The enqueue operation initiates a transfer of ownership from X -> Y. This corresponds to
-removing the element from set SX and inserting it into set TXY.\<close>
+text \<open>
+  The enqueue operation initiates a transfer of ownership from X -> Y (enq\_x), or the other way 
+  from Y -> X (enq\_y). This corresponds to removing the element from set SX and inserting it into 
+  set TXY, or removing it from the set XY and inserting it to TYX respectively.
+\<close>
 
-definition SetRB_enqueuex :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
-  where "SetRB_enqueuex b rb =  \<lparr>  SX = (SX rb) - {(b)},  SY = (SY rb), TXY = ((TXY rb) \<union> {(b)}),  
-                                        TYX = (TYX rb) \<rparr>"
+definition SetRB_enq_x :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
+  where "SetRB_enq_x b rb = rb  \<lparr>  SX := (SX rb) - {(b)},  TXY := ((TXY rb) \<union> {(b)}) \<rparr>"
+
+definition SetRB_enq_y :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
+  where "SetRB_enq_y b rb = rb  \<lparr>  SY := (SY rb) - {(b)},  TYX := ((TYX rb) \<union> {(b)}) \<rparr>"
+
+(*<*)
+
+lemma SetRB_enq_x_upd :
+  "SetRB_enq_x b rb =  \<lparr>  SX = (SX rb) - {(b)},  SY = (SY rb), TXY = ((TXY rb) \<union> {(b)}),  
+                          TYX = (TYX rb) \<rparr>"
+  by(simp add:SetRB_enq_x_def)
+
+lemma SetRB_enq_y_upd :
+  "SetRB_enq_y b rb =  \<lparr>  SX = (SX rb),  SY = (SY rb) - {(b)}, TXY = (TXY rb),  
+                          TYX = ((TYX rb) \<union> {(b)}) \<rparr>"
+  by(simp add:SetRB_enq_y_def)
+
+(*>*)
 
 
-text \<open>Next, we show that SetRB_enqueuex preserves the invariant\<close>
+text \<open>Next, we show that SetRB\_enqueuex preserves the invariant\<close>
 
-lemma SetRB_enqueuex_I1 :
+lemma SetRB_enq_x_I1 :
   assumes I1_holds : "I1 rb K"
       and I2_holds : "I2 rb"
       and X_owned: "b \<in> SX rb"
-    shows "I1 (SetRB_enqueuex b rb) K"
-  unfolding SetRB_enqueuex_def 
+    shows "I1 (SetRB_enq_x b rb) K"
+  unfolding SetRB_enq_x_def 
   using I1_holds X_owned by auto
 
-lemma SetRB_enqueuex_I2 :
+lemma SetRB_enq_x_I2 :
   assumes I1_holds : "I1 rb K"
       and I2_holds : "I2 rb"
       and X_owned: "b \<in> SX rb"
-    shows "I2 (SetRB_enqueuex b rb)"
-  unfolding SetRB_enqueuex_def
+    shows "I2 (SetRB_enq_x b rb)"
+  unfolding SetRB_enq_x_def
   using I2_holds X_owned by auto
 
-lemma SetRB_enqueuex_Invariants :
+lemma SetRB_enq_x_Invariants :
   assumes I_holds : "SetRB_Invariants K rb"
       and X_owned: "b \<in> SX rb"
-    shows "SetRB_Invariants K (SetRB_enqueuex b rb)"  
-  by (meson I_holds SetRB_Invariants.simps SetRB_enqueuex_I1 SetRB_enqueuex_I2 X_owned)
+    shows "SetRB_Invariants K (SetRB_enq_x b rb)"  
+  by (meson I_holds SetRB_Invariants.simps SetRB_enq_x_I1 SetRB_enq_x_I2 X_owned)
 
 
 
-lemma "\<Gamma>\<turnstile> \<lbrace> SetRB_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace> \<acute>RB :== (SetRB_enqueuex b \<acute>RB) \<lbrace> SetRB_Invariants K \<acute>RB \<rbrace>"
+
+
+lemma SetRB_Enq_Preserves_Invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> SetRB_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace> 
+        \<acute>RB :== (SetRB_enq_x b \<acute>RB) 
+      \<lbrace> SetRB_Invariants K \<acute>RB \<rbrace>"
   apply vcg
-  by(simp only: SetRB_enqueuex_Invariants)
+  by(simp only: SetRB_enq_x_Invariants)
+
+
+lemma SetRB_Enq_two_step:
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> SetRB_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
+            \<acute>RB :== \<acute>RB \<lparr>  SX := (SX  \<acute>RB ) - {(b)}  \<rparr> ;;
+            \<acute>RB :==  \<acute>RB \<lparr>  TXY := ((TXY  \<acute>RB ) \<union> {(b)}) \<rparr>  
+      \<lbrace> \<acute>RB = SetRB_enq_x b rb' \<rbrace>"
+  apply vcg
+  by(simp add:SetRB_enq_x_def)
+
+
+lemma "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> SetRB_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
+           \<acute>RB :== \<acute>RB \<lparr>  SX := (SX rb) - {(b)}  \<rparr> ;;
+           \<acute>RB :==  \<acute>RB \<lparr>  TXY := ((TXY rb) \<union> {(b)}) \<rparr>  
+            \<lbrace> SetRB_Invariants K \<acute>RB \<and> \<acute>RB = SetRB_enq_x b rb' \<rbrace>"
+  using  SetRB_Enq_two_step SetRB_Enq_Preserves_Invariants
+  oops
   
 
 lemma "\<Gamma>\<turnstile> \<lbrace> SetRB_Invariants K \<acute>RB  \<rbrace> 
-          IF b \<in> SX \<acute>RB THEN \<acute>RB :== (SetRB_enqueuex b \<acute>RB) FI \<lbrace> SetRB_Invariants K \<acute>RB \<rbrace>"
+          IF b \<in> SX \<acute>RB THEN \<acute>RB :== (SetRB_enq_x b \<acute>RB) FI \<lbrace> SetRB_Invariants K \<acute>RB \<rbrace>"
   apply vcg 
-  by (meson SetRB_enqueuex_Invariants)
+  by (meson SetRB_enq_x_Invariants)
 
 
 
@@ -150,7 +194,7 @@ definition SetRB_dequeuex :: "'a \<Rightarrow> 'a SetRB  \<Rightarrow> 'a SetRB"
                                    TYX = (TYX rb) - {b} \<rparr>"
 
 
-text \<open>Next, we show that SetRB_deuquex preserves the invariant\<close>
+text \<open>Next, we show that SetRB\_deuquex preserves the invariant\<close>
 
 lemma SetRB_dequeuex_I1 :
   assumes I1_holds : "I1 rb K"
