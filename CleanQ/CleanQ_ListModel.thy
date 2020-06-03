@@ -168,7 +168,22 @@ lemma CleanQ_List_enq_y_I3 :
   unfolding CleanQ_List_enq_y_def
   using I1_holds I2_holds I3_holds X_owned by(auto)
 
+text \<open>
+  Invariants I1, I2, and I3 are preserved by enq operations, thus we can combine them to
+  obtain show that the combined predicate \verb+CleanQ_List_Invariants+ always holds.
+\<close>
 
+lemma CleanQ_List_enq_x_Invariants :
+  assumes I_holds : "CleanQ_List_Invariants K rb"  and  X_owned: "b \<in> lSX rb"
+  shows "CleanQ_List_Invariants K (CleanQ_List_enq_x b rb)"  
+  unfolding CleanQ_List_enq_x_def 
+  using I_holds CleanQ_List_enq_x_I3 CleanQ_List_enq_x_I2 CleanQ_List_enq_x_I1 X_owned by(auto)
+
+lemma CleanQ_Set_enq_y_Invariants :
+  assumes I_holds : "CleanQ_List_Invariants K rb"  and  X_owned: "b \<in> lSY rb"
+    shows "CleanQ_List_Invariants K (CleanQ_List_enq_y b rb)"  
+  using I_holds CleanQ_List_enq_y_I3 CleanQ_List_enq_y_I2 CleanQ_List_enq_y_I1 X_owned
+  by (metis CleanQ_List_Invariants.simps)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -204,5 +219,65 @@ lemma CleanQ_List_deq_y_upd :
                              lTXY = remove1 b (lTXY rb),  lTYX = (lTYX rb) \<rparr>"
   by(simp add:CleanQ_List_deq_y_def)
 
+
+text \<open>
+  The two operations \verb+CleanQ_List_deq_x+ and \verb+CleanQ_List_deq_y+ transition
+  the model state. Thus we need to prove that invariants I1_img, I2_img, and I3 are preserved for
+  both of them.
+\<close>
+
+lemma CleanQ_List_deq_x_I1 :
+  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb"  and  TYX_owned: "b \<in> set (lTYX rb)"
+    shows "I1_img (CleanQ_List_deq_x b rb) K"
+  unfolding CleanQ_List_deq_x_def
+  using I1_holds TYX_owned by auto
+
+lemma CleanQ_List_deq_y_I1 :
+  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
+    shows "I1_img (CleanQ_List_deq_y b rb) K"
+  unfolding CleanQ_List_deq_y_def
+  using I1_holds TXY_owned by auto
+
+lemma CleanQ_List_deq_x_I2 :
+  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb" and  TYX_owned: "b \<in> set (lTYX rb)"
+    shows "I2_img (CleanQ_List_deq_x b rb)"
+  unfolding CleanQ_List_deq_x_def
+  using I1_holds I2_holds I3_holds TYX_owned by(auto)
+
+lemma CleanQ_List_deq_y_I2 :
+  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
+    shows "I2_img (CleanQ_List_deq_y b rb)"
+  unfolding CleanQ_List_deq_y_def
+  using I1_holds I2_holds I3_holds TXY_owned by auto
+
+lemma CleanQ_List_deq_x_I3 :
+  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb" and  TYX_owned: "b \<in> set (lTYX rb)"
+    shows "I3 (CleanQ_List_deq_x b rb)"
+  unfolding CleanQ_List_deq_x_def
+  using I1_holds I2_holds I3_holds TYX_owned by(auto)
+
+lemma CleanQ_List_deq_y_I3 :
+  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
+    shows "I3 (CleanQ_List_deq_y b rb)"
+  unfolding CleanQ_List_deq_y_def
+  using I1_holds I2_holds I3_holds TXY_owned by auto
+
+
+text \<open>
+  Both invariants I1, I2, and I3 are preserved by dequeue operations, thus we can combine them 
+  to obtain show that the predicate \verb+CleanQ_List_Invariants+ holds
+\<close>
+
+lemma CleanQ_List_deq_x_Invariants :
+  assumes I_holds : "CleanQ_List_Invariants K rb"  and  TYX_owned: "b \<in> set (lTYX rb)"
+    shows "CleanQ_List_Invariants K (CleanQ_List_deq_x b rb)" 
+  using CleanQ_List_deq_x_I1 CleanQ_List_deq_x_I2 CleanQ_List_deq_x_I3 TYX_owned
+  by (metis CleanQ_List_Invariants.elims(2) CleanQ_List_Invariants.elims(3) I_holds)
+
+lemma CleanQ_List_deq_y_Invariants :
+  assumes I_holds : "CleanQ_List_Invariants K rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
+    shows "CleanQ_List_Invariants K (CleanQ_List_deq_y b rb)" 
+   using CleanQ_List_deq_y_I1 CleanQ_List_deq_y_I2 CleanQ_List_deq_y_I3 TXY_owned
+   by (metis CleanQ_List_Invariants.elims(2) CleanQ_List_Invariants.elims(3) I_holds)
 
 end
