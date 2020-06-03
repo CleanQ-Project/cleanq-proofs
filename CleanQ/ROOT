@@ -1,7 +1,7 @@
 session "CleanQ" = "HOL" +
     options [document = pdf, 
              document_output = "../build/cleanq", 
-             document_variants = "document=+document,+theory,/proof,+ML,+visible,-invisible,+important,+unimportant"]
+             document_variants = "document=+document,+theory,/proof,-ML,+visible,-invisible,+important,+unimportant"]
     sessions
         "HOL-Library"
         "HOL-Statespace"
