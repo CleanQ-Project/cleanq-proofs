@@ -20,7 +20,9 @@ text \<open>
 
 theory CleanQ_SetModel
 (*<*)
-  imports  "../Simpl/Vcg"
+imports 
+  Main
+  "../Simpl/Simpl"
 begin
 (*>*)
 
@@ -147,11 +149,11 @@ text \<open>
   accordingly.
 \<close>
 
-definition CleanQ_Set_enq_x :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
-  where "CleanQ_Set_enq_x b rb = rb  \<lparr>  SX := (SX rb) - {b},  TXY := (TXY rb) \<union> {b} \<rparr>"
+definition CleanQ_Set_enq_x :: "'a \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
+  where "CleanQ_Set_enq_x b rb = rb \<lparr> SX := (SX rb) - {b}, TXY := (TXY rb) \<union> {b} \<rparr>"
 
-definition CleanQ_Set_enq_y :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
-  where "CleanQ_Set_enq_y b rb = rb  \<lparr>  SY := (SY rb) - {b},  TYX := (TYX rb) \<union> {b} \<rparr>"
+definition CleanQ_Set_enq_y :: "'a \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
+  where "CleanQ_Set_enq_y b rb = rb \<lparr> SY := (SY rb) - {b}, TYX := (TYX rb) \<union> {b} \<rparr>"
 
 
 text \<open>
@@ -159,8 +161,8 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_upd :
-  "CleanQ_Set_enq_x b rb = \<lparr> SX = (SX rb) - {b},  SY = (SY rb), 
-                             TXY = (TXY rb) \<union> {b},  TYX = (TYX rb) \<rparr>"
+  "CleanQ_Set_enq_x b rb = \<lparr> SX = (SX rb) - {b}, SY = (SY rb), 
+                             TXY = (TXY rb) \<union> {b}, TYX = (TYX rb) \<rparr>"
   by(simp add:CleanQ_Set_enq_x_def)
 
 lemma CleanQ_Set_enq_y_upd :
@@ -264,13 +266,13 @@ text \<open>
   accordingly.
 \<close>
 
-definition CleanQ_Set_deq_x :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
+definition CleanQ_Set_deq_x :: "'a \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
   where "CleanQ_Set_deq_x b rb = \<lparr> SX = (SX rb) \<union> {b}, SY = (SY rb), TXY = (TXY rb),  
                                    TYX = (TYX rb) - {b} \<rparr>"
 
-definition CleanQ_Set_deq_y :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
-  where "CleanQ_Set_deq_y b rb = \<lparr> SX = (SX rb),  SY = (SY rb) \<union> {b}, 
-                                   TXY = (TXY rb)  - {b},  TYX = (TYX rb) \<rparr>"
+definition CleanQ_Set_deq_y :: "'a \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
+  where "CleanQ_Set_deq_y b rb = \<lparr> SX = (SX rb), SY = (SY rb) \<union> {b}, 
+                                   TXY = (TXY rb) - {b}, TYX = (TYX rb) \<rparr>"
 
 
 text \<open>
@@ -278,13 +280,13 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_deq_x_upd :
-  "CleanQ_Set_deq_x b rb = \<lparr> SX = (SX rb) \<union> {b},  SY = (SY rb), 
+  "CleanQ_Set_deq_x b rb = \<lparr> SX = (SX rb) \<union> {b}, SY = (SY rb), 
                              TXY = (TXY rb), TYX = (TYX rb) - {b} \<rparr>"
   by(simp add:CleanQ_Set_deq_x_def)
 
 lemma CleanQ_Set_deq_y_upd :
-  "CleanQ_Set_deq_y b rb = \<lparr> SX = (SX rb),  SY = (SY rb) \<union> {b},
-                             TXY = (TXY rb) - {b},  TYX = (TYX rb) \<rparr>"
+  "CleanQ_Set_deq_y b rb = \<lparr> SX = (SX rb), SY = (SY rb) \<union> {b},
+                             TXY = (TXY rb) - {b}, TYX = (TYX rb) \<rparr>"
   by(simp add:CleanQ_Set_deq_y_def)
 
 
@@ -375,7 +377,7 @@ subsection \<open>Integration in SIMPL\<close>
 
 text \<open>
   We now integrate the the CleanQ Set Model into SIMPL. For each of the two operations,
-  enqueue and dequeue, we specify a Hoare-triple with  pre and post conditions, and
+  enqueue and dequeue, we specify a Hoare-triple with pre and post conditions, and
   the operation.
 \<close>
 
@@ -390,13 +392,13 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB \<rbrace> 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace> 
         \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
       \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_enq_x_Invariants)
 
 lemma CleanQ_Set_enq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SY \<acute>RB \<rbrace> 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SY \<acute>RB \<rbrace> 
         \<acute>RB :== (CleanQ_Set_enq_y b \<acute>RB) 
       \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_enq_y_Invariants)
@@ -410,14 +412,14 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace>
         \<acute>RB :== \<acute>RB \<lparr> SX := (SX \<acute>RB) - {b} \<rparr> ;;
         \<acute>RB :== \<acute>RB \<lparr> TXY := (TXY \<acute>RB) \<union> {b} \<rparr>  
       \<lbrace> \<acute>RB = CleanQ_Set_enq_x b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   by(vcg, simp add: CleanQ_Set_enq_x_def, auto)
 
 lemma CleanQ_Set_enq_y_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SY \<acute>RB   \<rbrace>
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SY \<acute>RB \<rbrace>
         \<acute>RB :== \<acute>RB \<lparr> SY := (SY \<acute>RB) - {b} \<rparr> ;;
         \<acute>RB :== \<acute>RB \<lparr> TYX := (TYX \<acute>RB) \<union> {b} \<rparr>  
       \<lbrace> \<acute>RB = CleanQ_Set_enq_y b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
@@ -429,7 +431,7 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_conditional :
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
          IF b \<in> SX \<acute>RB THEN 
           \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
          FI 
@@ -437,13 +439,30 @@ lemma CleanQ_Set_enq_x_conditional :
   by (vcg, meson CleanQ_Set_enq_x_Invariants)
 
 lemma CleanQ_Set_enq_y_conditional :
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
          IF b \<in> SY \<acute>RB THEN 
           \<acute>RB :== (CleanQ_Set_enq_y b \<acute>RB) 
          FI 
       \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>" 
   by (vcg, meson CleanQ_Set_enq_y_Invariants)
 
+
+(*
+
+can we define a procedure of this, which can be called by a thread?
+probably with a guard.
+
+procedures 
+  EnqX (S|R) = "IF (SX \<acute>S) \<noteq>  \<emptyset> THEN
+                ... pick a b
+                 \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
+                FI"
+
+  EnqX (S|R) = "SWITCH (SX \<acute>S)
+                    {{b} \<union> _} \<Rightarrow> \<acute>R :== (CleanQ_Set_enq_x b \<acute>S) 
+                  | {} \<Rightarrow> \<acute>R = \<acute>S
+               END"
+*)
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
@@ -512,6 +531,8 @@ lemma CleanQ_Set_deq_y_conditional:
   by (vcg, meson CleanQ_Set_deq_y_Invariants)
 
 
+
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Combining Enqueue and Dequeue\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -564,6 +585,27 @@ qed
 (* ==================================================================================== *)
 subsection \<open>Integration in COMPLEX\<close>
 (* ==================================================================================== *)
+
+
+(* 
+
+  have two threads. 
+    X: call enqx | deqx
+    Y: call enqy | deqy
+
+
+
+lemma
+  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>
+    COBEGIN test_guard \<lbrace>True\<rbrace>,\<lbrace>True\<rbrace>
+         \<parallel> \<lbrace>True\<rbrace> \<acute>y:=0 \<lbrace>True\<rbrace>, \<lbrace>True\<rbrace>
+    COEND \<lbrace>True\<rbrace>,\<lbrace>True\<rbrace>"
+  unfolding test_guard_def
+  apply oghoare (*11 subgoals*)
+           apply simp_all
+  done
+
+*)
 
 
 
