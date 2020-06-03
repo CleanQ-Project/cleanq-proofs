@@ -159,13 +159,13 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_upd :
-  "CleanQ_Set_enq_x b rb = \<lparr> SX = (SX rb) - {(b)},  SY = (SY rb), 
-                             TXY = ((TXY rb) \<union> {(b)}),  TYX = (TYX rb) \<rparr>"
+  "CleanQ_Set_enq_x b rb = \<lparr> SX = (SX rb) - {b},  SY = (SY rb), 
+                             TXY = (TXY rb) \<union> {b},  TYX = (TYX rb) \<rparr>"
   by(simp add:CleanQ_Set_enq_x_def)
 
 lemma CleanQ_Set_enq_y_upd :
-  "CleanQ_Set_enq_y b rb = \<lparr> SX = (SX rb), SY = (SY rb) - {(b)}, 
-                             TXY = (TXY rb), TYX = ((TYX rb) \<union> {(b)}) \<rparr>"
+  "CleanQ_Set_enq_y b rb = \<lparr> SX = (SX rb), SY = (SY rb) - {b}, 
+                             TXY = (TXY rb), TYX = (TYX rb) \<union> {b} \<rparr>"
   by(simp add:CleanQ_Set_enq_y_def)
 
 
@@ -199,6 +199,7 @@ lemma CleanQ_Set_enq_y_I2 :
   unfolding CleanQ_Set_enq_y_def
   using I2_holds X_owned by auto
 
+
 text \<open>
   Both invariants I1 and I2 are preserved by enq operations, thus we can combine them to
   obtain show that the predicate \verb+CleanQ_Set_Invariants+ holds
@@ -217,6 +218,38 @@ lemma CleanQ_Set_enq_y_Invariants :
             CleanQ_Set_enq_y_I2 X_owned)
 
 
+text \<open>
+  We can show that the buffers are ending up in the right set
+\<close>
+
+lemma CleanQ_Set_enq_x_dst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SX rb"
+    shows "b \<in> TXY (CleanQ_Set_enq_x b rb)"
+  by (simp add: CleanQ_Set_enq_x_upd)
+
+lemma CleanQ_Set_enq_y_dst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> SY rb"
+    shows "b \<in> TYX (CleanQ_Set_enq_y b rb)"
+  by (simp add: CleanQ_Set_enq_y_upd)
+
+
+text \<open>
+  Lastly, we can show that the buffers are not in the other set
+\<close>
+
+lemma CleanQ_Set_enq_x_ndst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SX rb"
+    shows "b \<notin> SY (CleanQ_Set_enq_x b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_x_I2 CleanQ_Set_enq_x_dst 
+            I2.elims(2) I_holds Set.set_insert X_owned insert_disjoint(1))
+
+lemma CleanQ_Set_enq_y_ndst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> SY rb"
+    shows "b \<notin> SX (CleanQ_Set_enq_y b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_y_I2 CleanQ_Set_enq_y_dst 
+            I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
+
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -232,54 +265,108 @@ text \<open>
 \<close>
 
 definition CleanQ_Set_deq_x :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
-  where "CleanQ_Set_deq_x b rb = \<lparr>  SX = (SX rb) \<union> {b}, SY = (SY rb), TXY = (TXY rb),  
-                                    TYX = (TYX rb) - {b} \<rparr>"
+  where "CleanQ_Set_deq_x b rb = \<lparr> SX = (SX rb) \<union> {b}, SY = (SY rb), TXY = (TXY rb),  
+                                   TYX = (TYX rb) - {b} \<rparr>"
 
 definition CleanQ_Set_deq_y :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
   where "CleanQ_Set_deq_y b rb = \<lparr> SX = (SX rb),  SY = (SY rb) \<union> {b}, 
                                    TXY = (TXY rb)  - {b},  TYX = (TYX rb) \<rparr>"
 
-text \<open>Next, we show that CleanQ\_Set\_deuquex preserves the invariant\<close>
+
+text \<open>
+  These definitions are the same as producing a new record:
+\<close>
+
+lemma CleanQ_Set_deq_x_upd :
+  "CleanQ_Set_deq_x b rb = \<lparr> SX = (SX rb) \<union> {b},  SY = (SY rb), 
+                             TXY = (TXY rb), TYX = (TYX rb) - {b} \<rparr>"
+  by(simp add:CleanQ_Set_deq_x_def)
+
+lemma CleanQ_Set_deq_y_upd :
+  "CleanQ_Set_deq_y b rb = \<lparr> SX = (SX rb),  SY = (SY rb) \<union> {b},
+                             TXY = (TXY rb) - {b},  TYX = (TYX rb) \<rparr>"
+  by(simp add:CleanQ_Set_deq_y_def)
+
+
+text \<open>
+  The two operations \verb+CleanQ_Set_deq_x+ and \verb+CleanQ_Set_deq_y+ transition
+  the model state. Thus we need to prove that invariants I1 and I2 are preserved for
+  both of them.
+\<close>
 
 lemma CleanQ_Set_deq_x_I1 :
-  assumes I1_holds : "I1 rb K"
-      and I2_holds : "I2 rb"
-      and TXY_owned: "b \<in> TXY rb"
+  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TYX_owned: "b \<in> TYX rb"
     shows "I1 (CleanQ_Set_deq_x b rb) K"
   unfolding CleanQ_Set_deq_x_def
+  using I1_holds TYX_owned by auto
+
+lemma CleanQ_Set_deq_y_I1 :
+  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TXY_owned: "b \<in> TXY rb"
+    shows "I1 (CleanQ_Set_deq_y b rb) K"
+  unfolding CleanQ_Set_deq_y_def
   using I1_holds TXY_owned by auto
 
 lemma CleanQ_Set_deq_x_I2 :
-  assumes I1_holds : "I1 rb K"
-      and I2_holds : "I2 rb"
-      and TYX_owned: "b \<in> TYX rb"
+  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TYX_owned: "b \<in> TYX rb"
     shows "I2 (CleanQ_Set_deq_x b rb)"
   unfolding CleanQ_Set_deq_x_def
   using I2_holds TYX_owned by auto
 
+lemma CleanQ_Set_deq_y_I2 :
+  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TXY_owned: "b \<in> TXY rb"
+    shows "I2 (CleanQ_Set_deq_y b rb)"
+  unfolding CleanQ_Set_deq_y_def
+  using I2_holds TXY_owned by auto
+
+
+text \<open>
+  Both invariants I1 and I2 are preserved by dequeue operations, thus we can combine them 
+  to obtain show that the predicate \verb+CleanQ_Set_Invariants+ holds
+\<close>
+
 lemma CleanQ_Set_deq_x_Invariants :
- assumes I_holds : "CleanQ_Set_Invariants K rb"
-      and TYX_owned: "b \<in> TYX rb"
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  TYX_owned: "b \<in> TYX rb"
     shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_x b rb)" 
-proof -
-  have "I1 \<lparr>SX = SX rb \<union> {b}, SY = SY rb, TXY = TXY rb, TYX = TYX rb - {b}\<rparr> K"
-    using I_holds TYX_owned by auto
-  then show ?thesis
-    by (metis I_holds CleanQ_Set_Invariants.simps CleanQ_Set_deq_x_I2 CleanQ_Set_deq_x_def TYX_owned)
-qed
+  by (meson CleanQ_Set_Invariants.simps CleanQ_Set_deq_x_I1 CleanQ_Set_deq_x_I2 I_holds 
+            TYX_owned)
+
+lemma CleanQ_Set_deq_y_Invariants :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  TXY_owned: "b \<in> TXY rb"
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_y b rb)" 
+  by (meson CleanQ_Set_Invariants.simps CleanQ_Set_deq_y_I1 CleanQ_Set_deq_y_I2 I_holds
+            TXY_owned)
 
 
+text \<open>
+  We can show that the buffers are ending up in the right set
+\<close>
+
+lemma CleanQ_Set_deq_x_dst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> TYX rb"
+    shows "b \<in> SX (CleanQ_Set_deq_x b rb)"
+  by (simp add: CleanQ_Set_deq_x_upd)
+
+lemma CleanQ_Set_deq_y_dst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> TXY rb"
+    shows "b \<in> SY (CleanQ_Set_deq_y b rb)"
+  by (simp add: CleanQ_Set_deq_y_upd)
 
 
-lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> TYX \<acute>RB   \<rbrace> \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
-  apply vcg
-  by(simp only: CleanQ_Set_deq_x_Invariants)
-  
+text \<open>
+  Lastly, we can show that the buffers are not in the other set
+\<close>
 
-lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
-          IF b \<in> TYX \<acute>RB THEN \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) FI \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
-  apply vcg 
-  by (meson CleanQ_Set_deq_x_Invariants)
+lemma CleanQ_Set_deq_x_ndst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> TYX rb"
+    shows "b \<notin> SY (CleanQ_Set_deq_x b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_x_I2 CleanQ_Set_deq_x_dst 
+            I2.elims(2) I_holds X_owned disjoint_insert(1) mk_disjoint_insert)
+
+lemma CleanQ_Set_deq_y_ndst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> TXY rb"
+    shows "b \<notin> SX (CleanQ_Set_deq_y b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_y_I2 CleanQ_Set_deq_y_dst 
+      I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
 
 
 (* ==================================================================================== *)
@@ -344,6 +431,15 @@ definition CleanQ_Set_deq_x_post :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a C
   where "CleanQ_Set_deq_x_post K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> SX rb }"
 
 
+lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> TYX \<acute>RB   \<rbrace> \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  apply vcg
+  by(simp only: CleanQ_Set_deq_x_Invariants)
+  
+
+lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
+          IF b \<in> TYX \<acute>RB THEN \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) FI \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  apply vcg 
+  by (meson CleanQ_Set_deq_x_Invariants)
 
 
 end
