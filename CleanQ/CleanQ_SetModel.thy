@@ -73,13 +73,21 @@ subsection \<open>CleanQ Set Model Invariants\<close>
 (* ==================================================================================== *)
 
 
+text \<open>
+  In the CleanQ model, every buffer element has its well-defined owner. In other words,
+  buffer elements are not lost or magically created, and at any point in time, a buffer
+  element is owned by precisely one set. We now state the invariants of the abstract
+  CleanQ Set Model.
+\<close>
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>I1: Constant Union\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 text \<open>
-  The union of all sets is constant. This ensures that elements are not lost during 
-  the ownership transfer
+  The union of all sets is constant. This ensures that buffer elements are not lost, or
+  created during the ownership transfer. The constant $K$ is a set of buffer elements.
+  Recall, the actual representation of buffer elements is undefined.
 \<close>
 
 fun I1 :: "'a CleanQ_Set_State \<Rightarrow> 'a set \<Rightarrow> bool"
@@ -90,8 +98,13 @@ fun I1 :: "'a CleanQ_Set_State \<Rightarrow> 'a set \<Rightarrow> bool"
 subsubsection \<open>I2: No Double Presence\<close>
 (* ------------------------------------------------------------------------------------ *)
 
-text \<open>All pairwise intersubsections are empty. An element cannot be in one than more sets. 
-This is required as the element cannot be owned by more than one agent.\<close>
+text \<open>
+  A buffer element cannot be in more than one set at any instance of time, otherwise there
+  would be multiple owners for the same buffer element. We express this invariant as ``All
+  pairwise intersections of the sets in the model state are empty''. Thus, a buffer element
+  cannot be in more than one set. We express this by explicitly listing all intersections
+  for the state with two agents.
+\<close>
 
 fun I2 :: "'a CleanQ_Set_State \<Rightarrow> bool"
   where "I2 rb \<longleftrightarrow> SX rb \<inter> SY rb = {} \<and> SX rb \<inter> TXY rb = {} \<and> SX rb \<inter> TYX rb = {} \<and> 
@@ -99,17 +112,27 @@ fun I2 :: "'a CleanQ_Set_State \<Rightarrow> bool"
 
 
 (* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>Invariants\<close>
+subsubsection \<open>CleanQ Set Invariants\<close>
 (* ------------------------------------------------------------------------------------ *)
 
-fun CleanQ_Set_State_Invariants :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> bool"
-  where "CleanQ_Set_State_Invariants K rb \<longleftrightarrow> I1 rb K \<and> I2 rb"
+text \<open>
+  We combine all invariants for the abstract CleanQ set model in the predicate 
+  \verb+CleanQ_Set_Invariants+.
+\<close>
+
+fun CleanQ_Set_Invariants :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> bool"
+  where "CleanQ_Set_Invariants K rb \<longleftrightarrow> I1 rb K \<and> I2 rb"
 
 
 (* ==================================================================================== *)
 subsection \<open>State Operations\<close>
 (* ==================================================================================== *)
 
+text \<open>
+  The two agents can, independently from each other, perform one of two operations, 
+  \verb+enqueue+ and \verb+dequeue+,  which trigger an ownership transfer of buffer 
+  elements.  
+\<close>
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Enqueue Operation\<close>
@@ -162,25 +185,25 @@ lemma CleanQ_Set_enq_x_I2 :
   using I2_holds X_owned by auto
 
 lemma CleanQ_Set_enq_x_Invariants :
-  assumes I_holds : "CleanQ_Set_State_Invariants K rb"
+  assumes I_holds : "CleanQ_Set_Invariants K rb"
       and X_owned: "b \<in> SX rb"
-    shows "CleanQ_Set_State_Invariants K (CleanQ_Set_enq_x b rb)"  
-  by (meson I_holds CleanQ_Set_State_Invariants.simps CleanQ_Set_enq_x_I1 CleanQ_Set_enq_x_I2 X_owned)
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_enq_x b rb)"  
+  by (meson I_holds CleanQ_Set_Invariants.simps CleanQ_Set_enq_x_I1 CleanQ_Set_enq_x_I2 X_owned)
 
 
 
 
 
 lemma CleanQ_Set_State_Enq_Preserves_Invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_State_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace> 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace> 
         \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
-      \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB \<rbrace>"
+      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   apply vcg
   by(simp only: CleanQ_Set_enq_x_Invariants)
 
 
 lemma CleanQ_Set_State_Enq_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_State_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
             \<acute>RB :== \<acute>RB \<lparr>  SX := (SX  \<acute>RB ) - {(b)}  \<rparr> ;;
             \<acute>RB :==  \<acute>RB \<lparr>  TXY := ((TXY  \<acute>RB ) \<union> {(b)}) \<rparr>  
       \<lbrace> \<acute>RB = CleanQ_Set_enq_x b rb' \<rbrace>"
@@ -188,16 +211,16 @@ lemma CleanQ_Set_State_Enq_two_step:
   by(simp add:CleanQ_Set_enq_x_def)
 
 
-lemma "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_State_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
+lemma "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
            \<acute>RB :== \<acute>RB \<lparr>  SX := (SX rb) - {(b)}  \<rparr> ;;
            \<acute>RB :==  \<acute>RB \<lparr>  TXY := ((TXY rb) \<union> {(b)}) \<rparr>  
-            \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB \<and> \<acute>RB = CleanQ_Set_enq_x b rb' \<rbrace>"
+            \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> \<acute>RB = CleanQ_Set_enq_x b rb' \<rbrace>"
   using  CleanQ_Set_State_Enq_two_step CleanQ_Set_State_Enq_Preserves_Invariants
   oops
   
 
-lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB  \<rbrace> 
-          IF b \<in> SX \<acute>RB THEN \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) FI \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB \<rbrace>"
+lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
+          IF b \<in> SX \<acute>RB THEN \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) FI \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   apply vcg 
   by (meson CleanQ_Set_enq_x_Invariants)
 
@@ -237,26 +260,26 @@ lemma CleanQ_Set_deq_x_I2 :
   using I2_holds TYX_owned by auto
 
 lemma CleanQ_Set_deq_x_Invariants :
- assumes I_holds : "CleanQ_Set_State_Invariants K rb"
+ assumes I_holds : "CleanQ_Set_Invariants K rb"
       and TYX_owned: "b \<in> TYX rb"
-    shows "CleanQ_Set_State_Invariants K (CleanQ_Set_deq_x b rb)" 
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_x b rb)" 
 proof -
   have "I1 \<lparr>SX = SX rb \<union> {b}, SY = SY rb, TXY = TXY rb, TYX = TYX rb - {b}\<rparr> K"
     using I_holds TYX_owned by auto
   then show ?thesis
-    by (metis I_holds CleanQ_Set_State_Invariants.simps CleanQ_Set_deq_x_I2 CleanQ_Set_deq_x_def TYX_owned)
+    by (metis I_holds CleanQ_Set_Invariants.simps CleanQ_Set_deq_x_I2 CleanQ_Set_deq_x_def TYX_owned)
 qed
 
 
 
 
-lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB \<and>  b \<in> TYX \<acute>RB   \<rbrace> \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB \<rbrace>"
+lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> TYX \<acute>RB   \<rbrace> \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   apply vcg
   by(simp only: CleanQ_Set_deq_x_Invariants)
   
 
-lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB  \<rbrace> 
-          IF b \<in> TYX \<acute>RB THEN \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) FI \<lbrace> CleanQ_Set_State_Invariants K \<acute>RB \<rbrace>"
+lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
+          IF b \<in> TYX \<acute>RB THEN \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) FI \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   apply vcg 
   by (meson CleanQ_Set_deq_x_Invariants)
 
