@@ -117,7 +117,7 @@ subsubsection \<open>CleanQ Set Invariants\<close>
 
 text \<open>
   We combine all invariants for the abstract CleanQ set model and define the unified
-   predicate \verb+CleanQ_Set_Invariants+.
+  predicate \verb+CleanQ_Set_Invariants+.
 \<close>
 
 fun CleanQ_Set_Invariants :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> bool"
@@ -455,14 +455,14 @@ text \<open>
   agents X and Y, and that in both cases the invariant is preserved.
 \<close>
 
-lemma CleanQ_Set_deq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> TYX \<acute>RB \<rbrace> 
+lemma CleanQ_Set_deq_x_preserves_invariants: 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TYX \<acute>RB \<rbrace> 
         \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) 
       \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_deq_x_Invariants)
 
-lemma CleanQ_Set_deq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> TXY \<acute>RB \<rbrace> 
+lemma CleanQ_Set_deq_y_preserves_invariants: 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TXY \<acute>RB \<rbrace> 
         \<acute>RB :== (CleanQ_Set_deq_y b \<acute>RB) 
       \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_deq_y_Invariants)
@@ -476,14 +476,14 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_deq_x_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> TYX \<acute>RB   \<rbrace>
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TYX \<acute>RB \<rbrace>
         \<acute>RB :== \<acute>RB \<lparr> TYX := (TYX \<acute>RB) - {b} \<rparr> ;;
         \<acute>RB :== \<acute>RB \<lparr> SX := (SX \<acute>RB) \<union> {b} \<rparr>  
       \<lbrace> \<acute>RB = CleanQ_Set_deq_x b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
   by(vcg, simp add: CleanQ_Set_deq_x_def, auto)
 
 lemma CleanQ_Set_deq_y_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> TXY \<acute>RB   \<rbrace>
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TXY \<acute>RB \<rbrace>
         \<acute>RB :== \<acute>RB \<lparr> TXY := (TXY \<acute>RB) - {b} \<rparr> ;;
         \<acute>RB :== \<acute>RB \<lparr> SY := (SY \<acute>RB) \<union> {b} \<rparr>  
       \<lbrace> \<acute>RB = CleanQ_Set_deq_y b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
@@ -495,16 +495,16 @@ text \<open>
   when we are owning the buffer
 \<close>
 
-lemma CleanQ_Set_deq_x_conditional :
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
+lemma CleanQ_Set_deq_x_conditional:
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
          IF b \<in> TYX \<acute>RB THEN 
           \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) 
          FI 
       \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>" 
   by (vcg, meson CleanQ_Set_deq_x_Invariants)
 
-lemma CleanQ_Set_deq_y_conditional :
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
+lemma CleanQ_Set_deq_y_conditional:
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
          IF b \<in> TXY \<acute>RB THEN 
           \<acute>RB :== (CleanQ_Set_deq_y b \<acute>RB) 
          FI 
@@ -522,14 +522,14 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_ops_combine : 
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> rb = \<acute>RB \<and> b \<in> SX  \<acute>RB \<rbrace> 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> rb = \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace> 
         \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) ;;
         \<acute>RB :== (CleanQ_Set_deq_y b \<acute>RB) ;;
         \<acute>RB :== (CleanQ_Set_enq_y b \<acute>RB) ;;
         \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> rb = \<acute>RB \<and> b \<in> SX  \<acute>RB \<rbrace>" 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> rb = \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace>" 
 proof(vcg)
-  have EQ: "\<And> RB.  CleanQ_Set_Invariants K RB \<Longrightarrow> b \<in> SX RB \<Longrightarrow> (CleanQ_Set_deq_x b
+  have EQ: "\<And> RB. CleanQ_Set_Invariants K RB \<Longrightarrow> b \<in> SX RB \<Longrightarrow> (CleanQ_Set_deq_x b
              (CleanQ_Set_enq_y b
                (CleanQ_Set_deq_y b
                  (CleanQ_Set_enq_x b RB)))) = RB"
