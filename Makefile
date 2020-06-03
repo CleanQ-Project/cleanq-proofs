@@ -47,8 +47,12 @@ CLEANQ_ROOT=$(CLEANQ_DIR)/ROOT $(CLEANQ_DIR)/root.tex
 
 all: cleanq-proofs.pdf
 
+<<<<<<< HEAD
 # building the proofs and the documentation
 cleanq-proofs.pdf: $(CLEANQ_THEORIES) $(CLEANQ_ROOT) Makefile deps
+=======
+cleanq-proofs.pdf: $(CLEANQ_THEORIES) $(CLEANQ_ROOT) Makefile
+>>>>>>> bf659f8... omitting proofs from generated document
 	$(RUN_ISABELLE) -D $(CLEANQ_DIR)
 	cp build/cleanq/document.pdf  cleanq-proofs.pdf
 

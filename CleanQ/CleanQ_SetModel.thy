@@ -107,7 +107,7 @@ text \<open>
 \<close>
 
 fun I2 :: "'a CleanQ_Set_State \<Rightarrow> bool"
-  where "I2 rb \<longleftrightarrow> SX rb \<inter> SY rb = {} \<and> SX rb \<inter> TXY rb = {} \<and> SX rb \<inter> TYX rb = {} \<and> 
+  where "I2 rb \<longleftrightarrow> SX rb \<inter> SY rb = {} \<and> SX rb \<inter> TXY rb = {} \<and> SX rb \<inter> TYX rb = {} \<and>
                    SY rb \<inter> TXY rb = {} \<and> SY rb \<inter> TYX rb = {} \<and> TXY rb \<inter> TYX rb = {}"
 
 
@@ -125,7 +125,7 @@ fun CleanQ_Set_Invariants :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightar
 
 
 (* ==================================================================================== *)
-subsection \<open>State Operations\<close>
+subsection \<open>State Transition Operations\<close>
 (* ==================================================================================== *)
 
 text \<open>
@@ -139,47 +139,49 @@ subsubsection \<open>Enqueue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 text \<open>
-  The enqueue operation initiates a transfer of ownership from X -> Y (enq\_x), or the 
-  other way from $Y \rightarrow X$ (enq\_y). This corresponds to removing the element from 
-  set SX and inserting it into set TXY, or removing it from the set XY and inserting it to 
-  TYX respectively.
+  The enqueue operation initiates a transfer of ownership from $X \rightarrow Y$
+  (\verb+CleanQ_Set_enq_x+), or the other direction from $Y \rightarrow X$ 
+  (\verb+CleanQ_Set_enq_y+). This corresponds to removing the element from set $SX$ and 
+  inserting it into set $TXY$, or removing it from the set $XY$ and inserting it to 
+  $TYX$ respectively. In both cases, we update the CleanQ sate by updating the sets
+  accordingly.
 \<close>
 
 definition CleanQ_Set_enq_x :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
-  where "CleanQ_Set_enq_x b rb = rb  \<lparr>  SX := (SX rb) - {(b)},  TXY := ((TXY rb) \<union> {(b)}) \<rparr>"
+  where "CleanQ_Set_enq_x b rb = rb  \<lparr>  SX := (SX rb) - {b},  TXY := (TXY rb) \<union> {b} \<rparr>"
 
 definition CleanQ_Set_enq_y :: "'a \<Rightarrow> 'a CleanQ_Set_State  \<Rightarrow> 'a CleanQ_Set_State"
-  where "CleanQ_Set_enq_y b rb = rb  \<lparr>  SY := (SY rb) - {(b)},  TYX := ((TYX rb) \<union> {(b)}) \<rparr>"
+  where "CleanQ_Set_enq_y b rb = rb  \<lparr>  SY := (SY rb) - {b},  TYX := (TYX rb) \<union> {b} \<rparr>"
 
 (*<*)
-
+(* these are helper lemmas showing that the updated record is the same as creating
+   a new one *)
 lemma CleanQ_Set_enq_x_upd :
-  "CleanQ_Set_enq_x b rb =  \<lparr>  SX = (SX rb) - {(b)},  SY = (SY rb), TXY = ((TXY rb) \<union> {(b)}),  
-                          TYX = (TYX rb) \<rparr>"
+  "CleanQ_Set_enq_x b rb = \<lparr>  SX = (SX rb) - {(b)},  SY = (SY rb), 
+                              TXY = ((TXY rb) \<union> {(b)}),  TYX = (TYX rb) \<rparr>"
   by(simp add:CleanQ_Set_enq_x_def)
 
 lemma CleanQ_Set_enq_y_upd :
-  "CleanQ_Set_enq_y b rb =  \<lparr>  SX = (SX rb),  SY = (SY rb) - {(b)}, TXY = (TXY rb),  
-                          TYX = ((TYX rb) \<union> {(b)}) \<rparr>"
+  "CleanQ_Set_enq_y b rb = \<lparr> SX = (SX rb), SY = (SY rb) - {(b)}, 
+                             TXY = (TXY rb), TYX = ((TYX rb) \<union> {(b)}) \<rparr>"
   by(simp add:CleanQ_Set_enq_y_def)
-
 (*>*)
 
 
-text \<open>Next, we show that CleanQ\_Set\_enqueuex preserves the invariant\<close>
+text \<open>
+  The two operations \verb+CleanQ_Set_enq_x+ and \verb+CleanQ_Set_enq_y+ transition
+  the model state. Thus we need to prove that invariants I1 and I2 are preserved for
+  both of them.
+\<close>
 
 lemma CleanQ_Set_enq_x_I1 :
-  assumes I1_holds : "I1 rb K"
-      and I2_holds : "I2 rb"
-      and X_owned: "b \<in> SX rb"
+  assumes I1_holds:  "I1 rb K"  and  I2_holds: "I2 rb"  and  X_owned: "b \<in> SX rb"
     shows "I1 (CleanQ_Set_enq_x b rb) K"
   unfolding CleanQ_Set_enq_x_def 
   using I1_holds X_owned by auto
 
 lemma CleanQ_Set_enq_x_I2 :
-  assumes I1_holds : "I1 rb K"
-      and I2_holds : "I2 rb"
-      and X_owned: "b \<in> SX rb"
+  assumes I1_holds: "I1 rb K"  and  I2_holds: "I2 rb"  and  X_owned: "b \<in> SX rb"
     shows "I2 (CleanQ_Set_enq_x b rb)"
   unfolding CleanQ_Set_enq_x_def
   using I2_holds X_owned by auto
