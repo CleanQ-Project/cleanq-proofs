@@ -12,6 +12,8 @@
 
 
 
+section "CleanQ Modular Intervals Helper Functions"
+
 theory CleanQ_ModularIntervals imports Main begin
 
 locale nonzero_modulus =
