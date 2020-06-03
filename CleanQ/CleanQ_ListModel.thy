@@ -126,6 +126,51 @@ lemma CleanQ_List_enq_y_upd :
   by(simp add:CleanQ_List_enq_y_def)
 
 
+text \<open>
+  The two operations \verb+CleanQ_Set_enq_x+ and \verb+CleanQ_Set_enq_y+ transition
+  the model state. Thus we need to prove that invariants I1 and I2 are preserved for
+  both of them.
+\<close>
+
+lemma CleanQ_List_enq_x_I1 :
+  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb"  and  X_owned: "b \<in> lSX rb"
+    shows "I1_img (CleanQ_List_enq_x b rb) K"
+  unfolding CleanQ_List_enq_x_def 
+  using I1_holds X_owned by auto
+
+lemma CleanQ_List_enq_y_I1 :
+  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb"  and  X_owned: "b \<in> lSY rb"
+    shows "I1_img (CleanQ_List_enq_y b rb) K"
+  unfolding CleanQ_List_enq_y_def 
+  using I1_holds X_owned by auto
+
+lemma CleanQ_List_enq_x_I2 :
+  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb"  and  X_owned: "b \<in> lSX rb"
+    shows "I2_img (CleanQ_List_enq_x b rb)"
+  unfolding CleanQ_List_enq_x_def
+  using I2_holds X_owned by auto
+
+lemma CleanQ_List_enq_y_I2 :
+  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb"  and  X_owned: "b \<in> lSY rb"
+    shows "I2_img (CleanQ_List_enq_y b rb)"
+  unfolding CleanQ_List_enq_y_def
+  using I2_holds X_owned by auto
+
+lemma CleanQ_List_enq_x_I3 :
+  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb" and I3_holds: "I3 rb" and  X_owned: "b \<in> lSY rb"
+    shows "I3 (CleanQ_List_enq_x b rb)"
+  unfolding CleanQ_List_enq_x_def
+  using I1_holds I2_holds I3_holds X_owned by auto
+
+lemma CleanQ_List_enq_y_I3 :
+  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb" and I3_holds: "I3 rb" and  X_owned: "b \<in> lSY rb"
+    shows "I3 (CleanQ_List_enq_y b rb)"
+  unfolding CleanQ_List_enq_y_def
+  using I1_holds I2_holds I3_holds X_owned by(auto)
+
+
+
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
