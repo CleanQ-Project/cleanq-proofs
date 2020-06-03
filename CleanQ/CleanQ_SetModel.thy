@@ -116,8 +116,8 @@ subsubsection \<open>CleanQ Set Invariants\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 text \<open>
-  We combine all invariants for the abstract CleanQ set model and define the predicate 
-  \verb+CleanQ_Set_Invariants+.
+  We combine all invariants for the abstract CleanQ set model and define the unified
+   predicate \verb+CleanQ_Set_Invariants+.
 \<close>
 
 fun CleanQ_Set_Invariants :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> bool"
@@ -202,7 +202,7 @@ lemma CleanQ_Set_enq_y_I2 :
 
 text \<open>
   Both invariants I1 and I2 are preserved by enq operations, thus we can combine them to
-  obtain show that the predicate \verb+CleanQ_Set_Invariants+ holds
+  obtain show that the combined predicate \verb+CleanQ_Set_Invariants+ always holds.
 \<close>
 
 lemma CleanQ_Set_enq_x_Invariants :
@@ -370,47 +370,56 @@ lemma CleanQ_Set_deq_y_ndst :
 
 
 (* ==================================================================================== *)
-subsection \<open>Basic Integration\<close>
+subsection \<open>Integration in SIMPL\<close>
 (* ==================================================================================== *)
+
+text \<open>
+  We now integrate the the CleanQ Set Model into SIMPL. For each of the two operations,
+  enqueue and dequeue, we specify a Hoare-triple with  pre and post conditions, and
+  the operation.
+\<close>
 
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Enqueue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
 
-definition CleanQ_Set_State_enqueuex_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_Set_State, 'a CleanQ_Set_State) Semantic.xstate set"
-  where "CleanQ_Set_State_enqueuex_pre K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> SX rb }"
+text \<open>
+  We first show, that we can define a Hoare triple for the enqueue operations from both
+  agents X and Y, and that in both cases the invariant is preserved.
+\<close>
 
-definition CleanQ_Set_State_enqueuex_post :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_Set_State, 'a CleanQ_Set_State) Semantic.xstate set"
-  where "CleanQ_Set_State_enqueuex_post K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> TXY rb }"
-
-
-
-
-lemma CleanQ_Set_State_Enq_Preserves_Invariants : 
+lemma CleanQ_Set_enq_x_preserves_invariants : 
   "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace> 
         \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
       \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
-  apply vcg
-  by(simp only: CleanQ_Set_enq_x_Invariants)
+  by(vcg, simp only: CleanQ_Set_enq_x_Invariants)
+
+lemma CleanQ_Set_enq_y_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SY \<acute>RB   \<rbrace> 
+        \<acute>RB :== (CleanQ_Set_enq_y b \<acute>RB) 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  by(vcg, simp only: CleanQ_Set_enq_y_Invariants)
 
 
-lemma CleanQ_Set_State_Enq_two_step:
+text \<open>
+  The enqueue operation effectively happens in two steps. The buffer element is removed
+  from one set and added to a new set. We can express this as two sequential operations
+  in the next lemma, where we show that the invariant is still preserved and that 
+  the outcome is the same, as with the definition above.
+\<close>
+
+lemma CleanQ_Set_enq_x_two_step:
   "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
-            \<acute>RB :== \<acute>RB \<lparr>  SX := (SX  \<acute>RB ) - {(b)}  \<rparr> ;;
-            \<acute>RB :==  \<acute>RB \<lparr>  TXY := ((TXY  \<acute>RB ) \<union> {(b)}) \<rparr>  
-      \<lbrace> \<acute>RB = CleanQ_Set_enq_x b rb' \<rbrace>"
-  apply vcg
-  by(simp add:CleanQ_Set_enq_x_def)
-
-
-lemma "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and>  b \<in> SX \<acute>RB   \<rbrace>
-           \<acute>RB :== \<acute>RB \<lparr>  SX := (SX rb) - {(b)}  \<rparr> ;;
-           \<acute>RB :==  \<acute>RB \<lparr>  TXY := ((TXY rb) \<union> {(b)}) \<rparr>  
-            \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> \<acute>RB = CleanQ_Set_enq_x b rb' \<rbrace>"
-  using  CleanQ_Set_State_Enq_two_step CleanQ_Set_State_Enq_Preserves_Invariants
-  oops
+        \<acute>RB :== \<acute>RB \<lparr>  SX := (SX  \<acute>RB ) - {(b)}  \<rparr> ;;
+        \<acute>RB :==  \<acute>RB \<lparr>  TXY := ((TXY  \<acute>RB ) \<union> {(b)}) \<rparr>  
+      \<lbrace> \<acute>RB = CleanQ_Set_enq_x b rb' \<and>  CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  by(vcg, simp add: CleanQ_Set_enq_x_def, auto)
   
+text \<open>
+  Next we can define this conditionally, where we only execute the enqueue operation, 
+  when we are owning the buffer
+\<close>
 
 lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbrace> 
           IF b \<in> SX \<acute>RB THEN \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) FI \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
@@ -418,6 +427,11 @@ lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbra
   by (meson CleanQ_Set_enq_x_Invariants)
 
 
+definition CleanQ_Set_State_enqueuex_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_Set_State, 'a CleanQ_Set_State) Semantic.xstate set"
+  where "CleanQ_Set_State_enqueuex_pre K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> SX rb }"
+
+definition CleanQ_Set_State_enqueuex_post :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_Set_State, 'a CleanQ_Set_State) Semantic.xstate set"
+  where "CleanQ_Set_State_enqueuex_post K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> TXY rb }"
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
@@ -442,4 +456,10 @@ lemma "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB  \<rbra
   by (meson CleanQ_Set_deq_x_Invariants)
 
 
+(* ==================================================================================== *)
+subsection \<open>Integration in COMPLEX\<close>
+(* ==================================================================================== *)
+
+(*<*)
 end
+(*>*)
