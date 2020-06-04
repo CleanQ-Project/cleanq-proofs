@@ -62,8 +62,8 @@ record 'a CleanQ_QP =
 
 text \<open>The full state. corresponds to the whole program state.\<close>
 record 'a CleanQ_RB_State =
-  client :: "'a CleanQ_QP"
-  server :: "'a CleanQ_QP"
+  qTXY :: "'a CleanQ_QP"
+  qTYX :: "'a CleanQ_QP"
   SX :: "'a set"
   SY :: "'a set"
 
@@ -87,11 +87,11 @@ definition slice :: "(nat \<Rightarrow> 'a) \<Rightarrow> nat \<Rightarrow> nat 
 
 text \<open>Get a list of the entries fro the XY direction.\<close>
 definition slice_xy :: "'a CleanQ_RB_State \<Rightarrow> 'a list"
-  where "slice_xy st = slice (ring (tx (client st))) (pos (rx (server st))) (pos (tx (client st)))"
+  where "slice_xy st = slice (ring (tx (qTXY st))) (pos (rx (qTYX st))) (pos (tx (qTXY st)))"
 
 text \<open>Get a list of the entries fro the YX direction.\<close>
 definition slice_yx :: "'a CleanQ_RB_State \<Rightarrow> 'a list"
-  where "slice_yx st = slice (ring (tx (server st))) (pos (rx (client st))) (pos (tx (server st)))"
+  where "slice_yx st = slice (ring (tx (qTYX st))) (pos (rx (qTXY st))) (pos (tx (qTYX st)))"
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Images of the previously defined invariants\<close>
@@ -108,6 +108,11 @@ fun I2_img :: "'a CleanQ_RB_State \<Rightarrow> bool"
     SY rb \<inter> set (slice_xy rb) = {} \<and> SY rb \<inter> set (slice_yx rb) = {} \<and> 
     set (slice_xy rb) \<inter> set (slice_yx rb) = {}"
 
+text \<open>Definition of I3 on the Ring buffer model: No duplicates in list.\<close>
+fun I3_img :: "'a CleanQ_RB_State \<Rightarrow> bool"
+  where "I3_img rb \<longleftrightarrow> distinct ((slice_xy rb) @ (slice_yx rb))"
+
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>I4: The ring buffers are the same\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -120,8 +125,8 @@ text \<open>
   same as the client RX ring buffer.
 \<close>
 fun I4 :: "'a CleanQ_RB_State \<Rightarrow> bool"
-  where "I4 st \<longleftrightarrow> (ring (tx (client st))) = (ring (rx (server st))) \<and>
-                   (ring (tx (server st))) = (ring (rx (client st)))"
+  where "I4 st \<longleftrightarrow> (ring (tx (qTXY st))) = (ring (rx (qTYX st))) \<and>
+                   (ring (tx (qTYX st))) = (ring (rx (qTXY st)))"
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>I5: Ring buffers are in a valid state\<close>
@@ -133,20 +138,32 @@ text \<open>
   less than that N. This needs to be true for both queue pairs in \verb+CleanQ_RB_State+. 
 \<close>
 fun I5 :: "'a CleanQ_RB_State \<Rightarrow> bool"
-  where "I5 st \<longleftrightarrow> (direction (tx (client st))) = dir_tx \<and>
-                   (direction (tx (server st))) = dir_tx \<and>
-                   (direction (rx (client st))) = dir_rx \<and>
-                   (direction (rx (server st))) = dir_rx \<and>
-                   size (tx (server st)) = N \<and>
-                   size (tx (client st)) = N \<and>
-                   size (rx (server st)) = N \<and>
-                   size (rx (client st)) = N \<and>
-                   pos (tx (server st)) < N \<and>
-                   pos (tx (client st)) < N \<and>
-                   pos (rx (server st)) < N \<and>
-                   pos (rx (client st)) < N "
+  where "I5 st \<longleftrightarrow> (direction (tx (qTXY st))) = dir_tx \<and>
+                   (direction (tx (qTYX st))) = dir_tx \<and>
+                   (direction (rx (qTXY st))) = dir_rx \<and>
+                   (direction (rx (qTYX st))) = dir_rx \<and>
+                   size (tx (qTYX st)) = N \<and>
+                   size (tx (qTXY st)) = N \<and>
+                   size (rx (qTYX st)) = N \<and>
+                   size (rx (qTXY st)) = N \<and>
+                   pos (tx (qTYX st)) < N \<and>
+                   pos (tx (qTXY st)) < N \<and>
+                   pos (rx (qTYX st)) < N \<and>
+                   pos (rx (qTXY st)) < N "
 
 (*Don't think there is an ordering invariant since there are only 2 pointers into the ring buffer *)
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>CleanQ List Invariants\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+text \<open>
+  We combine all invariants for the abstract CleanQ list model and define the predicate 
+  \verb+CleanQ_List_Invariants+.
+\<close>
+
+fun CleanQ_RB_Invariants :: "'a set \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "CleanQ_RB_Invariants K rb \<longleftrightarrow> I1_img rb K \<and> I2_img rb \<and> I3_img rb \<and> I4 rb \<and> I5 rb"
 
 end (*Modulus end *)
 
