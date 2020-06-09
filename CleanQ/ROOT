@@ -6,7 +6,10 @@ session "CleanQ" = "HOL" +
         "HOL-Library"
         "HOL-Statespace"
     theories [document = false]
+        "Main"
         "../Simpl/Vcg"
+        "../Simpl/Simpl" 
+        "../Complx/OG_Hoare" 
     theories 
         CleanQ_SetModel 
         CleanQ_ListModel

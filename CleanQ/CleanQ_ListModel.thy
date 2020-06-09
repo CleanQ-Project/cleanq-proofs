@@ -220,8 +220,8 @@ lemma CleanQ_List_deq_y_upd :
 
 text \<open>
   The two operations \verb+CleanQ_List_deq_x+ and \verb+CleanQ_List_deq_y+ transition
-  the model state. Thus we need to prove that invariants I1_img, I2_img, and I3 are preserved for
-  both of them.
+  the model state. Thus we need to prove that invariants \verb+I1_img+, \verb+I2_img+, and 
+  I3 are preserved for both of them.
 \<close>
 
 lemma CleanQ_List_deq_x_I1 :
