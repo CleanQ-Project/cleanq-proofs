@@ -236,21 +236,67 @@ lemma CleanQ_Set_enq_y_dst :
 
 
 text \<open>
-  Lastly, we can show that the buffers are not in the other set
+  Next, we can show that the buffers are not in the other set
 \<close>
 
-lemma CleanQ_Set_enq_x_ndst :
+lemma CleanQ_Set_enq_x_ndst1 :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SX rb"
     shows "b \<notin> SY (CleanQ_Set_enq_x b rb)"
   by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_x_I2 CleanQ_Set_enq_x_dst 
             I2.elims(2) I_holds Set.set_insert X_owned insert_disjoint(1))
 
-lemma CleanQ_Set_enq_y_ndst :
+lemma CleanQ_Set_enq_x_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SX rb"
+    shows "b \<notin> SX (CleanQ_Set_enq_x b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_x_I2 CleanQ_Set_enq_x_dst 
+            I2.elims(2) I_holds Set.set_insert X_owned insert_disjoint(1))
+
+lemma CleanQ_Set_enq_x_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SX rb"
+    shows "b \<notin> TYX (CleanQ_Set_enq_x b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_x_I2 CleanQ_Set_enq_x_dst 
+            I2.elims(2) I_holds Set.set_insert X_owned insert_disjoint(1))
+
+
+lemma CleanQ_Set_enq_y_ndst1 :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> SY rb"
     shows "b \<notin> SX (CleanQ_Set_enq_y b rb)"
   by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_y_I2 CleanQ_Set_enq_y_dst 
             I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
 
+lemma CleanQ_Set_enq_y_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> SY rb"
+    shows "b \<notin> SY (CleanQ_Set_enq_y b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_y_I2 CleanQ_Set_enq_y_dst 
+            I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
+
+lemma CleanQ_Set_enq_y_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> SY rb"
+    shows "b \<notin> TXY (CleanQ_Set_enq_y b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_enq_y_I2 CleanQ_Set_enq_y_dst 
+            I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
+
+
+text \<open>
+  Finally, we can combine the lemmas to obtain a single lemma for \verb+enqueue+
+  operation where the buffers end up.  
+\<close>
+
+lemma CleanQ_Set_enq_x_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SX rb"
+      and CQ: "rb' = CleanQ_Set_enq_x b rb"
+    shows "b \<in> TXY rb' \<and>  b \<notin> SX rb' \<and> b \<notin> SY rb' \<and> b \<notin> TYX rb'"
+  using assms
+  by (simp add: CleanQ_Set_enq_x_dst CleanQ_Set_enq_x_ndst1 CleanQ_Set_enq_x_ndst2 
+                CleanQ_Set_enq_x_ndst3)
+
+lemma CleanQ_Set_enq_y_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SY rb"
+      and CQ: "rb' = CleanQ_Set_enq_y b rb"
+    shows "b \<in> TYX rb' \<and>  b \<notin> SX rb' \<and> b \<notin> SY rb' \<and> b \<notin> TXY rb'"
+  using assms
+  by (simp add: CleanQ_Set_enq_y_dst CleanQ_Set_enq_y_ndst1 CleanQ_Set_enq_y_ndst2 
+                CleanQ_Set_enq_y_ndst3)
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
@@ -355,20 +401,66 @@ lemma CleanQ_Set_deq_y_dst :
 
 
 text \<open>
-  Lastly, we can show that the buffers are not in the other set
+  Next, we can show that the buffer not in any of the other sets. 
 \<close>
 
-lemma CleanQ_Set_deq_x_ndst :
+lemma CleanQ_Set_deq_x_ndst1 :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> TYX rb"
     shows "b \<notin> SY (CleanQ_Set_deq_x b rb)"
   by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_x_I2 CleanQ_Set_deq_x_dst 
             I2.elims(2) I_holds X_owned disjoint_insert(1) mk_disjoint_insert)
 
-lemma CleanQ_Set_deq_y_ndst :
+lemma CleanQ_Set_deq_x_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> TYX rb"
+    shows "b \<notin> TXY (CleanQ_Set_deq_x b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_x_I2 CleanQ_Set_deq_x_dst 
+            I2.elims(2) I_holds X_owned disjoint_insert(1) mk_disjoint_insert)
+
+lemma CleanQ_Set_deq_x_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> TYX rb"
+    shows "b \<notin> TYX (CleanQ_Set_deq_x b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_x_I2 CleanQ_Set_deq_x_dst 
+            I2.elims(2) I_holds X_owned disjoint_insert(1) mk_disjoint_insert)
+
+lemma CleanQ_Set_deq_y_ndst1 :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> TXY rb"
     shows "b \<notin> SX (CleanQ_Set_deq_y b rb)"
   by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_y_I2 CleanQ_Set_deq_y_dst 
       I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
+
+lemma CleanQ_Set_deq_y_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> TXY rb"
+    shows "b \<notin> TYX (CleanQ_Set_deq_y b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_y_I2 CleanQ_Set_deq_y_dst 
+      I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
+
+lemma CleanQ_Set_deq_y_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> TXY rb"
+    shows "b \<notin> TXY (CleanQ_Set_deq_y b rb)"
+  by (metis CleanQ_Set_Invariants.elims(2) CleanQ_Set_deq_y_I2 CleanQ_Set_deq_y_dst 
+      I2.elims(2) I_holds Set.set_insert Y_owned insert_disjoint(1))
+
+
+text \<open>
+  Finally, we combine the lemmas above to obtain a single lemma for the \verb+dequeue+
+  operation. 
+\<close>
+
+lemma CleanQ_Set_deq_x_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  YX_owned: "b \<in> TYX rb"
+      and CQ: "rb' = CleanQ_Set_deq_x b rb"
+    shows "b \<in> SX rb' \<and>  b \<notin> SY rb' \<and> b \<notin> TXY rb' \<and> b \<notin> TYX rb'"
+  using assms
+  by (simp add: CleanQ_Set_deq_x_dst CleanQ_Set_deq_x_ndst1 CleanQ_Set_deq_x_ndst2 
+                CleanQ_Set_deq_x_ndst3)
+
+lemma CleanQ_Set_deq_y_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  YX_owned: "b \<in> TXY rb"
+      and CQ: "rb' = CleanQ_Set_deq_y b rb"
+    shows "b \<in> SY rb' \<and>  b \<notin> SX rb' \<and> b \<notin> TXY rb' \<and> b \<notin> TYX rb'"
+  using assms
+  by (simp add: CleanQ_Set_deq_y_dst CleanQ_Set_deq_y_ndst1 CleanQ_Set_deq_y_ndst2 
+                CleanQ_Set_deq_y_ndst3)
 
 
 (* ==================================================================================== *)
