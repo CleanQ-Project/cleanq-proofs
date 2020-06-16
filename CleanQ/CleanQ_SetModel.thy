@@ -22,7 +22,9 @@ theory CleanQ_SetModel
 (*<*)
 imports 
   Main
-  "../Simpl/Simpl"
+  "../Simpl/Simpl" 
+  "../Complx/OG_Hoare"
+(*  "../Complx/OG_Syntax" *)
 begin
 (*>*)
 
@@ -64,7 +66,7 @@ text \<open>
 (*<*)
 (* Define some global variables to make Simpl/Complex proofs work *)
 record 'g CleanQ_Set_State_vars = 
-  RB_'  :: "nat CleanQ_Set_State"
+  SetRB_'  :: "nat CleanQ_Set_State"
   B_'   ::  nat
 (*>*)
   
@@ -97,7 +99,7 @@ fun I1 :: "'a CleanQ_Set_State \<Rightarrow> 'a set \<Rightarrow> bool"
 
 
 (* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>I2: No Double Presence\<close>
+subsubsection \<open>I2: Pairwise Empty\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 text \<open>
@@ -203,8 +205,9 @@ lemma CleanQ_Set_enq_y_I2 :
 
 
 text \<open>
-  Both invariants I1 and I2 are preserved by enq operations, thus we can combine them to
-  obtain show that the combined predicate \verb+CleanQ_Set_Invariants+ always holds.
+  Both invariants I1 and I2 are preserved by \verb+enqueue+ operations, thus we can 
+  combine them to obtain show that the combined predicate \verb+CleanQ_Set_Invariants+ 
+  always holds.
 \<close>
 
 lemma CleanQ_Set_enq_x_Invariants :
@@ -484,15 +487,15 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace> 
-        \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> SX \<acute>SetRB \<rbrace> 
+        \<acute>SetRB :== (CleanQ_Set_enq_x b \<acute>SetRB) 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_enq_x_Invariants)
 
 lemma CleanQ_Set_enq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SY \<acute>RB \<rbrace> 
-        \<acute>RB :== (CleanQ_Set_enq_y b \<acute>RB) 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> SY \<acute>SetRB \<rbrace> 
+        \<acute>SetRB :== (CleanQ_Set_enq_y b \<acute>SetRB) 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_enq_y_Invariants)
 
 
@@ -504,17 +507,17 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace>
-        \<acute>RB :== \<acute>RB \<lparr> SX := (SX \<acute>RB) - {b} \<rparr> ;;
-        \<acute>RB :== \<acute>RB \<lparr> TXY := (TXY \<acute>RB) \<union> {b} \<rparr>  
-      \<lbrace> \<acute>RB = CleanQ_Set_enq_x b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> SX \<acute>SetRB \<rbrace>
+        \<acute>SetRB :== \<acute>SetRB \<lparr> SX := (SX \<acute>SetRB) - {b} \<rparr> ;;
+        \<acute>SetRB :== \<acute>SetRB \<lparr> TXY := (TXY \<acute>SetRB) \<union> {b} \<rparr>  
+      \<lbrace> \<acute>SetRB = CleanQ_Set_enq_x b rb' \<and> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp add: CleanQ_Set_enq_x_def, auto)
 
 lemma CleanQ_Set_enq_y_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> SY \<acute>RB \<rbrace>
-        \<acute>RB :== \<acute>RB \<lparr> SY := (SY \<acute>RB) - {b} \<rparr> ;;
-        \<acute>RB :== \<acute>RB \<lparr> TYX := (TYX \<acute>RB) \<union> {b} \<rparr>  
-      \<lbrace> \<acute>RB = CleanQ_Set_enq_y b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> SY \<acute>SetRB \<rbrace>
+        \<acute>SetRB :== \<acute>SetRB \<lparr> SY := (SY \<acute>SetRB) - {b} \<rparr> ;;
+        \<acute>SetRB :== \<acute>SetRB \<lparr> TYX := (TYX \<acute>SetRB) \<union> {b} \<rparr>  
+      \<lbrace> \<acute>SetRB = CleanQ_Set_enq_y b rb' \<and> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp add: CleanQ_Set_enq_y_def, auto)
 
 text \<open>
@@ -523,19 +526,19 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_conditional :
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
-         IF b \<in> SX \<acute>RB THEN 
-          \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace> 
+         IF b \<in> SX \<acute>SetRB THEN 
+          \<acute>SetRB :== (CleanQ_Set_enq_x b \<acute>SetRB) 
          FI 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>" 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>" 
   by (vcg, meson CleanQ_Set_enq_x_Invariants)
 
 lemma CleanQ_Set_enq_y_conditional :
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
-         IF b \<in> SY \<acute>RB THEN 
-          \<acute>RB :== (CleanQ_Set_enq_y b \<acute>RB) 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace> 
+         IF b \<in> SY \<acute>SetRB THEN 
+          \<acute>SetRB :== (CleanQ_Set_enq_y b \<acute>SetRB) 
          FI 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>" 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>" 
   by (vcg, meson CleanQ_Set_enq_y_Invariants)
 
 
@@ -547,7 +550,7 @@ probably with a guard.
 procedures 
   EnqX (S|R) = "IF (SX \<acute>S) \<noteq>  \<emptyset> THEN
                 ... pick a b
-                 \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) 
+                 \<acute>SetRB :== (CleanQ_Set_enq_x b \<acute>SetRB) 
                 FI"
 
   EnqX (S|R) = "SWITCH (SX \<acute>S)
@@ -567,15 +570,15 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_deq_x_preserves_invariants: 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TYX \<acute>RB \<rbrace> 
-        \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> TYX \<acute>SetRB \<rbrace> 
+        \<acute>SetRB :== (CleanQ_Set_deq_x b \<acute>SetRB) 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_deq_x_Invariants)
 
 lemma CleanQ_Set_deq_y_preserves_invariants: 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TXY \<acute>RB \<rbrace> 
-        \<acute>RB :== (CleanQ_Set_deq_y b \<acute>RB) 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> TXY \<acute>SetRB \<rbrace> 
+        \<acute>SetRB :== (CleanQ_Set_deq_y b \<acute>SetRB) 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp only: CleanQ_Set_deq_y_Invariants)
 
 
@@ -587,17 +590,17 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_deq_x_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TYX \<acute>RB \<rbrace>
-        \<acute>RB :== \<acute>RB \<lparr> TYX := (TYX \<acute>RB) - {b} \<rparr> ;;
-        \<acute>RB :== \<acute>RB \<lparr> SX := (SX \<acute>RB) \<union> {b} \<rparr>  
-      \<lbrace> \<acute>RB = CleanQ_Set_deq_x b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> TYX \<acute>SetRB \<rbrace>
+        \<acute>SetRB :== \<acute>SetRB \<lparr> TYX := (TYX \<acute>SetRB) - {b} \<rparr> ;;
+        \<acute>SetRB :== \<acute>SetRB \<lparr> SX := (SX \<acute>SetRB) \<union> {b} \<rparr>  
+      \<lbrace> \<acute>SetRB = CleanQ_Set_deq_x b rb' \<and> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp add: CleanQ_Set_deq_x_def, auto)
 
 lemma CleanQ_Set_deq_y_two_step:
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RB \<and> CleanQ_Set_Invariants K \<acute>RB \<and> b \<in> TXY \<acute>RB \<rbrace>
-        \<acute>RB :== \<acute>RB \<lparr> TXY := (TXY \<acute>RB) - {b} \<rparr> ;;
-        \<acute>RB :== \<acute>RB \<lparr> SY := (SY \<acute>RB) \<union> {b} \<rparr>  
-      \<lbrace> \<acute>RB = CleanQ_Set_deq_y b rb' \<and> CleanQ_Set_Invariants K \<acute>RB \<rbrace>"
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>SetRB \<and> CleanQ_Set_Invariants K \<acute>SetRB \<and> b \<in> TXY \<acute>SetRB \<rbrace>
+        \<acute>SetRB :== \<acute>SetRB \<lparr> TXY := (TXY \<acute>SetRB) - {b} \<rparr> ;;
+        \<acute>SetRB :== \<acute>SetRB \<lparr> SY := (SY \<acute>SetRB) \<union> {b} \<rparr>  
+      \<lbrace> \<acute>SetRB = CleanQ_Set_deq_y b rb' \<and> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>"
   by(vcg, simp add: CleanQ_Set_deq_y_def, auto)
 
 
@@ -607,19 +610,19 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_deq_x_conditional:
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
-         IF b \<in> TYX \<acute>RB THEN 
-          \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace> 
+         IF b \<in> TYX \<acute>SetRB THEN 
+          \<acute>SetRB :== (CleanQ_Set_deq_x b \<acute>SetRB) 
          FI 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>" 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>" 
   by (vcg, meson CleanQ_Set_deq_x_Invariants)
 
 lemma CleanQ_Set_deq_y_conditional:
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace> 
-         IF b \<in> TXY \<acute>RB THEN 
-          \<acute>RB :== (CleanQ_Set_deq_y b \<acute>RB) 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace> 
+         IF b \<in> TXY \<acute>SetRB THEN 
+          \<acute>SetRB :== (CleanQ_Set_deq_y b \<acute>SetRB) 
          FI 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<rbrace>" 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>" 
   by (vcg, meson CleanQ_Set_deq_y_Invariants)
 
 
@@ -635,12 +638,12 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_ops_combine : 
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> rb = \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace> 
-        \<acute>RB :== (CleanQ_Set_enq_x b \<acute>RB) ;;
-        \<acute>RB :== (CleanQ_Set_deq_y b \<acute>RB) ;;
-        \<acute>RB :== (CleanQ_Set_enq_y b \<acute>RB) ;;
-        \<acute>RB :== (CleanQ_Set_deq_x b \<acute>RB) 
-      \<lbrace> CleanQ_Set_Invariants K \<acute>RB \<and> rb = \<acute>RB \<and> b \<in> SX \<acute>RB \<rbrace>" 
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<and> rb = \<acute>SetRB \<and> b \<in> SX \<acute>SetRB \<rbrace> 
+        \<acute>SetRB :== (CleanQ_Set_enq_x b \<acute>SetRB) ;;
+        \<acute>SetRB :== (CleanQ_Set_deq_y b \<acute>SetRB) ;;
+        \<acute>SetRB :== (CleanQ_Set_enq_y b \<acute>SetRB) ;;
+        \<acute>SetRB :== (CleanQ_Set_deq_x b \<acute>SetRB) 
+      \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<and> rb = \<acute>SetRB \<and> b \<in> SX \<acute>SetRB \<rbrace>" 
 proof(vcg)
   have EQ: "\<And> RB. CleanQ_Set_Invariants K RB \<Longrightarrow> b \<in> SX RB \<Longrightarrow> (CleanQ_Set_deq_x b
              (CleanQ_Set_enq_y b
@@ -686,6 +689,18 @@ subsection \<open>Integration in COMPLEX\<close>
     Y: call enqy | deqy
 
 
+lemma
+  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/\<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>\<^esub>
+    COBEGIN 
+         \<lbrace>  b \<in> SX \<acute>SetRB \<rbrace> \<acute>SetRB := (CleanQ_Set_enq_x b \<acute>SetRB) \<lbrace>True\<rbrace>, \<lbrace>True\<rbrace>
+       \<parallel> \<lbrace>  b2 \<in> SY \<acute>SetRB \<rbrace> \<acute>SetRB := (CleanQ_Set_enq_y b2 \<acute>SetRB) \<lbrace>True\<rbrace>, \<lbrace>True\<rbrace>
+    COEND \<lbrace> CleanQ_Set_Invariants K \<acute>SetRB \<rbrace>,\<lbrace> True\<rbrace>"
+
+  
+          apply simp_all apply auto
+  done
+
+
 
 lemma
   "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>
@@ -696,8 +711,10 @@ lemma
   apply oghoare (*11 subgoals*)
            apply simp_all
   done
-
 *)
+
+definition CleanQ_Set_Hoare ::  "('s, 'p, 'f) com"
+  where "CleanQ_Set_Hoare = Parallel []"
 
 
 
@@ -729,6 +746,12 @@ definition CleanQ_Set_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a Cl
 
 definition CleanQ_Set_enq_y_post :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_Set_State, 'a CleanQ_Set_State) Semantic.xstate set"
   where "CleanQ_Set_enq_y_post K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> TYX rb }"
+
+
+
+    
+
+
 
 (*<*)
 end
