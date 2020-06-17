@@ -180,25 +180,25 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_I1 :
-  assumes I1_holds: "I1 rb K"  and  I2_holds: "I2 rb"  and  X_owned: "b \<in> SX rb"
+  assumes I1_holds: "I1 rb K"  and  X_owned: "b \<in> SX rb"
     shows "I1 (CleanQ_Set_enq_x b rb) K"
   unfolding CleanQ_Set_enq_x_def 
   using I1_holds X_owned by auto
 
 lemma CleanQ_Set_enq_y_I1 :
-  assumes I1_holds: "I1 rb K"  and  I2_holds: "I2 rb"  and  X_owned: "b \<in> SY rb"
+  assumes I1_holds: "I1 rb K"  and  X_owned: "b \<in> SY rb"
     shows "I1 (CleanQ_Set_enq_y b rb) K"
   unfolding CleanQ_Set_enq_y_def 
   using I1_holds X_owned by auto
 
 lemma CleanQ_Set_enq_x_I2 :
-  assumes I1_holds: "I1 rb K"  and  I2_holds: "I2 rb"  and  X_owned: "b \<in> SX rb"
+  assumes I2_holds: "I2 rb"  and  X_owned: "b \<in> SX rb"
     shows "I2 (CleanQ_Set_enq_x b rb)"
   unfolding CleanQ_Set_enq_x_def
   using I2_holds X_owned by auto
 
 lemma CleanQ_Set_enq_y_I2 :
-  assumes I1_holds: "I1 rb K"  and  I2_holds: "I2 rb"  and  X_owned: "b \<in> SY rb"
+  assumes  I2_holds: "I2 rb"  and  X_owned: "b \<in> SY rb"
     shows "I2 (CleanQ_Set_enq_y b rb)"
   unfolding CleanQ_Set_enq_y_def
   using I2_holds X_owned by auto
@@ -346,25 +346,25 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_deq_x_I1 :
-  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TYX_owned: "b \<in> TYX rb"
+  assumes I1_holds : "I1 rb K"  and  TYX_owned: "b \<in> TYX rb"
     shows "I1 (CleanQ_Set_deq_x b rb) K"
   unfolding CleanQ_Set_deq_x_def
   using I1_holds TYX_owned by auto
 
 lemma CleanQ_Set_deq_y_I1 :
-  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TXY_owned: "b \<in> TXY rb"
+  assumes I1_holds : "I1 rb K"  and  TXY_owned: "b \<in> TXY rb"
     shows "I1 (CleanQ_Set_deq_y b rb) K"
   unfolding CleanQ_Set_deq_y_def
   using I1_holds TXY_owned by auto
 
 lemma CleanQ_Set_deq_x_I2 :
-  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TYX_owned: "b \<in> TYX rb"
+  assumes  I2_holds : "I2 rb"  and  TYX_owned: "b \<in> TYX rb"
     shows "I2 (CleanQ_Set_deq_x b rb)"
   unfolding CleanQ_Set_deq_x_def
   using I2_holds TYX_owned by auto
 
 lemma CleanQ_Set_deq_y_I2 :
-  assumes I1_holds : "I1 rb K"  and  I2_holds : "I2 rb"  and  TXY_owned: "b \<in> TXY rb"
+  assumes  I2_holds : "I2 rb"  and  TXY_owned: "b \<in> TXY rb"
     shows "I2 (CleanQ_Set_deq_y b rb)"
   unfolding CleanQ_Set_deq_y_def
   using I2_holds TXY_owned by auto

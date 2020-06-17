@@ -61,12 +61,12 @@ text \<open>
 (* Define some global variables to make Simpl/Complex proofs work *)
 record 'g CleanQ_Set_State_vars = 
   ListRB_'  :: "nat CleanQ_List_State"
-  B_'   ::  nat
+  ListB_'   ::  nat
 (*>*)
 
 
 (* ==================================================================================== *)
-subsection \<open>CleanQ List Model Invariants\<close>
+subsection \<open>State Lifting Function\<close>
 (* ==================================================================================== *)
 
 text \<open>
@@ -153,7 +153,7 @@ text \<open>
 \<close>
 
 fun I3 :: "'a CleanQ_List_State \<Rightarrow> bool"
-  where "I3 st_list \<longleftrightarrow> distinct (lTXY st_list @ lTYX st_list)"
+  where "I3 st_list \<longleftrightarrow> distinct (lTXY st_list) \<and> distinct (lTYX st_list)"
 
 
 text \<open>
@@ -163,19 +163,20 @@ text \<open>
 
 lemma I3_cardinality : 
   assumes I3_holds : "I3 L"  and  lift: "LS = CleanQ_List2Set L"
-    shows "length ((lTXY L) @ (lTYX L)) = card (TXY LS \<union> TYX LS)"
+    shows "length (lTXY L) = card (TXY LS) \<and> length (lTYX L) = card (TYX LS)"
   using I3_holds lift unfolding CleanQ_List2Set_def
   by (metis CleanQ_List2Set_def CleanQ_Set_State.ext_inject CleanQ_Set_State.surjective 
-            I3.simps assms(2) distinct_card set_append)
+            I3.simps assms(2) distinct_card)
+
 
 
 (* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>CleanQ List Invariants\<close>
+subsubsection \<open>All CleanQ List Invariants\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 text \<open>
-  We combine all invariants for the abstract CleanQ list model and define the predicate 
-  \verb+CleanQ_List_Invariants+.
+  We combine all invariants for the abstract CleanQ list model and define the unified 
+  predicate \verb+CleanQ_List_Invariants+.
 \<close>
 
 fun CleanQ_List_Invariants :: "'a set \<Rightarrow> 'a CleanQ_List_State \<Rightarrow> bool"
@@ -208,7 +209,7 @@ subsubsection \<open>Enqueue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 text \<open>
-  The enqueue operation is analogous to the Set operations except that the elements
+  The \verb+enqueue+ operation is analogous to the Set operations except that the elements
   are added to the list instead of inserted to the set. Note, we always insert the 
   element at the end of the list. 
 \<close>
@@ -250,52 +251,82 @@ lemma CleanQ_List_enq_y_equal :
 
 
 text \<open>
+  The enqueue operations move buffers around different sets and lists. We define a 
+  few helper lemmas, which allow us to talk about where the buffer ends up.
+\<close>
+
+lemma CleanQ_List_enq_x_result :
+  assumes X_owned: "b \<in> lSX rb"  and  X_enq: "rb' = CleanQ_List_enq_x b rb"
+    and I2_holds : "I2_img rb"
+  shows  "b \<in> set (lTXY rb') \<and> b \<notin> lSX rb' \<and> b \<notin> lSY rb' \<and> b \<notin> set (lTYX rb')"
+  using X_owned X_enq I2_holds unfolding CleanQ_List_enq_x_def by(auto)
+
+lemma CleanQ_List_enq_y_result :
+  assumes Y_owned: "b \<in> lSY rb"  and  X_enq: "rb' = CleanQ_List_enq_y b rb"
+    and I2_holds : "I2_img rb"
+  shows  "b \<in> set (lTYX rb') \<and> b \<notin> lSY rb' \<and> b \<notin> lSX rb' \<and> b \<notin> set (lTXY rb')"
+  using Y_owned X_enq I2_holds unfolding CleanQ_List_enq_y_def by(auto)
+
+text \<open>
+  Not only we can say that it is in the set of the list, we can even say that
+  the buffer is precisely at the end of it.
+\<close>
+
+lemma CleanQ_List_enq_x_result_p :
+  assumes X_owned: "b \<in> lSX rb"  and  X_enq: "rb' = CleanQ_List_enq_x b rb"
+    and I2_holds : "I2_img rb"
+  shows  "b = last (lTXY rb') \<and> b \<notin> lSX rb' \<and> b \<notin> lSY rb' \<and> b \<notin> set (lTYX rb')"
+  using X_owned X_enq I2_holds unfolding CleanQ_List_enq_x_def by(auto)
+
+lemma CleanQ_List_enq_y_result_p :
+  assumes Y_owned: "b \<in> lSY rb"  and  X_enq: "rb' = CleanQ_List_enq_y b rb"
+    and I2_holds : "I2_img rb"
+  shows  "b = last (lTYX rb') \<and> b \<notin> lSY rb' \<and> b \<notin> lSX rb' \<and> b \<notin> set (lTXY rb')"
+  using Y_owned X_enq I2_holds unfolding CleanQ_List_enq_y_def by(auto)
+
+
+text \<open>
   The two operations \verb+CleanQ_Set_enq_x+ and \verb+CleanQ_Set_enq_y+ transition
   the model state. Thus we need to prove that all invariants are preserved. We do this
   Individually first, then do the union. Note, the proofs are symmetric. 
 \<close>
 
 lemma CleanQ_List_enq_x_I1 :
-  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb"  
-      and  X_owned: "b \<in> lSX rb"
+  assumes I1_holds: "I1_img rb K"  and  X_owned: "b \<in> lSX rb"
     shows "I1_img (CleanQ_List_enq_x b rb) K"
   unfolding CleanQ_List_enq_x_def 
   using I1_holds X_owned by auto
 
 lemma CleanQ_List_enq_y_I1 :
-  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb"  
-      and  X_owned: "b \<in> lSY rb"
+  assumes I1_holds: "I1_img rb K"  and  X_owned: "b \<in> lSY rb"
     shows "I1_img (CleanQ_List_enq_y b rb) K"
   unfolding CleanQ_List_enq_y_def 
   using I1_holds X_owned by auto
 
 lemma CleanQ_List_enq_x_I2 :
-  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb" 
-      and  X_owned: "b \<in> lSX rb"
+  assumes  I2_holds: "I2_img rb"   and  X_owned: "b \<in> lSX rb"
     shows "I2_img (CleanQ_List_enq_x b rb)"
   unfolding CleanQ_List_enq_x_def
   using I2_holds X_owned by auto
 
 lemma CleanQ_List_enq_y_I2 :
-  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb"  
-      and  X_owned: "b \<in> lSY rb"
+  assumes I2_holds: "I2_img rb"    and  X_owned: "b \<in> lSY rb"
     shows "I2_img (CleanQ_List_enq_y b rb)"
   unfolding CleanQ_List_enq_y_def
   using I2_holds X_owned by auto
 
 lemma CleanQ_List_enq_x_I3 :
-  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb" and I3_holds: "I3 rb" 
-      and  X_owned: "b \<in> lSY rb"
+  assumes  I2_holds: "I2_img rb" and I3_holds: "I3 rb"  and  X_owned: "b \<in> lSY rb"
     shows "I3 (CleanQ_List_enq_x b rb)"
   unfolding CleanQ_List_enq_x_def
-  using I1_holds I2_holds I3_holds X_owned by auto
+  using  I2_holds I3_holds X_owned by auto
 
 lemma CleanQ_List_enq_y_I3 :
-  assumes I1_holds: "I1_img rb K"  and  I2_holds: "I2_img rb" and I3_holds: "I3 rb" 
-      and  X_owned: "b \<in> lSY rb"
+  assumes  I2_holds: "I2_img rb" and I3_holds: "I3 rb"  and  X_owned: "b \<in> lSY rb"
     shows "I3 (CleanQ_List_enq_y b rb)"
   unfolding CleanQ_List_enq_y_def
-  using I1_holds I2_holds I3_holds X_owned by(auto)
+  using  I2_holds I3_holds X_owned by(auto)
+
 
 text \<open>
   Invariants I1, I2, and I3 are preserved by \verb+enqueue+ operations, thus we can 
@@ -344,30 +375,105 @@ subsubsection \<open>Dequeue Operation\<close>
 
 
 text \<open>
-  The dequeue operation is analogous to the Set operations except that the elements
-  are removed from the head of the queue instead of simply removed to the set. 
+  The \verb+dequeue+ operation is analogous to the Set operations except that the elements
+  are removed from the list instead of inserted to the set. Note, we always remove the 
+  element at the front of the list.
 \<close>
 
-definition CleanQ_List_deq_x :: "'a \<Rightarrow> 'a CleanQ_List_State  \<Rightarrow> 'a CleanQ_List_State"
-  where "CleanQ_List_deq_x b rb = \<lparr> lSX = (lSX rb) \<union> {b}, lSY = (lSY rb), lTXY = (lTXY rb),  
-                                   lTYX = (remove1 b (lTYX rb)) \<rparr>"
+definition CleanQ_List_deq_x :: "'a CleanQ_List_State  \<Rightarrow> 'a CleanQ_List_State"
+  where "CleanQ_List_deq_x rb = rb \<lparr> lSX := (lSX rb) \<union> {hd (lTYX rb)}, 
+                                     lTYX := tl (lTYX rb) \<rparr>" 
 
-definition CleanQ_List_deq_y :: "'a \<Rightarrow> 'a CleanQ_List_State  \<Rightarrow> 'a CleanQ_List_State"
-  where "CleanQ_List_deq_y b rb = \<lparr> lSX = (lSX rb),  lSY = (lSY rb) \<union> {b}, 
-                                   lTXY = (remove1 b (lTXY rb)),  lTYX = (lTYX rb) \<rparr>"
+definition CleanQ_List_deq_y :: "'a CleanQ_List_State  \<Rightarrow> 'a CleanQ_List_State"
+  where "CleanQ_List_deq_y rb = rb \<lparr> lSY := (lSY rb) \<union> {hd (lTXY rb)}, 
+                                     lTXY := tl (lTXY rb) \<rparr>" 
+
+
 text \<open>
-  These definitions are the same as producing a new record:
+  These definitions are the same as producing a new record, instead of updating the old one
 \<close>
 
 lemma CleanQ_List_deq_x_upd :
-  "CleanQ_List_deq_x b rb = \<lparr> lSX = (lSX rb) \<union> {b},  lSY = (lSY rb), 
-                             lTXY = (lTXY rb), lTYX = remove1 b (lTYX rb) \<rparr>"
-  by(simp add:CleanQ_List_deq_x_def)
+  "CleanQ_List_deq_x rb = \<lparr> lSX = (lSX rb) \<union> {hd (lTYX rb)}, lSY = lSY rb, 
+                            lTXY = lTXY rb, lTYX = tl (lTYX rb) \<rparr>"
+  by (simp add: CleanQ_List_deq_x_def)
 
 lemma CleanQ_List_deq_y_upd :
-  "CleanQ_List_deq_y b rb = \<lparr> lSX = (lSX rb),  lSY = (lSY rb) \<union> {b},
-                             lTXY = remove1 b (lTXY rb),  lTYX = (lTYX rb) \<rparr>"
+  "CleanQ_List_deq_y rb = \<lparr> lSX = lSX rb, lSY = (lSY rb) \<union> {hd (lTXY rb)}, 
+                            lTXY = tl (lTXY rb), lTYX = lTYX rb \<rparr>"
   by(simp add:CleanQ_List_deq_y_def)
+
+
+text \<open>
+  The dequeue operations move buffers around different sets and lists. We define a 
+  few helper lemmas, which allow us to talk about where the buffer ends up.
+\<close>
+
+lemma CleanQ_List_deq_x_result :
+  assumes ne: "lTYX rb \<noteq> []"  and  X_deq: "rb' = CleanQ_List_deq_x rb"
+    and I2_holds : "I2_img rb" and I3_holds : "I3 rb" and buf: "b = hd (lTYX rb)"
+  shows  "b \<in> (lSX rb') \<and> b \<notin> lSY rb' \<and> b \<notin> set(lTXY rb') \<and> b \<notin> set (lTYX rb')"
+  using ne X_deq I2_holds I3_holds buf unfolding CleanQ_List_deq_x_def
+  apply(simp) 
+  by (metis disjoint_iff_not_equal distinct.simps(2) hd_in_set list.collapse)
+
+lemma CleanQ_List_deq_y_result :
+  assumes ne: "lTXY rb \<noteq> []"  and  Y_deq: "rb' = CleanQ_List_deq_y rb"
+    and I2_holds : "I2_img rb" and I3_holds : "I3 rb" and buf: "b = hd (lTXY rb)"
+  shows  "b \<in> (lSY rb') \<and> b \<notin> lSX rb' \<and> b \<notin> set(lTXY rb') \<and> b \<notin> set (lTYX rb')"
+  using ne Y_deq I2_holds I3_holds buf unfolding CleanQ_List_deq_y_def
+  apply(simp) 
+  by (metis disjoint_iff_not_equal distinct.simps(2) hd_in_set list.collapse)
+
+
+text \<open>
+  We can now show that the operations have the same outcome of when lifted to the 
+  set model. We first define a helper lemma that lets us talk about the set subtraction
+  when we lift the list to a set. 
+\<close>
+
+
+lemma list_set_hd_tl_union:
+  "\<And>L. L\<noteq>[] \<Longrightarrow> set (L) =  set([hd L] @ (tl L))"
+  by(simp)
+
+
+lemma list_set_hd_tl_subtract: 
+ assumes ne: "L \<noteq> []" and dist : "distinct L"
+ shows "set (tl L) = set (L) - {hd L}"
+proof -
+  have X0 : "L = [hd L] @ tl L"
+    by (simp add: ne)
+
+  have X1: "set (L) = {hd L} \<union> set (tl L)"
+    by(subst X0, simp)
+
+  from dist X0 have dn :
+    "{hd L} \<inter> set (tl L) = {}"
+    apply(simp)
+    using  distinct.simps(2) by fastforce
+
+  show ?thesis 
+    using ne dist X1 dn by(simp)
+qed
+
+text \<open>
+  Using the helper lemma, we can now proof the commutativity
+\<close>
+
+lemma CleanQ_List_deq_x_equal : 
+  assumes ne: "lTYX rb \<noteq> []" and  TYX_owned : "b = hd (lTYX rb)" and  I3_holds : "I3 rb"
+  shows "CleanQ_List2Set (CleanQ_List_deq_x rb) = CleanQ_Set_deq_x b (CleanQ_List2Set rb)"
+  unfolding CleanQ_List2Set_def CleanQ_Set_deq_x_def CleanQ_List_deq_x_def
+  using I3_holds ne TYX_owned by(simp add: list_set_hd_tl_subtract) 
+ 
+lemma CleanQ_List_deq_y_equal : 
+  assumes ne: "lTXY rb \<noteq> []" and  TXY_owned : "b = hd (lTXY rb)" and  I3_holds : "I3 rb"
+  shows "CleanQ_List2Set (CleanQ_List_deq_y rb) = CleanQ_Set_deq_y b (CleanQ_List2Set rb)"
+  unfolding CleanQ_List2Set_def CleanQ_Set_deq_y_def CleanQ_List_deq_y_def
+  using assms by(simp add: list_set_hd_tl_subtract)
+  
+
 
 
 text \<open>
@@ -377,40 +483,48 @@ text \<open>
 \<close>
 
 lemma CleanQ_List_deq_x_I1 :
-  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb"  and  TYX_owned: "b \<in> set (lTYX rb)"
-    shows "I1_img (CleanQ_List_deq_x b rb) K"
-  unfolding CleanQ_List_deq_x_def
-  using I1_holds TYX_owned by auto
+  assumes I1_holds : "I1_img rb K"  and   TYX_ne: "(lTYX rb) \<noteq> []"
+  shows "I1_img (CleanQ_List_deq_x rb) K"
+  using TYX_ne I1_holds list_set_hd_tl_union
+  unfolding CleanQ_List_deq_x_def by(auto)
 
 lemma CleanQ_List_deq_y_I1 :
-  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
-    shows "I1_img (CleanQ_List_deq_y b rb) K"
-  unfolding CleanQ_List_deq_y_def
-  using I1_holds TXY_owned by auto
+  assumes I1_holds : "I1_img rb K"  and   TXY_ne: "(lTXY rb) \<noteq> []"
+  shows "I1_img (CleanQ_List_deq_y rb) K"
+  using TXY_ne I1_holds list_set_hd_tl_union
+  unfolding CleanQ_List_deq_y_def by(auto)
+
 
 lemma CleanQ_List_deq_x_I2 :
-  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb" and  TYX_owned: "b \<in> set (lTYX rb)"
-    shows "I2_img (CleanQ_List_deq_x b rb)"
+  assumes I2_holds : "I2_img rb"  and   TYX_ne: "(lTYX rb) \<noteq> []" and I3_holds: "I3 rb"
+  shows "I2_img (CleanQ_List_deq_x rb)"
   unfolding CleanQ_List_deq_x_def
-  using I1_holds I2_holds I3_holds TYX_owned by(auto)
+  apply(simp)
+  using assms 
+  by (metis I2_img.elims(2) I3.elims(2) disjoint_insert(1) distinct.simps(2) 
+            list.exhaust_sel list.simps(15))
 
 lemma CleanQ_List_deq_y_I2 :
-  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
-    shows "I2_img (CleanQ_List_deq_y b rb)"
+  assumes I2_holds : "I2_img rb"  and   TXY_ne: "(lTXY rb) \<noteq> []" and I3_holds: "I3 rb"
+  shows "I2_img (CleanQ_List_deq_y rb)"
   unfolding CleanQ_List_deq_y_def
-  using I1_holds I2_holds I3_holds TXY_owned by auto
+  apply(simp)
+  using assms 
+  apply(simp)
+  by (smt I2_img.elims(2) I3.elims(2) Int_commute distinct.simps(2) insert_disjoint(1) 
+          list.exhaust_sel list.simps(15))
+  
+
 
 lemma CleanQ_List_deq_x_I3 :
-  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb" and  TYX_owned: "b \<in> set (lTYX rb)"
-    shows "I3 (CleanQ_List_deq_x b rb)"
-  unfolding CleanQ_List_deq_x_def
-  using I1_holds I2_holds I3_holds TYX_owned by(auto)
+  assumes I3_holds : "I3 rb"
+  shows "I3 (CleanQ_List_deq_x rb)"
+    unfolding CleanQ_List_deq_x_def using I3_holds distinct_tl by auto
 
 lemma CleanQ_List_deq_y_I3 :
-  assumes I1_holds : "I1_img rb K"  and  I2_holds : "I2_img rb" and I3_holds : "I3 rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
-    shows "I3 (CleanQ_List_deq_y b rb)"
-  unfolding CleanQ_List_deq_y_def
-  using I1_holds I2_holds I3_holds TXY_owned by auto
+  assumes I3_holds : "I3 rb"
+  shows "I3 (CleanQ_List_deq_y rb)"
+    unfolding CleanQ_List_deq_y_def using I3_holds distinct_tl by auto
 
 
 text \<open>
@@ -419,16 +533,52 @@ text \<open>
 \<close>
 
 lemma CleanQ_List_deq_x_Invariants :
-  assumes I_holds : "CleanQ_List_Invariants K rb"  and  TYX_owned: "b \<in> set (lTYX rb)"
-    shows "CleanQ_List_Invariants K (CleanQ_List_deq_x b rb)" 
-  using CleanQ_List_deq_x_I1 CleanQ_List_deq_x_I2 CleanQ_List_deq_x_I3 TYX_owned
-  by (metis CleanQ_List_Invariants.elims(2) CleanQ_List_Invariants.elims(3) I_holds)
+  assumes I_holds : "CleanQ_List_Invariants K rb"  and  TYX_ne: "[] \<noteq> (lTYX rb)"
+    shows "CleanQ_List_Invariants K (CleanQ_List_deq_x rb)" 
+  using assms CleanQ_List_deq_x_I1 CleanQ_List_deq_x_I2 CleanQ_List_deq_x_I3
+  by (metis CleanQ_List_Invariants.elims(2) CleanQ_List_Invariants.elims(3))
 
 lemma CleanQ_List_deq_y_Invariants :
-  assumes I_holds : "CleanQ_List_Invariants K rb"  and  TXY_owned: "b \<in> set (lTXY rb)"
-    shows "CleanQ_List_Invariants K (CleanQ_List_deq_y b rb)" 
-   using CleanQ_List_deq_y_I1 CleanQ_List_deq_y_I2 CleanQ_List_deq_y_I3 TXY_owned
-   by (metis CleanQ_List_Invariants.elims(2) CleanQ_List_Invariants.elims(3) I_holds)
+  assumes I_holds : "CleanQ_List_Invariants K rb"  and  TYX_ne: "[] \<noteq> (lTXY rb)"
+    shows "CleanQ_List_Invariants K (CleanQ_List_deq_y rb)" 
+   using assms CleanQ_List_deq_y_I1 CleanQ_List_deq_y_I2 CleanQ_List_deq_y_I3
+   by (metis CleanQ_List_Invariants.elims(2) CleanQ_List_Invariants.elims(3))
+
+
+(* ==================================================================================== *)
+subsection \<open>Integration in SIMPL\<close>
+(* ==================================================================================== *)
+
+
+text \<open>
+  We now integrate the the CleanQ List Model into SIMPL. For each of the two operations,
+  enqueue and dequeue, we specify a Hoare-triple with pre and post conditions, and
+  the operation.
+\<close>
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Enqueue Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+text \<open>
+  We first show, that we can define a Hoare triple for the enqueue operations from both
+  agents X and Y, and that in both cases the invariant is preserved.
+\<close>
+
+
+lemma CleanQ_List_enq_x_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>ListRB \<and> CleanQ_List_Invariants K \<acute>ListRB \<and> b \<in> lSX \<acute>ListRB \<rbrace> 
+        \<acute>ListRB :== (CleanQ_List_enq_x b \<acute>ListRB) 
+      \<lbrace> CleanQ_List_Invariants K \<acute>ListRB \<rbrace>"
+  by(vcg, simp only: CleanQ_List_enq_x_Invariants)
+
+
+lemma CleanQ_List_enq_y_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>ListRB \<and> CleanQ_List_Invariants K \<acute>ListRB \<and> b \<in> lSY \<acute>ListRB \<rbrace> 
+        \<acute>ListRB :== (CleanQ_List_enq_y b \<acute>ListRB) 
+      \<lbrace> CleanQ_List_Invariants K \<acute>ListRB \<rbrace>"
+  by(vcg, simp only: CleanQ_List_enq_y_Invariants)
+
 
 
 (* ==================================================================================== *)
@@ -449,6 +599,8 @@ definition CleanQ_List_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a C
   where "CleanQ_List_deq_y_pre K buf = Semantic.Normal ` {rb. I1_img rb K \<and> I2_img rb \<and> I3 rb \<and>
                                                           buf \<in> set (lTXY rb) \<and> buf = hd (lTXY rb) \<and> buf \<notin> lSY rb }"
 
+
+*)
 end
 
 
