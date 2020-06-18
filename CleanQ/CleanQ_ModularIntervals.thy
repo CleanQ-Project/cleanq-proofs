@@ -402,6 +402,13 @@ qed
 definition set_between :: "nat \<Rightarrow> nat \<Rightarrow> nat set" (infix "upto" 500)
   where "l upto h = {i. i < N \<and> (l \<sqsubseteq> i \<sqsubset> h)}"
 
+definition list_between :: "nat \<Rightarrow> nat \<Rightarrow> nat list" (infix "uptol" 500)
+  where "l uptol h = filter (\<lambda>i.  (l \<sqsubseteq> i \<sqsubset> h)) [0..<N]"
+
+lemma upto_set_list_eq:
+  "l upto h = set (l uptol h)"
+  unfolding set_between_def list_between_def by(simp)
+
 lemma upto_eq:
   assumes eq: "l = h"
   shows "l upto h = {}"
@@ -416,6 +423,49 @@ proof
     with eq show "x \<in> {}" by(auto)
   qed
 qed
+
+
+lemma upto_eq_mod: 
+  "l mod N = h mod N \<longleftrightarrow> l upto h = {}"
+proof
+  show "l mod N = h mod N \<Longrightarrow> l upto h = {}" 
+    by (simp add: between_strict_def nonzero_modulus.mod_dist_modeq 
+                  nonzero_modulus.set_between_def nonzero_modulus_axioms)
+  show " l upto h = {} \<Longrightarrow>l mod N = h mod N"
+    unfolding set_between_def 
+    by (metis (no_types, lifting) Collect_empty_eq Npos between_strict_def le_zero_eq 
+              mod_dist_def mod_dist_zero mod_less_divisor nonzero_modulus.mod_dist_mod_left 
+              nonzero_modulus.mod_dist_modeq nonzero_modulus_axioms not_less)
+qed
+
+lemma upto_eq_both :
+  assumes ll: "l < N" and hh: " h < N"
+  shows " l = h \<longleftrightarrow> l upto h = {}"
+proof -
+  from ll have X1: " l = l mod N"
+    by(auto)
+  from hh  have X2: " h = h mod N"
+    by(auto)
+  show ?thesis 
+    apply(subst X1)
+    apply(subst X2)
+    using upto_eq_mod by(auto)
+qed
+
+lemma uptol_eq_both :
+  assumes ll: "l < N" and hh: " h < N"
+  shows " l = h \<longleftrightarrow> l uptol h = []"
+  using ll hh upto_eq_both upto_set_list_eq
+  by simp
+    
+  
+    
+
+lemma uptol_eq:
+  assumes eq: "l = h"
+  shows "l uptol h = []"
+  using eq upto_set_list_eq upto_eq by(simp)
+
 
 lemma upto_mono_right:
   "\<And>a b c. a \<sqsubseteq> b \<sqsubseteq> c \<Longrightarrow> a upto b \<subseteq> a upto c"
