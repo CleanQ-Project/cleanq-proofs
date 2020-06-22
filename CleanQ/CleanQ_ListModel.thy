@@ -593,11 +593,11 @@ definition CleanQ_List_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a C
 
 definition CleanQ_List_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"        
   where "CleanQ_List_deq_x_pre K buf = Semantic.Normal ` {rb. I1_list_img rb K \<and> I2_list_img rb \<and> I3 rb \<and>
-                                                          buf \<in> set (lTYX rb) \<and> buf = hd (lTYX rb) \<and> buf \<notin> lSX rb }"
+                                                          (lTYX rb) \<noteq> [] \<and> buf = hd (lTYX rb) }"
 
 definition CleanQ_List_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"        
   where "CleanQ_List_deq_y_pre K buf = Semantic.Normal ` {rb. I1_list_img rb K \<and> I2_list_img rb \<and> I3 rb \<and>
-                                                          buf \<in> set (lTXY rb) \<and> buf = hd (lTXY rb) \<and> buf \<notin> lSY rb }"
+                                                          (lTXY rb) \<noteq> [] \<and> buf = hd (lTXY rb) }"
 
 
 end
