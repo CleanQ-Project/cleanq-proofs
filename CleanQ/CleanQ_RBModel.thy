@@ -379,7 +379,22 @@ lemma
   
   
   sorry
-    
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Dequeue Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+text \<open>
+  The \verb+dequeue+ operation is analogous to the List operations except that the elements
+  are read from a slot in the descriptor ring and then the pointers adapted accordingly. 
+\<close>
+
+definition CleanQ_RB_deq_x :: "'a CleanQ_RB_State  \<Rightarrow> 'a CleanQ_RB_State"
+  where "CleanQ_RB_deq_x rb = (let (b, rest) = rb_deq(rTYX rb) in rb \<lparr> rSY := (rSY rb) \<union> {b}, rTYX := rest \<rparr>)"
+
+definition CleanQ_RB_deq_y :: "'a CleanQ_RB_State  \<Rightarrow> 'a CleanQ_RB_State"
+  where "CleanQ_RB_deq_y rb = (let (b, rest) = rb_deq(rTXY rb) in rb \<lparr> rSY := (rSY rb) \<union> {b}, rTXY := rest \<rparr>)"
+
+
 (* ==================================================================================== *)
 subsection \<open>Pre- and post- conditions\<close>
 (* ==================================================================================== *)
