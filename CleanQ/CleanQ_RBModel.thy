@@ -146,30 +146,18 @@ definition rb_incr_tail :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
   where "rb_incr_tail rb = rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr>"
 
 
-
-
-text \<open>
-  
-\<close>
-
-lemma 
+(*lemma 
   assumes notfull: "\<not>(rb_full rb)"  and  hdinc: "rb' = rb \<lparr>   \<rparr>
-
+*)
 
 
 
 text \<open>
   Writing an entry into the ring buffer then corresponds to a function update.
 \<close>
+
 definition CleanQ_RB_upd :: "nat \<Rightarrow> 'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
   where "CleanQ_RB_upd i b rb = rb \<lparr> ring := (ring rb)(i := b) \<rparr>"
-
-
-
-
-
-
-
 
 
 definition rb_enq :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB" 
@@ -179,8 +167,6 @@ definition rb_enq :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
 definition rb_deq :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
   where "rb_deq rb = ((ring rb) (tail rb),  
                       rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
-  
-(*
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>System State\<close>
@@ -204,6 +190,7 @@ text \<open>
   elements. This can be a single, fixed-sized page frame, a variable-sized base-limit 
   segment, or a set of memory locations. 
 \<close>
+
 
 (*<*)
 (* Define some global variables to make Simpl/Complex proofs work *)
@@ -393,8 +380,23 @@ lemma
   
   sorry
     
- 
+(* ==================================================================================== *)
+subsection \<open>Pre- and post- conditions\<close>
+(* ==================================================================================== *)
 
+
+definition CleanQ_RB_enq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
+  where "CleanQ_RB_enq_x_pre K b =  Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and> b \<in> rSX rb }"
+
+definition CleanQ_RB_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
+  where "CleanQ_RB_enq_y_pre K b = Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and> b \<in> rSY rb}"
+
+definition CleanQ_RB_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
+  where "CleanQ_RB_deq_x_pre K buf = Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and>
+                                                        CleanQ_RB_list  (rTYX rb) \<noteq> [] \<and> buf = ring (rTYX rb) (tail (rTYX rb))}"
+definition CleanQ_RB_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
+  where "CleanQ_RB_deq_y_pre K buf = Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and>
+                                                        CleanQ_RB_list  (rTXY rb) \<noteq> [] \<and> buf = ring (rTXY rb) (tail (rTXY rb))}"
 
 (*
 
@@ -565,7 +567,6 @@ text \<open>
 
 fun CleanQ_RB_Invariants :: "'a set \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
   where "CleanQ_RB_Invariants K rb \<longleftrightarrow> I1_img rb K \<and> I2_img rb \<and> I3_img rb \<and> I4 rb \<and> I5 rb"
+*)*)
 
 end (*Modulus end *)
-*)
-end
