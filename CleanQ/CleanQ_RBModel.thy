@@ -66,18 +66,39 @@ text \<open>
   locale to work out the elements.
 \<close>
 
+(*
+
+This needs to get a proof to talk about the valid entries...
+
 definition rb_valid_entries :: "'a CleanQ_RB \<Rightarrow> nat list"
   where "rb_valid_entries rb = (nonzero_modulus.list_between 
                                        (size rb) (tail rb) (head rb))"
 
 
-text \<open>
-  Using the valid entries, we can define the buffer elements in the descriptor ring
-  by mapping them onto the ring-function of the CleanQ RB:
-\<close>
+lemma 
+  assumes sz: "size rb > 1" and  hh: "head rb < size rb" and ll: "tail rb < size rb"
+  shows "rb_valid_entries rb = (if (tail rb) \<le> (head rb) then [(tail rb) ..< (head rb)]
+                                else [0..<(head rb)] @ [(tail rb)..< (size rb)])"
+proof(cases)
+  assume norm: "(tail rb) \<le> (head rb)"
+  then show ?thesis
+  proof -
+    have X1: "rb_valid_entries rb = [tail rb..<head rb]"
+      sorry
+    with norm X1 show ?thesis by(auto)
+  qed
+next
+  assume norm: "\<not>(tail rb) \<le> (head rb)"
+  then show ?thesis 
+  proof -
+    have X1: "rb_valid_entries rb = [0..<head rb] @ [tail rb..<size rb]"
+      sorry
+    with norm X1 show ?thesis by(auto)
+  qed
+qed
 
-definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
-  where "CleanQ_RB_list rb = map (ring rb) (rb_valid_entries rb)"
+*)
+
 
 text \<open>
   We say a queue is full, if the enqueue operation would lead to the case
@@ -91,9 +112,41 @@ definition rb_empty :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_empty rb = ((head rb) = (tail rb))"
 
 
+text \<open>
+  Using the head and tail pointer we can now define the list of valid entries of the 
+  ring. We do this by a case distinction if head <= tail or the other way round.
+\<close>
+
+definition rb_valid_entries :: "'a CleanQ_RB \<Rightarrow> nat list"
+  where "rb_valid_entries rb = (if (tail rb) \<le> (head rb) then [(tail rb) ..< (head rb)]
+                                else [(tail rb)..< (size rb)] @ [0..<(head rb)])"
+
+text \<open>
+  Using the valid entries, we can define the buffer elements in the descriptor ring
+  by mapping them onto the ring-function of the CleanQ RB:
+\<close>
+
+
+definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
+  where "CleanQ_RB_list rb = map (ring rb) (rb_valid_entries rb)"
+
+text \<open>
+ We can now show that the list of valid entries is empty, when the predicate 
+ \verb+rb_empty+ is true.
+\<close>
+
 lemma 
   assumes sz: "size rb > 1" and  hh: "head rb < size rb" and ll: "tail rb < size rb"
-    shows "rb_empty rb \<longleftrightarrow> rb_valid_entries rb = []"
+  shows "rb_empty rb \<longleftrightarrow> rb_valid_entries rb = []"
+  unfolding  rb_valid_entries_def
+  by (metis Nil_is_append_conv ll nat_less_le order.order_iff_strict
+            rb_empty_def upt_eq_Cons_conv upt_rec)
+
+
+(*
+
+old proof using the modulo
+
 proof
   show "rb_empty rb \<Longrightarrow> rb_valid_entries rb = []"
   proof -
@@ -132,7 +185,7 @@ next
       unfolding rb_empty_def by(auto)
   qed
 qed
-
+*)
 
 
 text \<open>
@@ -145,28 +198,153 @@ definition rb_incr_head :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
 definition rb_incr_tail :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
   where "rb_incr_tail rb = rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr>"
 
+text \<open>
+  The two functions that increment the head or tail either remove or add an entry to the
+  list of valid entries:
+\<close>
 
-(*lemma 
-  assumes notfull: "\<not>(rb_full rb)"  and  hdinc: "rb' = rb \<lparr>   \<rparr>
-*)
+
+lemma rb_incr_tail_valid_entries:
+assumes notempty: "\<not> rb_empty rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+  shows "rb_valid_entries rb = (tail rb) # rb_valid_entries (rb_incr_tail rb)"
+  using notempty inrange inrange2
+  unfolding rb_valid_entries_def rb_incr_tail_def rb_empty_def
+  by (simp add: mod_Suc  upt_conv_Cons) 
+
+lemma rb_incr_tail_valid_entries_tail:
+  assumes notempty: "\<not> rb_empty rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+  shows "rb_valid_entries (rb_incr_tail rb) = tl (rb_valid_entries rb)"
+  using  inrange inrange2 notempty by (simp add:rb_incr_tail_valid_entries)
+
+lemma rb_incr_head_valid_entries:
+assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+  shows "(rb_valid_entries rb) @ [(head rb)] = rb_valid_entries (rb_incr_head rb)"
+  using notfull inrange inrange2 
+  unfolding rb_valid_entries_def rb_incr_head_def rb_full_def
+  apply(simp add: mod_Suc upt_Suc_append  upt_conv_Cons, auto)
+  by (metis inrange2 le_less_trans upt_Suc_append upt_rec)
+  
+lemma rb_incr_head_valid_entries_butlast:
+assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+shows "(rb_valid_entries rb) = butlast (rb_valid_entries (rb_incr_head rb))"
+   using  inrange inrange2 notfull
+   by (metis butlast_snoc rb_incr_head_valid_entries)
+
+text \<open>
+  Writing an entry into the ring buffer then corresponds to a function update. 
+\<close>
+
+definition rb_write :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow>'a CleanQ_RB"
+  where "rb_write b rb = rb \<lparr> ring := (ring rb)((head rb) := b) \<rparr>"
+
+lemma rb_write_perserves_valid:
+  "rb_valid_entries rb = rb_valid_entries (rb_write b rb)"
+  unfolding rb_write_def rb_valid_entries_def by(auto)
+
+
+text \<open>
+  The enqueue operation is then the combination of the update and the increment
+  of the head.
+\<close>
+
+definition rb_enq :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB" 
+  where "rb_enq b rb = rb_incr_head (rb_write b rb)"
+
+
+text \<open>
+  This produces the following updates to the structure
+\<close>
+
+
+definition rb_enq_alt :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB" 
+  where "rb_enq_alt b rb = rb \<lparr> ring := (ring rb)((head rb) := b),
+                            head := ((head rb) + 1) mod (size rb) \<rparr>"
+
+
+lemma rb_enq_equiv:
+  "rb_enq b rb = rb_enq_alt b rb"
+  unfolding rb_enq_alt_def rb_enq_def rb_incr_head_def rb_write_def by(auto)
+
+
+lemma rb_enq_buf :
+  assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+  shows "rb' = rb_enq b rb \<Longrightarrow> (ring (rb'))((head rb)) = b"
+  unfolding rb_enq_def rb_incr_head_def rb_write_def by(auto)
+
+text \<open>
+  Doing the enqueue operation then behaves as adding the buffer to the end
+  of the list.
+\<close>
+
+lemma rb_enq_valid_entries_incr_head:
+assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+shows "rb_valid_entries (rb_enq b rb) =  rb_valid_entries (rb_incr_head rb)"
+  using notfull inrange inrange2 rb_write_perserves_valid unfolding rb_enq_def
+  by (smt rb_full_def rb_incr_head_valid_entries rb_write_def select_convs(2) 
+          select_convs(3) select_convs(4) surjective update_convs(1))
+
+lemma rb_enq_valid_entries :
+assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+shows "rb_valid_entries (rb) @ [(head rb)] = rb_valid_entries (rb_enq b rb)"
+  using notfull inrange inrange2 rb_write_perserves_valid rb_enq_valid_entries_incr_head
+  by (simp add: rb_enq_valid_entries_incr_head rb_incr_head_valid_entries)
+
+
+lemma rb_enq_perserves_old_entries:
+  assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+  shows "map (ring (rb_enq b rb)) (rb_valid_entries (rb)) = map (ring rb) (rb_valid_entries (rb))"
+  using notfull inrange inrange2 rb_enq_buf unfolding rb_enq_def  rb_incr_head_def rb_write_def 
+  sorry (* TODO: do the proof here... I think it should hold" *)
+
+lemma
+assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+shows "CleanQ_RB_list(rb_enq b rb) = (CleanQ_RB_list rb) @ [b]"
+proof -
+
+  
+  have X0: "rb_valid_entries (rb_enq b rb) = rb_valid_entries (rb) @ [(head rb)]"
+    using inrange inrange2 notfull rb_enq_valid_entries by fastforce
+
+  have X1:
+    "CleanQ_RB_list(rb_enq b rb) = map (ring (rb_enq b rb)) (rb_valid_entries (rb_enq b rb))"
+    unfolding CleanQ_RB_list_def by simp
+
+  have X2: "... =  map (ring (rb_enq b rb)) (rb_valid_entries (rb) @ [(head rb)])"
+    by (simp add: X0)
+  have X3: "... =  map (ring (rb_enq b rb)) (rb_valid_entries (rb)) @ map (ring (rb_enq b rb)) ([head rb])"
+    by(auto)
+  have X4: "... =  map (ring (rb_enq b rb)) (rb_valid_entries (rb)) @ [(ring (rb_enq b rb)) (head rb)]"
+    by(auto)
+  have X5: "... = map (ring rb) (rb_valid_entries (rb)) @ [(ring (rb_enq b rb)) (head rb)]"
+    using notfull inrange inrange2 rb_enq_perserves_old_entries by(simp)
+
+  have X6: "(ring (rb_enq b rb)) (head rb) = b"
+    using notfull inrange inrange2
+    by (simp add: rb_enq_buf)
+
+  have X7 : "(CleanQ_RB_list rb) = map (ring rb) (rb_valid_entries (rb))"
+    unfolding CleanQ_RB_list_def by simp
+
+  show ?thesis 
+    using X1 X2 X3 X4 X5 X6 X7 by(auto)               
+qed
 
 
 
 text \<open>
-  Writing an entry into the ring buffer then corresponds to a function update.
+ TODO: how is this best expressed ??
 \<close>
-
-definition CleanQ_RB_upd :: "nat \<Rightarrow> 'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
-  where "CleanQ_RB_upd i b rb = rb \<lparr> ring := (ring rb)(i := b) \<rparr>"
-
-
-definition rb_enq :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB" 
-  where "rb_enq b rb = rb \<lparr> ring := (ring rb)((head rb) := b),
-                            head := ((head rb) + 1) mod (size rb) \<rparr>"
-
 definition rb_deq :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
   where "rb_deq rb = ((ring rb) (tail rb),  
                       rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
+
+
+lemma
+assumes notempty: "\<not> rb_empty rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+shows "CleanQ_RB_list (snd (rb_deq rb)) = tl (CleanQ_RB_list rb)"
+  oops
+
+
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>System State\<close>
@@ -364,7 +542,9 @@ definition CleanQ_RB_enq_y :: "'a \<Rightarrow> 'a CleanQ_RB_State  \<Rightarrow
   where "CleanQ_RB_enq_y b rb = rb \<lparr> rSY := (rSY rb) - {b}, rTYX := rb_enq b (rTYX rb) \<rparr>"
 
 
+end 
 
+(* 
 lemma 
   assumes notfull : "\<not> rb_full rb" and pos: "i = (head rb)"
   shows "(ring (rb_enq b rb)) i = b"
@@ -413,8 +593,6 @@ definition CleanQ_RB_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a Cle
   where "CleanQ_RB_deq_y_pre K buf = Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and>
                                                         CleanQ_RB_list  (rTXY rb) \<noteq> [] \<and> buf = ring (rTXY rb) (tail (rTXY rb))}"
 
-(*
-
 
 lemma 
  assumes notfull : "\<not> rb_full rb"  and  pos: "i = (head rb)"
@@ -443,7 +621,8 @@ lemma CleanQ_RB_enq_x_equal :
     shows "CleanQ_RB2List (CleanQ_RB_enq_x b rb) = CleanQ_List_enq_x b (CleanQ_RB2List rb)"
   unfolding CleanQ_RB2List_def CleanQ_RB_enq_x_def CleanQ_List_enq_x_def rb_enq_def CleanQ_RB_list_def
   apply(simp)
-
+  oops
+end 
 (*
 
 text \<open>
@@ -582,6 +761,10 @@ text \<open>
 
 fun CleanQ_RB_Invariants :: "'a set \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
   where "CleanQ_RB_Invariants K rb \<longleftrightarrow> I1_img rb K \<and> I2_img rb \<and> I3_img rb \<and> I4 rb \<and> I5 rb"
-*)*)
+*)
 
 end (*Modulus end *)
+
+end
+
+*)
