@@ -121,11 +121,23 @@ definition rb_valid_entries :: "'a CleanQ_RB \<Rightarrow> nat list"
   where "rb_valid_entries rb = (if (tail rb) \<le> (head rb) then [(tail rb) ..< (head rb)]
                                 else [(tail rb)..< (size rb)] @ [0..<(head rb)])"
 
+
+lemma rb_valid_entries_head :
+  "(head rb) \<notin> set (rb_valid_entries rb)"
+  unfolding rb_valid_entries_def by(auto)
+
+lemma rb_valid_entries_tail1 :
+  "head rb = tail rb \<Longrightarrow> (tail rb) \<notin> set (rb_valid_entries rb)"
+  unfolding rb_valid_entries_def by(simp)
+
+lemma rb_valid_entries_tail2 :
+  "tail rb < size rb \<Longrightarrow> head rb \<noteq> tail rb \<Longrightarrow> (tail rb) : set (rb_valid_entries rb)"
+  unfolding rb_valid_entries_def by(simp)
+
 text \<open>
   Using the valid entries, we can define the buffer elements in the descriptor ring
   by mapping them onto the ring-function of the CleanQ RB:
 \<close>
-
 
 definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
   where "CleanQ_RB_list rb = map (ring rb) (rb_valid_entries rb)"
@@ -203,7 +215,6 @@ text \<open>
   list of valid entries:
 \<close>
 
-
 lemma rb_incr_tail_valid_entries:
 assumes notempty: "\<not> rb_empty rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
   shows "rb_valid_entries rb = (tail rb) # rb_valid_entries (rb_incr_tail rb)"
@@ -229,6 +240,16 @@ assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and i
 shows "(rb_valid_entries rb) = butlast (rb_valid_entries (rb_incr_head rb))"
    using  inrange inrange2 notfull
    by (metis butlast_snoc rb_incr_head_valid_entries)
+
+
+lemma rb_incr_head_ring: 
+  "(ring (rb_incr_head rb)) = ring rb"
+  unfolding rb_incr_head_def by(auto)
+
+lemma rb_incr_tail_ring: 
+  "(ring (rb_incr_tail rb)) = ring rb"
+  unfolding rb_incr_tail_def by(auto)
+
 
 text \<open>
   Writing an entry into the ring buffer then corresponds to a function update. 
@@ -290,11 +311,29 @@ shows "rb_valid_entries (rb) @ [(head rb)] = rb_valid_entries (rb_enq b rb)"
   by (simp add: rb_enq_valid_entries_incr_head rb_incr_head_valid_entries)
 
 
+lemma rb_enq_preserves_valid_entries:
+  assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
+  shows "\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_enq b rb)) i = (ring rb) i"
+proof -
+
+  have X1: "\<And>i. (ring (rb_enq b rb)) i = ring (rb_incr_head (rb_write b rb)) i"
+    unfolding rb_enq_def by(auto)
+  have X2: "\<And>i. ring (rb_incr_head (rb_write b rb)) i =  ring (rb_write b rb) i"
+    using rb_incr_head_ring by metis
+  have X3: "(\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_enq b rb)) i = (ring rb) i) 
+    = (\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_write b rb) i = (ring rb) i))"
+    using X1 X2 by(auto)
+      
+  show ?thesis
+    using X3 notfull inrange inrange2 
+    by (simp add: rb_valid_entries_head rb_write_def)
+qed
+
 lemma rb_enq_perserves_old_entries:
   assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
-  shows "map (ring (rb_enq b rb)) (rb_valid_entries (rb)) = map (ring rb) (rb_valid_entries (rb))"
-  using notfull inrange inrange2 rb_enq_buf unfolding rb_enq_def  rb_incr_head_def rb_write_def 
-  sorry (* TODO: do the proof here... I think it should hold" *)
+  shows "(map (ring (rb_enq b rb)) (rb_valid_entries (rb))) = (map (ring rb) (rb_valid_entries (rb)))"
+  using notfull inrange inrange2 
+  by (simp add: rb_enq_preserves_valid_entries)
 
 lemma
 assumes notfull: "\<not> rb_full rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
