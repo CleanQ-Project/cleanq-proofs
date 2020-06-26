@@ -271,6 +271,17 @@ definition rb_write :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow>'a CleanQ_RB"
 
 
 text \<open>
+  we can define functions to read the entries of the ring buffer:
+\<close>
+
+definition rb_read :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a"
+  where "rb_read i rb = (ring rb) i"
+
+definition rb_read_tail :: "'a CleanQ_RB \<Rightarrow> 'a"
+  where "rb_read_tail rb = rb_read (tail rb) rb"
+
+
+text \<open>
   Writing an entry preserves the list of valid entries as well as the validity of
   the ring buffer. 
 \<close>
@@ -312,10 +323,18 @@ text \<open>
 definition rb_can_enq :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_can_enq rb \<longleftrightarrow> \<not>(rb_full rb)"
 
-lemma rb_enq_buf :
+lemma rb_enq_buf_ring :
   assumes notfull: "\<not> rb_full rb" and valid: "rb_valid rb" 
   shows "rb' = rb_enq b rb \<Longrightarrow> (ring (rb'))((head rb)) = b"
   unfolding rb_enq_def rb_incr_head_def rb_write_def by(auto)
+
+lemma rb_enq_buf:
+  assumes notfull: "\<not> rb_full rb" and valid: "rb_valid rb" 
+  shows "rb' = rb_enq b rb \<Longrightarrow> rb_read (head rb) rb' = b"
+  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
+  
+  
+
 
 text \<open>
   Doing the enqueue operation then behaves as adding the buffer to the end
@@ -383,7 +402,7 @@ proof -
     using notfull valid rb_enq_perserves_old_entries by(simp)
 
   have X6: "(ring (rb_enq b rb)) (head rb) = b"
-    using notfull valid  by (simp add: rb_enq_buf)
+    using notfull valid  by (simp add: rb_enq_buf_ring)
 
   have X7 : "(CleanQ_RB_list rb) = map (ring rb) (rb_valid_entries (rb))"
     unfolding CleanQ_RB_list_def by simp
@@ -556,6 +575,21 @@ lemma I3_rb_img_lift:
 
 
 (* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>I4: Valid Ringbuffers\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+text \<open>
+  For well-defined outcomes, we need to have well-defined ringbuffers in the state. 
+  We define this Invariant to be the conjunction of the \verb+rb_valid+ predicates
+  for both ringbuffers in the state.
+\<close>
+
+fun I4_rb_valid :: "'a CleanQ_RB_State \<Rightarrow> bool"
+  where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb)))"
+
+
+
+(* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>All CleanQ RB Invariants\<close>
 (* ------------------------------------------------------------------------------------ *)
 
@@ -565,7 +599,8 @@ text \<open>
 \<close>
 
 fun CleanQ_RB_Invariants :: "'a set \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
-  where "CleanQ_RB_Invariants K rb \<longleftrightarrow> I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb"
+  where "CleanQ_RB_Invariants K rb \<longleftrightarrow> I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb
+                                       \<and> I4_rb_valid rb"
 
 
 text \<open>
@@ -605,18 +640,118 @@ definition CleanQ_RB_enq_y :: "'a \<Rightarrow> 'a CleanQ_RB_State  \<Rightarrow
   where "CleanQ_RB_enq_y b rb = rb \<lparr> rSY := (rSY rb) - {b}, rTYX := rb_enq b (rTYX rb) \<rparr>"
 
 
+text \<open>
+  The enqueue operation cannot proceed if there is no space in the corresponding ring
+  buffer.
+\<close>
+
+definition CleanQ_RB_enq_x_possible :: "'a CleanQ_RB_State \<Rightarrow> bool"
+  where "CleanQ_RB_enq_x_possible rb \<longleftrightarrow> \<not>(rb_full (rTXY rb))"
+
+definition CleanQ_RB_enq_y_possible :: "'a CleanQ_RB_State \<Rightarrow> bool"
+  where "CleanQ_RB_enq_y_possible rb \<longleftrightarrow> \<not>(rb_full (rTYX rb))"
 
 
 text \<open>
-  We can now show that the result of the enqueue operation is the same as the
-  enqueue operation on the list model. 
+  Next we can show that if we can enqueue something into the bounded ring buffer, 
+  the system behaves exactly like the list model, by showing the commutative 
+  of the lifting function and the enqueue operation.
 \<close>
 
 lemma CleanQ_RB_enq_x_equal :
-  assumes notfull: "\<not> rb_full (rTXY rb)"
-  shows "CleanQ_RB2List (CleanQ_RB_enq_x b rb) = CleanQ_List_enq_x b (CleanQ_RB2List rb)"
-  unfolding CleanQ_RB2List_def CleanQ_RB_enq_x_def  CleanQ_List_enq_x_def
-  
+  assumes can_enq: "CleanQ_RB_enq_x_possible rb" 
+      and invariants : "CleanQ_RB_Invariants K rb"
+  shows "CleanQ_RB2List (CleanQ_RB_enq_x b rb) = CleanQ_List_enq_x b (CleanQ_RB2List rb)"  
+  unfolding CleanQ_RB2List_def CleanQ_List_enq_x_def CleanQ_RB_enq_x_def
+  using can_enq invariants 
+  by (simp add: CleanQ_RB_enq_x_possible_def rb_enq_list_add)
+
+lemma CleanQ_RB_enq_y_equal :
+  assumes can_enq: "CleanQ_RB_enq_y_possible rb" 
+      and invariants : "CleanQ_RB_Invariants K rb"
+  shows "CleanQ_RB2List (CleanQ_RB_enq_y b rb) = CleanQ_List_enq_y b (CleanQ_RB2List rb)"  
+  unfolding CleanQ_RB2List_def CleanQ_List_enq_y_def CleanQ_RB_enq_y_def
+  using can_enq invariants 
+  by (simp add: CleanQ_RB_enq_y_possible_def rb_enq_list_add)
+
+
+text \<open>
+  We can now show where the buffer \verb+b+ ends up precisely, when we enqueue it into
+  the ring buffer. A pre-requisit here, is that the buffer is owned by the agent, and
+  that there is space to enqueue the buffer. We do this for X and Y separately.
+\<close>
+
+lemma CleanQ_RB_enq_x_result :
+  assumes X_owned: "b \<in> rSX rb"  and  X_enq: "rb' = CleanQ_RB_enq_x b rb"
+    and invariants : "CleanQ_RB_Invariants K rb"  
+    and can_enq:  "CleanQ_RB_enq_x_possible rb" 
+  shows  "b \<notin> rSX rb' \<and> b \<notin> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTYX rb')) 
+          \<and> b = rb_read (head (rTXY rb)) (rTXY rb')  \<and> b \<in> set (CleanQ_RB_list (rTXY rb'))"
+proof -
+  from can_enq invariants X_enq have X1:
+    "b \<notin> rSX rb'"
+    unfolding CleanQ_RB_enq_x_def by(simp)
+    
+  from can_enq invariants X_enq have X2:
+    "b \<notin> rSY rb'"
+    using invariants X_owned unfolding CleanQ_RB_enq_x_def by auto
+
+  from can_enq invariants X_enq have X3:
+    " b \<notin> set (CleanQ_RB_list (rTYX rb'))"
+    using invariants X_owned unfolding CleanQ_RB_enq_x_def by auto
+
+   from can_enq invariants X_enq have X4:
+    "b = rb_read (head (rTXY rb)) (rTXY rb')"
+     using X_owned unfolding CleanQ_RB_enq_x_def CleanQ_RB_enq_x_possible_def
+     by (simp add: rb_enq_buf) 
+     
+    have X5:
+    "b \<in> set (CleanQ_RB_list (rTXY rb'))"
+     apply (subst X_enq)
+      apply (simp add:CleanQ_RB_enq_x_def)
+      using CleanQ_RB_enq_x_possible_def can_enq invariants rb_enq_list_add by fastforce
+          
+  show ?thesis
+    using X1 X2 X3 X4 X5 by(auto)
+qed 
+
+
+lemma CleanQ_RB_enq_y_result :
+  assumes Y_owned: "b \<in> rSY rb"  and  Y_enq: "rb' = CleanQ_RB_enq_y b rb"
+    and invariants : "CleanQ_RB_Invariants K rb"  
+    and can_enq:  "CleanQ_RB_enq_y_possible rb" 
+  shows  "b \<notin> rSX rb' \<and> b \<notin> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTXY rb')) 
+          \<and> b = rb_read (head (rTYX rb)) (rTYX rb')  \<and> b \<in> set (CleanQ_RB_list (rTYX rb'))"
+proof -
+  from can_enq invariants Y_enq have X1:
+    "b \<notin> rSY rb'"
+    unfolding CleanQ_RB_enq_y_def by(simp)
+    
+  from can_enq invariants Y_enq have X2:
+    "b \<notin> rSX rb'"
+    using invariants Y_owned unfolding CleanQ_RB_enq_y_def by auto
+
+  from can_enq invariants Y_enq have X3:
+    " b \<notin> set (CleanQ_RB_list (rTXY rb'))"
+    using invariants Y_owned unfolding CleanQ_RB_enq_y_def by auto
+
+   from can_enq invariants Y_enq have X4:
+    "b = rb_read (head (rTYX rb)) (rTYX rb')"
+     using Y_owned unfolding CleanQ_RB_enq_y_def CleanQ_RB_enq_y_possible_def
+     by (simp add: rb_enq_buf) 
+     
+    have X5:
+    "b \<in> set (CleanQ_RB_list (rTYX rb'))"
+     apply (subst Y_enq)
+      apply (simp add:CleanQ_RB_enq_y_def)
+      using CleanQ_RB_enq_y_possible_def can_enq invariants rb_enq_list_add by fastforce
+          
+  show ?thesis
+    using X1 X2 X3 X4 X5 by(auto)
+qed 
+
+end
+(*
 
 lemma CleanQ_RB_enq_y_equal :
   "CleanQ_List2Set (CleanQ_List_enq_y b rb) = CleanQ_Set_enq_y b (CleanQ_List2Set rb)"
