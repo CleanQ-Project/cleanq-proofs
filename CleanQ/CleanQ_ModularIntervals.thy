@@ -204,7 +204,7 @@ proof -
   with aN bN show ?thesis by(auto)
 qed
 
-definition between_strict :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> bool"  ("_ \<sqsubseteq> _ \<sqsubset> _")
+definition between_strict :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> bool"  ("_ \<sqsubseteq> _ \<sqsubset> _" 200)
   where "between_strict l x h \<longleftrightarrow> x \<ominus> l < h \<ominus> l"
 
 lemma between_strict_eq:
@@ -214,7 +214,7 @@ proof(rule contrapos_pn[OF betw])
   assume eq: "a = c"
   with betw have "b = c"
     unfolding between_strict_def by(simp add:mod_dist_simps)
-  thus "\<not> a \<sqsubseteq> b \<sqsubset> c"
+  thus "\<not> (a \<sqsubseteq> b \<sqsubset> c)"
     unfolding between_strict_def by(simp)
 qed
 
@@ -288,7 +288,7 @@ proof(rule contrapos_pp[OF betw])
   moreover from betw have "(c \<ominus> b) + (b \<ominus> a) = c \<ominus> a"
     by(rule interval_split_strict)
   ultimately have "b \<ominus> a = c \<ominus> a" by(simp)
-  thus "\<not> a \<sqsubseteq> b \<sqsubset> c" by(simp add:between_strict_def)
+  thus "\<not> (a \<sqsubseteq> b \<sqsubset> c)" by(simp add:between_strict_def)
 qed
 
 lemma between_strict_disj:
@@ -332,27 +332,27 @@ lemma between_rhs:
   unfolding between_def by(simp)
 
 lemma between_mod_left_iff:
-  "\<And>a b c. (a mod N \<sqsubseteq> b \<sqsubseteq> c) = (a \<sqsubseteq> b \<sqsubseteq> c)"
+  "\<And>a b c. ((a mod N) \<sqsubseteq> b \<sqsubseteq> c) = (a \<sqsubseteq> b \<sqsubseteq> c)"
   by(simp add:between_def mod_dist_simps)
 
 lemma between_mod_middle_iff:
-  "\<And>a b c. (a \<sqsubseteq> b mod N \<sqsubseteq> c) = (a \<sqsubseteq> b \<sqsubseteq> c)"
+  "\<And>a b c. (a \<sqsubseteq> (b mod N) \<sqsubseteq> c) = (a \<sqsubseteq> b \<sqsubseteq> c)"
   by(simp add:between_def mod_dist_simps)
 
 lemma between_mod_right_iff:
-  "\<And>a b c. (a \<sqsubseteq> b \<sqsubseteq> c mod N) = (a \<sqsubseteq> b \<sqsubseteq> c)"
+  "\<And>a b c. (a \<sqsubseteq> b \<sqsubseteq> (c mod N)) = (a \<sqsubseteq> b \<sqsubseteq> c)"
   by(simp add:between_def mod_dist_simps)
 
 lemma between_strict_mod_left_iff:
-  "\<And>a b c. (a mod N \<sqsubseteq> b \<sqsubset> c) = (a \<sqsubseteq> b \<sqsubset> c)"
+  "\<And>a b c. ((a mod N) \<sqsubseteq> b \<sqsubset> c) = (a \<sqsubseteq> b \<sqsubset> c)"
   by(simp add:between_strict_def mod_dist_simps)
 
 lemma between_strict_mod_middle_iff:
-  "\<And>a b c. (a \<sqsubseteq> b mod N \<sqsubset> c) = (a \<sqsubseteq> b \<sqsubset> c)"
+  "\<And>a b c. (a \<sqsubseteq> (b mod N) \<sqsubset> c) = (a \<sqsubseteq> b \<sqsubset> c)"
   by(simp add:between_strict_def mod_dist_simps)
 
 lemma between_strict_mod_right_iff:
-  "\<And>a b c. (a \<sqsubseteq> b \<sqsubset> c mod N) = (a \<sqsubseteq> b \<sqsubset> c)"
+  "\<And>a b c. (a \<sqsubseteq> b \<sqsubset> (c mod N)) = (a \<sqsubseteq> b \<sqsubset> c)"
   by(simp add:between_strict_def mod_dist_simps)
 
 lemmas between_simps =
@@ -367,7 +367,7 @@ lemma between_disj:
             (Right) "b \<sqsubseteq> x \<sqsubseteq> c"
 proof(cases "x mod N = c mod N")
   case True
-  hence "b \<sqsubseteq> x mod N \<sqsubseteq> c mod N" by(simp add:between_simps)
+  hence "b \<sqsubseteq> (x mod N) \<sqsubseteq> (c mod N)" by(simp add:between_simps)
   hence "b \<sqsubseteq> x \<sqsubseteq> c" by(simp add:between_simps)
   thus thesis by(rule Right)
 next
@@ -458,8 +458,6 @@ lemma uptol_eq_both :
   using ll hh upto_eq_both upto_set_list_eq
   by simp
     
-  
-    
 
 lemma uptol_eq:
   assumes eq: "l = h"
@@ -476,7 +474,7 @@ lemma upto_mono_left:
   unfolding set_between_def by(auto dest:between_extend_left)
 
 lemma upto_between_strict_eq:
-  "(b < N \<and> a \<sqsubseteq> b \<sqsubset> c) = (b \<in> a upto c)"
+  "(b < N \<and> (a \<sqsubseteq> b \<sqsubset> c)) = (b \<in> a upto c)"
   unfolding set_between_def between_strict_def by(auto)
 
 lemma upto_union:
@@ -522,6 +520,321 @@ proof(intro iffD1[OF subset_empty] subsetI)
   txt {* Derive a contradiction. *}
   with part_ac pos_bx show "x \<in> {}" by(simp)
 qed
+
+
+lemma 
+  assumes leq: "l \<le> h" and ll: "l < N" and hh: "h \<le> N"
+  shows "l \<sqsubseteq> h \<sqsubset> N"
+  unfolding between_strict_def mod_dist_def
+  using leq ll hh 
+  oops
+
+
+lemma 
+  between_strict_geq_lt:
+  assumes leq: "l \<le> h" and ll: "l \<le> N" and hh: "h \<le> N"
+  shows "(k < N \<and> (l \<sqsubseteq> k \<sqsubset> h)) \<Longrightarrow> (l \<le> k \<and> k < h)"
+proof -
+    assume pre: "k < N \<and> (l \<sqsubseteq> k \<sqsubset> h)"
+
+    from pre have X1:
+      "((LEAST i. (l + i) mod N = k mod N) < (LEAST i. (l + i) mod N = h mod N))"
+      unfolding between_strict_def mod_dist_def by(auto)
+
+    from pre have Y1: "(LEAST i. (l + i) mod N = k mod N) = k - l"
+    proof -
+      have P: "(\<lambda>i.(l + i) mod N = k mod N) (k - l)"
+        by (smt ab_semigroup_add_class.add_ac(1) add.left_commute add_diff_cancel_right'
+                hh le_add_diff_inverse leq less_imp_le_nat linorder_neqE_nat 
+                mod_dist_right_inverse mod_less nonzero_modulus.between_strict_def 
+                nonzero_modulus.mod_dist_unique nonzero_modulus_axioms not_add_less1 pre)
+      have I: "\<And>y. (\<lambda>i. (l + i) mod N = k mod N) y \<Longrightarrow> (k - l) \<le> y"
+        using le_diff_conv mod_less_eq_dividend
+        using pre by fastforce
+            
+      show ?thesis
+         using P I by(simp add:Least_equality)
+     qed
+    
+    have Y2: "(LEAST i. (l + i) mod N = h mod N) = h - l"
+    proof -
+      have P: "(\<lambda>i. (l + i) mod N = h mod N) (h - l)"
+        by (simp add: leq)
+      have I: "\<And>y. (\<lambda>i.  (l + i) mod N = h mod N) y \<Longrightarrow> (h - l) \<le> y"
+         using le_diff_conv mod_less_eq_dividend
+         by (metis add.commute between_strict_eq between_strict_mod_right_iff hh 
+                   le_add1 le_neq_implies_less mod_if not_less pre)
+            
+      show ?thesis
+         using P I by(simp add:Least_equality)
+     qed
+
+    from X1 Y1 Y2 have X2:
+      "(k - l) < (h - l)"
+      by(simp)
+
+    from X2 have X3: "k < h"
+      by(auto)
+
+    have Z1:
+      "(\<lambda>i.(l + i) mod N = k mod N) (k - l)" 
+      by (metis (mono_tags, lifting) LeastI_ex Y1 mod_dist_left_inverse)  
+
+    have  X4: "l \<le> k"
+      using pre ll hh leq Y1 Y2 Z1
+      by (metis X2 add_cancel_right_right diff_is_0_eq' le_neq_implies_less less_or_eq_imp_le mod_less nat_neq_iff)
+
+    from X3 X4 show ?thesis by(simp)
+qed
+
+(*
+lemma 
+  assumes leq: "l \<le> h" and ll: "l \<le> N" and hh: "h \<le> N"
+  shows "(k < N \<and> (l \<sqsubseteq> k \<sqsubset> h)) = (l \<le> k \<and> k < h)"
+proof(rule iffI)
+  show "k < N \<and> (l \<sqsubseteq> k \<sqsubset> h) \<Longrightarrow> l \<le> k \<and> k < h"
+  proof -
+    assume pre: "k < N \<and> (l \<sqsubseteq> k \<sqsubset> h)"
+
+    from pre have X1:
+      "((LEAST i. (l + i) mod N = k mod N) < (LEAST i. (l + i) mod N = h mod N))"
+      unfolding between_strict_def mod_dist_def by(auto)
+
+    from pre have Y1: "(LEAST i. (l + i) mod N = k mod N) = k - l"
+    proof -
+      have P: "(\<lambda>i.(l + i) mod N = k mod N) (k - l)"
+        by (smt ab_semigroup_add_class.add_ac(1) add.left_commute add_diff_cancel_right' hh le_add_diff_inverse leq less_imp_le_nat linorder_neqE_nat mod_dist_right_inverse mod_less nonzero_modulus.between_strict_def nonzero_modulus.mod_dist_unique nonzero_modulus_axioms not_add_less1 pre)
+      have I: "\<And>y. (\<lambda>i. (l + i) mod N = k mod N) y \<Longrightarrow> (k - l) \<le> y"
+        using le_diff_conv mod_less_eq_dividend
+        using pre by fastforce
+            
+      show ?thesis
+         using P I by(simp add:Least_equality)
+     qed
+    
+    have Y2: "(LEAST i. (l + i) mod N = h mod N) = h - l"
+    proof -
+      have P: "(\<lambda>i. (l + i) mod N = h mod N) (h - l)"
+        by (simp add: leq)
+      have I: "\<And>y. (\<lambda>i.  (l + i) mod N = h mod N) y \<Longrightarrow> (h - l) \<le> y"
+         using le_diff_conv mod_less_eq_dividend
+         by (metis add.commute between_strict_eq between_strict_mod_right_iff hh le_add1 le_neq_implies_less mod_if not_less pre)  (*by presburger *)
+            
+      show ?thesis
+         using P I by(simp add:Least_equality)
+     qed
+
+    from X1 Y1 Y2 have X2:
+      "(k - l) < (h - l)"
+      by(simp)
+
+    from X2 have X3: "k < h"
+      by(auto)
+
+    have Z1:
+      "(\<lambda>i.(l + i) mod N = k mod N) (k - l)" 
+      by (metis (mono_tags, lifting) LeastI_ex Y1 mod_dist_left_inverse)  
+
+    have  X4: "l \<le> k"
+      using pre ll hh leq Y1 Y2 Z1
+      by (metis X2 add_cancel_right_right diff_is_0_eq' le_neq_implies_less less_or_eq_imp_le mod_less nat_neq_iff)
+
+    from X3 X4 show ?thesis by(simp)
+  qed
+  show " l \<le> k \<and> k < h \<Longrightarrow> k < N \<and> (l \<sqsubseteq> k \<sqsubset> h)"
+  proof -
+    assume pre: "l \<le> k \<and> k < h"
+
+    from pre have Y1: "(LEAST i. (l + i) mod N = k mod N) = k - l"
+    proof -
+      have P: "(\<lambda>i.(l + i) mod N = k mod N) (k - l)"
+        by (smt ab_semigroup_add_class.add_ac(1) add.left_commute add_diff_cancel_right' hh le_add_diff_inverse leq less_imp_le_nat linorder_neqE_nat mod_dist_right_inverse mod_less nonzero_modulus.between_strict_def nonzero_modulus.mod_dist_unique nonzero_modulus_axioms not_add_less1 pre)
+      have I: "\<And>y. (\<lambda>i. (l + i) mod N = k mod N) y \<Longrightarrow> (k - l) \<le> y"
+        using le_diff_conv mod_less_eq_dividend
+        using pre ll hh leq 
+        by fastforce
+            
+      show ?thesis
+         using P I by(simp add:Least_equality)
+     qed
+
+    have Y2: "(LEAST i. (l + i) mod N = h mod N) = h - l"
+    proof -
+      have P: "(\<lambda>i. (l + i) mod N = h mod N) (h - l)"
+        by (simp add: leq)
+      have I: "\<And>y.  (\<lambda>i.  (l + i) mod N = h mod N) y \<Longrightarrow> (h - l) \<le> y"
+      proof cases
+        assume heq: "h \<noteq> N"
+        then show "\<And>y.  (\<lambda>i.  (l + i) mod N = h mod N) y \<Longrightarrow> (h - l) \<le> y" 
+          using hh le_diff_conv by fastforce
+      next
+        assume heq: "\<not>(h \<noteq> N)"
+        then show "\<And>y.  (\<lambda>i.  (l + i) mod N = h mod N) y \<Longrightarrow> (h - l) \<le> y" 
+        proof -
+          from heq have equa: "h = N"
+            by(auto)
+
+          have rep: 
+            "\<And>y.  (\<lambda>i.  (l + i) mod N = 0) y \<Longrightarrow> (h - l) \<le> y"
+            try
+            sorry
+
+          show "\<And>y.  (\<lambda>i.  (l + i) mod N = h mod N) y \<Longrightarrow> (h - l) \<le> y"
+            using equa heq rep by(auto)
+        qed
+      qed
+                   
+      show ?thesis
+         using P I by(simp add:Least_equality)
+     qed
+
+    from pre have Y3:  "(k - l) < (h - l)"
+       by(auto)
+  
+    have X1: "k < N"
+      using pre hh by(simp)
+
+    have X2: "(l \<sqsubseteq> k \<sqsubset> h)"
+      using Y1 Y2 Y3 unfolding between_strict_def mod_dist_def by(auto)
+
+    show ?thesis
+      using X1 X2 by(auto)
+  qed
+qed
+
+lemma uptol_elements:
+  assumes leq: "l \<le> h" and ll: "l \<le> N" and hh: "h \<le> N"
+  shows "l uptol h = [l..<h]"
+proof -
+  have X0:
+    "(l uptol h) = filter (\<lambda>i. (l \<sqsubseteq> i \<sqsubset> h)) [0..<N]"
+    unfolding list_between_def by(simp)
+
+  have xx: 
+    "0 \<le> l" 
+    by(auto)
+
+  from leq ll hh xx have par :
+    "[0..<N] = [0..<l] @ [l..<h] @ [h..<N]"
+     by (metis le_Suc_ex upt_add_eq_append)
+
+   from par have splitlist:
+     "filter (\<lambda>i. (l \<le> i \<and> i < h)) [0..<N] = 
+        filter (\<lambda>i. (l \<le> i \<and> i < h)) ([0..<l] @ [l..<h] @ [h..<N])"
+    by(auto)
+
+  have splitfilter: 
+    "filter (\<lambda>i. (l \<le> i \<and> i < h)) ([0..<l] @ [l..<h] @ [h..<N]) = 
+        filter (\<lambda>i. (l \<le> i \<and> i < h)) ([0..<l])
+      @ filter (\<lambda>i. (l \<le> i \<and> i < h)) ( [l..<h])
+      @ filter (\<lambda>i. (l \<le> i \<and> i < h)) ( [h..<N])"
+    by(auto)
+
+  have upper:
+    "\<forall>x \<in> set([h..<N]). \<not>((\<lambda>i. (l \<le> i \<and> i < h)) x)"
+    by(auto)
+
+  from upper have upperfilter:
+    "filter (\<lambda>i. (l \<le> i \<and> i < h)) ( [h..<N]) = []"
+    by(simp)
+
+  have lower:
+    "\<forall>x \<in> set([0..<l]). \<not>((\<lambda>i. (l \<le> i \<and> i < h)) x)"
+    by(auto)
+
+  from lower have lowerfilter:
+    "filter (\<lambda>i. (l \<le> i \<and> i < h)) ([0..<l]) = []"
+    by(auto)
+
+  from upperfilter lowerfilter have drop:
+    "filter (\<lambda>i. (l \<le> i \<and> i < h)) ([0..<l] @ [l..<h] @ [h..<N]) = 
+     filter (\<lambda>i. (l \<le> i \<and> i < h)) ( [l..<h])"
+    by(auto)
+
+  have mid:
+    "\<forall>x \<in> set [l..<h].  (\<lambda>i. (l \<le> i \<and> i < h)) x"
+    by(auto)
+
+  from mid have midfilter:
+    "filter (\<lambda>i. (l \<le> i \<and> i < h)) ( [l..<h]) = [l..<h]"
+    by(auto)
+
+  
+  from splitlist drop midfilter have X1:
+    "[l..<h] = filter (\<lambda>i. (l \<le> i \<and> i < h)) [0..<N]"
+    by(auto)
+
+  from leq ll hh have X2:
+    "\<And>i. i < N \<and> (l \<sqsubseteq> i \<sqsubset> h) = (l \<le> i \<and> i < h)"
+    using between_strict_geq_lt oops
+    sorry
+
+  show ?thesis
+    using X0 X1 X2 by(auto)
+qed
+
+
+lemma "0 uptol N = [0..<N]"
+  by (simp add: uptol_elements)
+
+lemma "0 upto N = {0..<N}"
+  by (simp add: upto_set_list_eq uptol_elements)
+
+
+
+lemma uptol_elements_wrap:
+  assumes geq: "l > h" and ll: "l \<le> N" and hh: "h \<le> N"
+  shows  "l uptol h = [0..<h] @ [l..<N]"
+  oops
+
+
+lemma upto_elements:
+  assumes leq: "l \<le> h" and ll: "l \<le> N" and hh: "h \<le> N"
+  shows "l upto h = {l..<h}"
+  using leq ll hh uptol_elements upto_set_list_eq
+  by(auto)
+
+lemma upto_elements_wrap:
+  assumes geq: "l > h" and ll: "l \<le> N" and hh: "h \<le> N"
+  shows "l upto h = {0..<h} \<union> {l..<N}"
+  using geq ll hh uptol_elements_wrap upto_set_list_eq
+  by(auto)
+
+*) 
+
+lemma 
+  assumes leq: "l \<le> h" and ll: "l \<le> N" and hh: "h \<le> N"
+  shows "[0..<N] = (0 uptol l) @ (l uptol h) @ (h uptol N)"
+proof -
+  from ll have X0:
+    "0 \<le> l \<and> l \<le> N"
+    by(auto)
+
+  from X0 have X1:
+    "0 uptol l = [0..<l]"
+    using uptol_elements by(auto)
+
+  from leq ll hh have X2:
+    "l uptol h = [l..<h]"
+    using uptol_elements by(auto)
+
+  from hh  have X3:
+    "h uptol N = [h..<N]"
+    using uptol_elements by(auto)
+
+  from X1 X2 X3 have X4:
+    "(0 uptol l) @ (l uptol h) @ (h uptol N) = [0..<l] @ [l..<h] @ [h..<N]"
+    by(auto)
+
+  also have 
+    "[0..<l] @ [l..<h] @ [h..<N] = [0..<N]"
+    by (metis X0 hh le_Suc_ex leq upt_add_eq_append)
+
+  with X4 show ?thesis
+    by(auto)
+qed    
+    
+
 
 (*
 lemma send_help_2:
