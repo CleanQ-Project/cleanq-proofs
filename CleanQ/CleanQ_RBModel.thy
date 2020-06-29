@@ -316,6 +316,12 @@ lemma rb_enq_equiv:
   unfolding rb_enq_alt_def rb_enq_def rb_incr_head_def rb_write_def by(auto)
 
 
+lemma rb_enq_remains_valid:
+  assumes notfull: "\<not>rb_full rb" and  valid: "rb_valid rb"
+  shows "rb_valid (rb_enq b rb)"
+  using valid notfull unfolding rb_valid_def rb_enq_def rb_full_def rb_incr_head_def rb_write_def
+  by(auto)
+
 text \<open>
   
 \<close>
@@ -419,6 +425,12 @@ definition rb_deq :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
                       rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
 
 
+lemma rb_deq_remains_valid:
+  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"
+  shows "rb_valid (snd (rb_deq rb))"
+  using valid notempty unfolding rb_valid_def rb_deq_def
+  by(simp)
+
 lemma rb_deq_list_was_head :
   assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
      and res: "rb' = rb_deq rb" 
@@ -451,7 +463,16 @@ shows "(fst rb') \<notin> set (CleanQ_RB_list (snd rb')) "
             fstI list.simps(9) map_tl rb_deq_def rb_deq_list_tail 
               rb_incr_tail_valid_entries rb_incr_tail_valid_entries_tail)
 
-
+lemma rb_deq_subset :
+  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+     and res: "rb' = rb_deq rb" and dist: "distinct (CleanQ_RB_list rb)"
+   shows "set (CleanQ_RB_list (snd rb')) \<subset> set (CleanQ_RB_list rb) "
+  using notempty valid res dist
+  by (metis (no_types, lifting) CleanQ_RB_list_def insert_Diff insert_iff list.map(2) 
+            list.simps(3) list_set_hd_tl_subtract order.not_eq_order_implies_strict 
+            rb_deq_list_not_in rb_deq_list_tail rb_deq_list_was_head rb_deq_list_was_in 
+            rb_incr_tail_valid_entries subsetI)
+   
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -932,6 +953,24 @@ lemma CleanQ_RB_deq_y_equal :
   by (simp add: CleanQ_RB_deq_y_possible_def prod.case_eq_if rb_deq_list_tail 
                 rb_deq_list_was_head)
 
+lemma CleanQ_RB_deq_x_no_change:
+    assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+  shows "rSY rb' = rSY rb \<and> rTXY rb' = rTXY rb"
+  using can_deq X_deq unfolding CleanQ_RB_deq_x_def by (simp add: prod.case_eq_if)
+
+
+
+lemma CleanQ_RB_deq_x_subsets :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+    and invariants : "CleanQ_RB_Invariants K rb" 
+  shows "rSX rb \<subset> rSX rb' \<and> set (CleanQ_RB_list (rTYX rb')) \<subset> set (CleanQ_RB_list (rTYX rb))"
+  apply(subst X_deq)+
+  apply(simp add: CleanQ_RB_deq_x_def prod.case_eq_if)
+  using can_deq invariants 
+  by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def I2_rb_img.elims(2) 
+            I3_rb_img.elims(2) I4_rb_valid.elims(2) dual_order.order_iff_strict insert_absorb 
+            insert_disjoint(1) psubset_insert_iff rb_deq_list_was_in rb_deq_subset)
+
 
 lemma CleanQ_RB_deq_x_result :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
@@ -972,14 +1011,12 @@ proof -
 qed
 
 
-
 lemma CleanQ_RB_deq_y_result :
   assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
     and invariants : "CleanQ_RB_Invariants K rb"  and buf: "b = rb_read (tail (rTXY rb)) (rTXY rb)"
   shows  "b \<notin> rSX rb' \<and> b \<in> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTYX rb')) 
           \<and> b \<notin> set (CleanQ_RB_list (rTXY rb')) "
 proof -
-
   have X1:"b \<in> rSY rb'"
     using buf Y_deq unfolding CleanQ_RB_deq_y_def
     by (simp add: rb_deq_def rb_read_def)
@@ -1011,6 +1048,26 @@ proof -
   show ?thesis using X1 X2 X3 X4 by(simp) 
 qed
 
+lemma CleanQ_RB_deq_y_no_change:
+    assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+  shows "rSX rb' = rSX rb \<and> rTYX rb' = rTYX rb"
+  using can_deq Y_deq unfolding CleanQ_RB_deq_y_def by (simp add: prod.case_eq_if)
+
+
+
+lemma CleanQ_RB_deq_y_subsets :
+  assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+    and invariants : "CleanQ_RB_Invariants K rb" 
+  shows "rSY rb \<subset> rSY rb' \<and> set (CleanQ_RB_list (rTXY rb')) \<subset> set (CleanQ_RB_list (rTXY rb))"
+  apply(subst Y_deq)+
+  apply(simp add: CleanQ_RB_deq_y_def prod.case_eq_if)
+  using can_deq invariants 
+  by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_y_possible_def I2_rb_img.elims(2) 
+            I3_rb_img.elims(2) I4_rb_valid.elims(2) dual_order.order_iff_strict insert_absorb 
+            insert_disjoint(1) psubset_insert_iff rb_deq_list_was_in rb_deq_subset)
+
+  
+
 (* -------------------------------------------------------------------------------------*)
 subsubsection \<open>Invariants\<close>
 (* -------------------------------------------------------------------------------------*)
@@ -1018,19 +1075,107 @@ subsubsection \<open>Invariants\<close>
 
 lemma CleanQ_RB_deq_x_I1 :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
-    and invariants : "CleanQ_RB_Invariants K rb"  and buf: "b = rb_read (tail (rTYX rb)) (rTYX rb)"
+    and invariants : "CleanQ_RB_Invariants K rb"
   shows "I1_rb_img rb' K"
-  using can_deq X_deq invariants buf unfolding CleanQ_RB_deq_x_def try
+proof (simp)
   
-    unfolding CleanQ_RB_deq_x_def
-  oops
+  have X1: 
+    "rSY rb' = rSY rb \<and> rTXY rb' = rTXY rb"
+    using can_deq X_deq by(simp add:CleanQ_RB_deq_x_no_change)
+
+  have X2:
+    "rSX rb' \<union> set (CleanQ_RB_list (rTYX rb')) = rSX rb \<union> set (CleanQ_RB_list (rTYX rb))"
+    apply(subst X_deq)+
+    apply(simp add:CleanQ_RB_deq_x_def prod.case_eq_if)
+    by (metis (no_types, lifting) CleanQ_RB_Invariants.elims(2) 
+              CleanQ_RB_deq_x_possible_def I4_rb_valid.elims(2) Un_insert_right 
+              can_deq empty_set insert_absorb insert_is_Un insert_not_empty invariants 
+              list.simps(15) list_set_hd_tl_union rb_deq_list_tail rb_deq_list_was_head 
+              rb_deq_list_was_in set_append)
+
+  show "rSX rb' \<union> rSY rb' \<union> set (CleanQ_RB_list (rTXY rb')) \<union> set (CleanQ_RB_list (rTYX rb')) = K"
+    using X1 X2 invariants by(auto)
+qed
+
+lemma CleanQ_RB_deq_y_I1 :
+  assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "I1_rb_img rb' K"
+proof (simp)
+  
+  have X1: 
+    "rSX rb' = rSX rb \<and> rTYX rb' = rTYX rb"
+    using can_deq Y_deq CleanQ_RB_deq_y_no_change by(auto)
+
+  have X2:
+    "rSY rb' \<union> set (CleanQ_RB_list (rTXY rb')) = rSY rb \<union> set (CleanQ_RB_list (rTXY rb))"
+    apply(subst Y_deq)+
+    apply(simp add:CleanQ_RB_deq_y_def prod.case_eq_if)
+    by (metis (no_types, lifting) CleanQ_RB_Invariants.elims(2) 
+              CleanQ_RB_deq_y_possible_def I4_rb_valid.elims(2) Un_insert_right 
+              can_deq empty_set insert_absorb insert_is_Un insert_not_empty invariants 
+              list.simps(15) list_set_hd_tl_union rb_deq_list_tail rb_deq_list_was_head 
+              rb_deq_list_was_in set_append)
+
+  show "rSX rb' \<union> rSY rb' \<union> set (CleanQ_RB_list (rTXY rb')) \<union> set (CleanQ_RB_list (rTYX rb')) = K"
+    using X1 X2 invariants by(auto)
+qed
+
+
+lemma 
 
 lemma CleanQ_RB_deq_x_I2 :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
-    and invariants : "CleanQ_RB_Invariants K rb"  and buf: "b = rb_read (tail (rTYX rb)) (rTYX rb)"
+    and invariants : "CleanQ_RB_Invariants K rb"
   shows "I2_rb_img rb'"
-  using can_deq X_deq invariants buf  apply(simp) apply(auto)
-  oops
+proof -
+  have X1:
+    "rSX rb' \<inter> rSY rb' = {}"
+    apply(subst X_deq)+
+    apply(simp add:CleanQ_RB_deq_x_def prod.case_eq_if) 
+     using invariants
+     by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def 
+                I2_rb_img.elims(2) I4_rb_valid.elims(2) IntI can_deq empty_iff 
+                rb_deq_list_was_in)
+
+  (* ok that one should be rephrased... *)
+  have X2: "rSX rb' \<inter> set (CleanQ_RB_list (rTXY rb')) = {}"
+    apply(subst X_deq)+
+    apply(simp add:CleanQ_RB_deq_x_def prod.case_eq_if)
+    using can_deq invariants
+    by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def 
+              I2_rb_img.elims(2) I4_rb_valid.elims(2) insert_Diff insert_disjoint(1) 
+              rb_deq_list_was_in)
+
+
+
+  (* ok that one should be rephrased... *)
+  have X3: "rSX rb' \<inter> set (CleanQ_RB_list (rTYX rb')) = {}"
+    apply(subst X_deq)+
+    apply(simp add:CleanQ_RB_deq_x_def prod.case_eq_if)
+    using can_deq invariants
+    by (smt CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def I2_rb_img.elims(2) 
+            I3_rb_img.elims(2) I4_rb_valid.elims(2) Int_commute Int_iff empty_set insert_Diff 
+            insert_disjoint(1) list_set_hd_tl_subtract rb_deq_list_not_in rb_deq_list_tail 
+            rb_deq_list_was_head rb_deq_list_was_in)
+
+  have X4: "rSY rb' \<inter> set (CleanQ_RB_list (rTXY rb')) = {}" 
+    using can_deq X_deq invariants CleanQ_RB_deq_x_no_change
+    by (metis CleanQ_RB_Invariants.elims(2) I2_rb_img.elims(2))
+
+  have X5: "rSY rb' \<inter> set (CleanQ_RB_list (rTYX rb')) = {}"
+    using can_deq X_deq invariants CleanQ_RB_deq_x_no_change CleanQ_RB_deq_x_subsets
+    by (metis (no_types, lifting) CleanQ_RB_Invariants.elims(2) I2_rb_img.elims(2) 
+              inf.strict_order_iff inf_bot_right inf_left_commute)
+   
+  have X6: "set (CleanQ_RB_list (rTXY rb')) \<inter> set (CleanQ_RB_list (rTYX rb')) = {}"
+    using can_deq X_deq invariants CleanQ_RB_deq_x_no_change CleanQ_RB_deq_x_subsets
+    by (metis (no_types, lifting) CleanQ_RB_Invariants.elims(2) I2_rb_img.elims(2) 
+              inf.strict_order_iff inf_bot_right inf_left_commute)
+
+  from X1 X2 X3 X4 X5 X6  show "I2_rb_img rb'"
+    by(auto)
+qed
 
 lemma CleanQ_RB_deq_x_I3 :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
@@ -1053,8 +1198,12 @@ lemma CleanQ_RB_deq_x_I4 :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
     and invariants : "CleanQ_RB_Invariants K rb"
   shows "I4_rb_valid rb'"
-
-
+  apply(subst X_deq)
+  unfolding CleanQ_RB_deq_x_def CleanQ_RB_deq_x_possible_def 
+  using can_deq invariants
+  by(simp add: CleanQ_RB_deq_x_possible_def rb_deq_remains_valid prod.case_eq_if) 
+  
+  
 
 (* ==================================================================================== *)
 subsection \<open>Pre- and post- conditions\<close>
