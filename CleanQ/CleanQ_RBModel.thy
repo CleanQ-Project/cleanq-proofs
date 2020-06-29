@@ -958,7 +958,7 @@ proof -
               CleanQ_List_deq_x_upd CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) 
               CleanQ_RB_deq_x_equal I3_rb_img.elims(2) I4_rb_valid.elims(2) X_deq can_deq 
               fstI invariants rb_deq_def rb_deq_list_not_in rb_deq_list_tail rb_read_def)
-    by (simp add: rb_deq_def rb_read_def)
+
   have X4:"b \<notin> set (CleanQ_RB_list (rTXY rb'))"
      using buf X_deq can_deq unfolding CleanQ_RB_deq_x_def CleanQ_RB_deq_x_possible_def
     apply(simp)
@@ -968,8 +968,7 @@ proof -
                disjoint_insert(1) fstI insert_Diff invariants rb_deq_def rb_deq_list_was_in 
                rb_read_def)
     
-  show ?thesis using X1 X2 X3 X4 by(simp)
-    
+  show ?thesis using X1 X2 X3 X4 by(simp)   
 qed
 
 
@@ -999,7 +998,7 @@ proof -
               CleanQ_List_deq_y_upd CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) 
               CleanQ_RB_deq_y_equal I3_rb_img.elims(2) I4_rb_valid.elims(2) Y_deq can_deq 
               fstI invariants rb_deq_def rb_deq_list_not_in rb_deq_list_tail rb_read_def)
-    by (simp add: rb_deq_def rb_read_def)
+    
   have X4:"b \<notin> set (CleanQ_RB_list (rTYX rb'))"
      using buf Y_deq can_deq unfolding CleanQ_RB_deq_y_def CleanQ_RB_deq_y_possible_def
     apply(simp)
@@ -1009,9 +1008,53 @@ proof -
                disjoint_insert(1) fstI insert_Diff invariants rb_deq_def rb_deq_list_was_in 
                rb_read_def)
     
-  show ?thesis using X1 X2 X3 X4 by(simp)
-    
+  show ?thesis using X1 X2 X3 X4 by(simp) 
 qed
+
+(* -------------------------------------------------------------------------------------*)
+subsubsection \<open>Invariants\<close>
+(* -------------------------------------------------------------------------------------*)
+
+
+lemma CleanQ_RB_deq_x_I1 :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+    and invariants : "CleanQ_RB_Invariants K rb"  and buf: "b = rb_read (tail (rTYX rb)) (rTYX rb)"
+  shows "I1_rb_img rb' K"
+  using can_deq X_deq invariants buf unfolding CleanQ_RB_deq_x_def try
+  
+    unfolding CleanQ_RB_deq_x_def
+  oops
+
+lemma CleanQ_RB_deq_x_I2 :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+    and invariants : "CleanQ_RB_Invariants K rb"  and buf: "b = rb_read (tail (rTYX rb)) (rTYX rb)"
+  shows "I2_rb_img rb'"
+  using can_deq X_deq invariants buf  apply(simp) apply(auto)
+  oops
+
+lemma CleanQ_RB_deq_x_I3 :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "I3_rb_img rb'"
+  using can_deq X_deq invariants
+  by (metis CleanQ_List_deq_x_I3 CleanQ_RB_Invariants.elims(2)
+            CleanQ_RB_deq_x_equal I3_rb_img_lift)
+
+lemma CleanQ_RB_deq_y_I3 :
+  assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "I3_rb_img rb'"
+  using can_deq Y_deq invariants
+  by (metis CleanQ_List_deq_y_I3 CleanQ_RB_Invariants.elims(2)
+            CleanQ_RB_deq_y_equal I3_rb_img_lift)
+
+
+lemma CleanQ_RB_deq_x_I4 :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "I4_rb_valid rb'"
+
+
 
 (* ==================================================================================== *)
 subsection \<open>Pre- and post- conditions\<close>
