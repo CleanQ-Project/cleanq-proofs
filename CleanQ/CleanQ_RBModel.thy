@@ -421,10 +421,38 @@ definition rb_deq :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
                       rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
 
 
-lemma
-assumes notempty: "\<not> rb_empty rb" and inrange: "(tail rb) < (size rb)"  and inrange2: "(head rb) < (size rb)" 
-shows "CleanQ_RB_list (snd (rb_deq rb)) = tl (CleanQ_RB_list rb)"
-  oops
+lemma rb_deq_list_was_head :
+  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+     and res: "rb' = rb_deq rb" 
+   shows "(fst rb') = hd (CleanQ_RB_list rb)"
+  using res notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
+  by (simp add: rb_incr_tail_valid_entries)
+
+lemma rb_deq_list_was_in :
+  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+     and res: "rb' = rb_deq rb" 
+   shows "(fst rb') \<in> set (CleanQ_RB_list rb)"
+  using res notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
+  by (simp add: rb_incr_tail_valid_entries)
+
+lemma rb_deq_list_tail :
+  assumes notempty: "\<not> rb_empty rb" and  valid: "rb_valid rb"   
+  and  res: "rb' = rb_deq rb"
+shows "CleanQ_RB_list (snd (rb')) = tl (CleanQ_RB_list rb)"
+  using  res notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
+  apply (simp)
+  by (metis Pair_inject map_tl rb_deq_def rb_incr_tail_def 
+            rb_incr_tail_valid_entries_tail res)
+
+lemma rb_deq_list_not_in :
+  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+     and res: "rb' = rb_deq rb" and dist: "distinct (CleanQ_RB_list rb)"
+shows "(fst rb') \<notin> set (CleanQ_RB_list (snd rb')) "
+  using notempty valid res dist
+  by (metis (no_types, lifting) CleanQ_RB_list_def distinct.simps(2) 
+            fstI list.simps(9) map_tl rb_deq_def rb_deq_list_tail 
+              rb_incr_tail_valid_entries rb_incr_tail_valid_entries_tail)
+
 
 
 
@@ -750,31 +778,7 @@ proof -
     using X1 X2 X3 X4 X5 by(auto)
 qed 
 
-end
-(*
 
-lemma CleanQ_RB_enq_y_equal :
-  "CleanQ_List2Set (CleanQ_List_enq_y b rb) = CleanQ_Set_enq_y b (CleanQ_List2Set rb)"
-  unfolding CleanQ_List2Set_def CleanQ_Set_enq_y_def CleanQ_List_enq_y_def 
-  by(auto)
-
-end 
-
-(* 
-lemma 
-  assumes notfull : "\<not> rb_full rb" and pos: "i = (head rb)"
-  shows "(ring (rb_enq b rb)) i = b"
-  using notfull pos unfolding rb_enq_def by(simp)
-
-
-lemma
-  assumes notfull : "\<not> rb_full rb" and dist: "b \<notin> set (CleanQ_RB_list rb)"
-  shows "set (CleanQ_RB_list rb) \<subset> set (CleanQ_RB_list (rb_enq b rb))"
-  using notfull dist unfolding rb_enq_def CleanQ_RB_list_def 
-  apply(simp)
-  
-  
-  sorry
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -785,10 +789,34 @@ text \<open>
 \<close>
 
 definition CleanQ_RB_deq_x :: "'a CleanQ_RB_State  \<Rightarrow> 'a CleanQ_RB_State"
-  where "CleanQ_RB_deq_x rb = (let (b, rest) = rb_deq(rTYX rb) in rb \<lparr> rSY := (rSY rb) \<union> {b}, rTYX := rest \<rparr>)"
+  where "CleanQ_RB_deq_x rb = (let (b, rest) = rb_deq(rTYX rb) in 
+                                  rb \<lparr> rSX := (rSX rb) \<union> {b}, rTYX := rest \<rparr>)"
 
 definition CleanQ_RB_deq_y :: "'a CleanQ_RB_State  \<Rightarrow> 'a CleanQ_RB_State"
-  where "CleanQ_RB_deq_y rb = (let (b, rest) = rb_deq(rTXY rb) in rb \<lparr> rSY := (rSY rb) \<union> {b}, rTXY := rest \<rparr>)"
+  where "CleanQ_RB_deq_y rb = (let (b, rest) = rb_deq(rTXY rb) in 
+                                  rb \<lparr> rSY := (rSY rb) \<union> {b}, rTXY := rest \<rparr>)"
+
+
+text \<open>
+  The deqeueu operation cannot proceed if there is no element in the corresponding ring
+  buffer.
+\<close>
+
+definition CleanQ_RB_deq_x_possible :: "'a CleanQ_RB_State \<Rightarrow> bool"
+  where "CleanQ_RB_deq_x_possible rb \<longleftrightarrow> \<not>(rb_empty (rTYX rb))"
+
+definition CleanQ_RB_deq_y_possible :: "'a CleanQ_RB_State \<Rightarrow> bool"
+  where "CleanQ_RB_deq_y_possible rb \<longleftrightarrow> \<not>(rb_empty (rTXY rb))"
+
+
+lemma CleanQ_RB_dnq_x_equal :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb" 
+      and invariants : "CleanQ_RB_Invariants K rb"
+  shows "CleanQ_RB2List (CleanQ_RB_deq_x rb) = CleanQ_List_deq_x (CleanQ_RB2List rb)"  
+  using can_deq invariants unfolding CleanQ_RB2List_def CleanQ_RB_deq_x_def apply(auto)
+  
+  oops
+
 
 
 (* ==================================================================================== *)
