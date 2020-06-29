@@ -813,10 +813,19 @@ lemma CleanQ_RB_dnq_x_equal :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb" 
       and invariants : "CleanQ_RB_Invariants K rb"
   shows "CleanQ_RB2List (CleanQ_RB_deq_x rb) = CleanQ_List_deq_x (CleanQ_RB2List rb)"  
-  using can_deq invariants unfolding CleanQ_RB2List_def CleanQ_RB_deq_x_def apply(auto)
-  
-  oops
+  unfolding CleanQ_RB2List_def CleanQ_RB_deq_x_def CleanQ_List_deq_x_def 
+  using can_deq invariants
+  by (simp add: CleanQ_RB_deq_x_possible_def prod.case_eq_if rb_deq_list_tail 
+                rb_deq_list_was_head)
 
+lemma CleanQ_RB_dnq_y_equal :
+  assumes can_deq: "CleanQ_RB_deq_y_possible rb" 
+      and invariants : "CleanQ_RB_Invariants K rb"
+  shows "CleanQ_RB2List (CleanQ_RB_deq_y rb) = CleanQ_List_deq_y (CleanQ_RB2List rb)"  
+  unfolding CleanQ_RB2List_def CleanQ_RB_deq_y_def CleanQ_List_deq_y_def 
+  using can_deq invariants
+  by (simp add: CleanQ_RB_deq_y_possible_def prod.case_eq_if rb_deq_list_tail 
+                rb_deq_list_was_head)
 
 
 (* ==================================================================================== *)
