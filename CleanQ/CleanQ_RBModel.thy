@@ -411,8 +411,6 @@ proof -
     using X1 X2 X3 X4 X5 X6 X7 by(auto)               
 qed
 
-
-
 text \<open>
  TODO: how is this best expressed ??
 \<close>
@@ -613,7 +611,9 @@ text \<open>
 \<close>
 
 fun I4_rb_valid :: "'a CleanQ_RB_State \<Rightarrow> bool"
-  where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb)))"
+  where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb))) \<and>
+                            (length (CleanQ_RB_list (rTXY rb)) < size (rTXY rb)) \<and>
+                            (length (CleanQ_RB_list (rTXY rb)) < size (rTYX rb)) "
 
 
 
@@ -778,6 +778,111 @@ proof -
     using X1 X2 X3 X4 X5 by(auto)
 qed 
 
+text \<open>
+  The two operations \verb+CleanQ_RB_enq_x+ and \verb+CleanQ_RB_enq_y+ transition
+  the model state. Thus we need to prove that all invariants are preserved. We do this
+  Individually first, then do the union. Note, the proofs are symmetric. 
+\<close>
+
+lemma CleanQ_RB_enq_x_I1 :
+  fixes b
+  assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSX rb" and
+          can_enq: "CleanQ_RB_enq_x_possible rb" and
+          X_enq: "rb' = CleanQ_RB_enq_x b rb"
+    shows "I1_rb_img (rb') K"
+  unfolding CleanQ_RB_enq_x_def 
+  using Inv X_owned can_enq
+  by (metis CleanQ_List_State.select_convs(1) CleanQ_List_enq_x_I1 CleanQ_RB2List_def 
+      CleanQ_RB_Invariants.elims(2) CleanQ_RB_enq_x_equal I1_rb_img_lift X_enq)
+
+lemma CleanQ_RB_enq_y_I1 :
+  fixes b
+  assumes Inv: "CleanQ_RB_Invariants K rb"  and  Y_owned: "b \<in> rSY rb" and
+          can_enq: "CleanQ_RB_enq_y_possible rb" and
+          Y_enq: "rb' = CleanQ_RB_enq_y b rb"
+    shows "I1_rb_img (rb') K"
+  unfolding CleanQ_RB_enq_y_def 
+  by (metis CleanQ_List_Invariants.simps CleanQ_List_State.select_convs(2) CleanQ_List_enq_y_I1 
+      CleanQ_RB2List_def CleanQ_RB_Invariants_List_Invariants CleanQ_RB_enq_y_equal I1_rb_img_lift Inv Y_enq Y_owned can_enq)
+
+lemma CleanQ_RB_enq_x_I2 :
+  assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSX rb" and
+          X_enq: "rb' = CleanQ_RB_enq_x b rb" and
+          can_enq: "CleanQ_RB_enq_x_possible rb"
+    shows "I2_rb_img (rb')"
+  unfolding CleanQ_RB_enq_x_def
+  by (metis CleanQ_List_State.select_convs(1) CleanQ_List_enq_x_I2 CleanQ_RB2List_def 
+      CleanQ_RB_Invariants.elims(2) CleanQ_RB_enq_x_equal I2_rb_img_lift Inv X_enq X_owned can_enq)
+
+lemma CleanQ_RB_enq_y_I2 :
+  assumes Inv: "CleanQ_RB_Invariants K rb"  and  Y_owned: "b \<in> rSY rb" and
+          Y_enq: "rb' = CleanQ_RB_enq_y b rb" and
+          can_enq: "CleanQ_RB_enq_y_possible rb"
+    shows "I2_rb_img (rb')"
+  unfolding CleanQ_RB_enq_y_def
+  by (metis CleanQ_List_Invariants.simps CleanQ_List_State.select_convs(2) CleanQ_List_enq_y_I2 
+      CleanQ_RB2List_def CleanQ_RB_Invariants_List_Invariants CleanQ_RB_enq_y_equal I2_rb_img_lift Inv Y_enq Y_owned can_enq)
+
+lemma CleanQ_RB_enq_x_I3 :
+  fixes K rb rb'
+  assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSX rb" and
+          X_enq: "rb' = CleanQ_RB_enq_x b rb" and
+          can_enq: "CleanQ_RB_enq_x_possible rb"
+  shows "I3_rb_img (rb')"
+  using can_enq X_enq Inv
+proof(auto)
+  from Inv X_owned have b_before: "b \<notin> set (CleanQ_RB_list (rTXY rb))" by auto
+  from X_owned Inv X_enq can_enq CleanQ_RB_enq_x_result have b_after: "b \<in> set (CleanQ_RB_list (rTXY rb'))"
+    by metis
+  from Inv b_before b_after have dist_before: "distinct (CleanQ_RB_list (rTXY rb))"  
+    by simp
+  from b_after dist_before have dist_after: "distinct (CleanQ_RB_list (rTXY rb) @ [b])"
+    by (simp add: b_before)
+  from can_enq Inv rb_enq_list_add have final: "CleanQ_RB_list (rTXY rb) @ [b] = CleanQ_RB_list (rb_enq b (rTXY rb))"
+    by (simp add: rb_enq_list_add CleanQ_RB_enq_x_possible_def)
+
+  show first: "distinct (CleanQ_RB_list (rTXY (CleanQ_RB_enq_x b rb)))" using Inv X_enq can_enq X_owned dist_after final rb_enq_list_add
+    unfolding CleanQ_RB_enq_x_def
+    by simp
+
+  from CleanQ_RB_enq_x_result CleanQ_RB_enq_x_def X_enq have no_change: "rTYX rb = rTYX rb'"
+    by (simp add: CleanQ_RB_enq_x_def)
+  show "distinct (CleanQ_RB_list (rTYX (CleanQ_RB_enq_x b rb)))" using no_change
+    using Inv X_enq by auto
+
+qed
+
+lemma CleanQ_RB_enq_y_I3 :
+  fixes K rb rb'
+  assumes Inv: "CleanQ_RB_Invariants K rb"  and  Y_owned: "b \<in> rSY rb" and
+          Y_enq: "rb' = CleanQ_RB_enq_y b rb" and
+          can_enq: "CleanQ_RB_enq_y_possible rb"
+  shows "I3_rb_img (rb')"
+  using can_enq Y_enq Inv
+proof(auto)
+  from Inv Y_owned have b_before: "b \<notin> set (CleanQ_RB_list (rTYX rb))" by auto
+  from Y_owned Inv Y_enq can_enq CleanQ_RB_enq_y_result have b_after: "b \<in> set (CleanQ_RB_list (rTYX rb'))"
+    by metis
+  from Inv b_before b_after have dist_before: "distinct (CleanQ_RB_list (rTYX rb))"  
+    by simp
+  from b_after dist_before have dist_after: "distinct (CleanQ_RB_list (rTYX rb) @ [b])"
+    by (simp add: b_before)
+  from can_enq Inv rb_enq_list_add have final: "CleanQ_RB_list (rTYX rb) @ [b] = CleanQ_RB_list (rb_enq b (rTYX rb))"
+    by (simp add: rb_enq_list_add CleanQ_RB_enq_y_possible_def)
+
+  show first: "distinct (CleanQ_RB_list (rTYX (CleanQ_RB_enq_y b rb)))" using Inv Y_enq can_enq Y_owned dist_after final rb_enq_list_add
+    unfolding CleanQ_RB_enq_y_def
+    by simp
+
+  from CleanQ_RB_enq_y_result CleanQ_RB_enq_y_def Y_enq have no_change: "rTXY rb = rTXY rb'"
+    by (simp add: CleanQ_RB_enq_y_def)
+  show "distinct (CleanQ_RB_list (rTXY (CleanQ_RB_enq_y b rb)))" using no_change
+    using Inv Y_enq by auto
+
+qed
+
+end
+(*
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
