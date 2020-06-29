@@ -933,6 +933,40 @@ lemma CleanQ_RB_dnq_y_equal :
                 rb_deq_list_was_head)
 
 
+lemma CleanQ_RB_deq_x_result :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+    and invariants : "CleanQ_RB_Invariants K rb"  and buf: "b = rb_read (tail (rTYX rb)) (rTYX rb)"
+  shows  "b \<in> rSX rb' \<and> b \<notin> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTYX rb')) 
+          \<and> b \<notin> set (CleanQ_RB_list (rTXY rb')) "
+proof -
+
+  have X1:"b \<in> rSX rb'"
+    using buf X_deq unfolding CleanQ_RB_deq_x_def
+    by (simp add: rb_deq_def rb_read_def)
+    
+  have X2:"b \<notin> rSY rb'" 
+    using invariants buf X_deq unfolding CleanQ_RB_deq_x_def
+    by (metis (no_types, lifting) CleanQ_List_State.ext_inject CleanQ_List_State.surjective 
+              CleanQ_List_deq_x_upd CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) 
+              CleanQ_RB_deq_x_possible_def CleanQ_RB_dnq_x_equal I2_rb_img.elims(2) 
+              I4_rb_valid.elims(2) X_deq can_deq disjoint_iff_not_equal fstI rb_deq_def 
+              rb_deq_list_was_in rb_read_def)
+  have X3:"b \<notin> set (CleanQ_RB_list (rTYX rb'))"
+    using buf X_deq can_deq unfolding CleanQ_RB_deq_x_def CleanQ_RB_deq_x_possible_def
+    apply(simp)
+    by (metis CleanQ_List_State.ext_inject CleanQ_List_State.surjective CleanQ_List_deq_x_upd CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) CleanQ_RB_dnq_x_equal I3_rb_img.elims(2) I4_rb_valid.elims(2) X_deq can_deq fstI invariants rb_deq_def rb_deq_list_not_in rb_deq_list_tail rb_read_def)
+    by (simp add: rb_deq_def rb_read_def)
+  have X4:"b \<notin> set (CleanQ_RB_list (rTXY rb'))"
+     using buf X_deq can_deq unfolding CleanQ_RB_deq_x_def CleanQ_RB_deq_x_possible_def
+    apply(simp)
+     by (metis CleanQ_List_State.ext_inject CleanQ_List_State.surjective CleanQ_List_deq_x_upd CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) CleanQ_RB_dnq_x_equal I2_rb_img.elims(2) I4_rb_valid.elims(2) X_deq can_deq disjoint_insert(1) fstI insert_Diff invariants rb_deq_def rb_deq_list_was_in rb_read_def)
+    
+  show ?thesis using X1 X2 X3 X4 by(simp)
+    
+qed
+
+
+
 (* ==================================================================================== *)
 subsection \<open>Pre- and post- conditions\<close>
 (* ==================================================================================== *)
