@@ -1032,34 +1032,7 @@ definition CleanQ_RB_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a Cle
                                                         CleanQ_RB_list  (rTXY rb) \<noteq> [] \<and> buf = ring (rTXY rb) (tail (rTXY rb))}"
 
 
-lemma 
- assumes notfull : "\<not> rb_full rb"  and  pos: "i = (head rb)"
-   shows "CleanQ_RB_list (rb_enq b rb) = (CleanQ_RB_list rb) @ [b]"
-  unfolding CleanQ_RB_list_def rb_enq_def 
-proof (simp)
-
-  have "map ((ring rb)(head rb := b))
-     (nonzero_modulus.list_between (size rb) (tail rb)
-       (Suc (head rb) mod size rb)) =
-     map  ((ring rb)(head rb := b))
-     (nonzero_modulus.list_between (size rb) (tail rb)
-       (head rb)) @
-    []"
-    apply(simp) 
-    
-
-
-
-qed
   
-
-
-lemma CleanQ_RB_enq_x_equal :
-  assumes notfull : "\<not> rb_full (rTXY rb)"
-    shows "CleanQ_RB2List (CleanQ_RB_enq_x b rb) = CleanQ_List_enq_x b (CleanQ_RB2List rb)"
-  unfolding CleanQ_RB2List_def CleanQ_RB_enq_x_def CleanQ_List_enq_x_def rb_enq_def CleanQ_RB_list_def
-  apply(simp)
-  oops
 end 
 (*
 
