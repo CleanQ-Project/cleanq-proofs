@@ -154,6 +154,16 @@ definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
   where "CleanQ_RB_list rb = map (ring rb) (rb_valid_entries rb)"
 
 text \<open>
+  If the ring is valid, then the list is bounded by the size of the ring.
+\<close>
+
+lemma rb_valid_list_size:
+  "rb_valid rb \<Longrightarrow> (length (CleanQ_RB_list rb) < size rb)"
+  unfolding CleanQ_RB_list_def rb_valid_entries_def rb_valid_def
+  by auto
+
+
+text \<open>
  We can now show that the list of valid entries is empty, when the predicate 
  \verb+rb_empty+ is true.
 \<close>
@@ -164,6 +174,14 @@ lemma
   using valid unfolding  rb_valid_entries_def rb_valid_def 
   by (metis Nil_is_append_conv  nat_less_le order.order_iff_strict
             rb_empty_def upt_eq_Cons_conv upt_rec)
+
+
+
+
+
+
+
+
 (*
 old proof using the modulo
 
@@ -632,10 +650,7 @@ text \<open>
 \<close>
 
 fun I4_rb_valid :: "'a CleanQ_RB_State \<Rightarrow> bool"
-  where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb))) \<and>
-                            (length (CleanQ_RB_list (rTXY rb)) < size (rTXY rb)) \<and>
-                            (length (CleanQ_RB_list (rTXY rb)) < size (rTYX rb)) "
-
+  where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb)))"
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -902,8 +917,15 @@ proof(auto)
 
 qed
 
-end
-(*
+
+lemma CleanQ_RB_enq_y_I4 :
+ assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSX rb" and
+         X_enq: "rb' = CleanQ_RB_enq_x b rb" and  can_enq: "CleanQ_RB_enq_x_possible rb"
+  shows "I4_rb_valid rb'"
+  apply(subst X_enq)
+  using can_enq unfolding CleanQ_RB_enq_x_def CleanQ_RB_list_def CleanQ_RB_enq_x_possible_def
+  using Inv by(simp add:rb_enq_remains_valid)
+
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
@@ -1122,7 +1144,6 @@ proof (simp)
 qed
 
 
-lemma 
 
 lemma CleanQ_RB_deq_x_I2 :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
