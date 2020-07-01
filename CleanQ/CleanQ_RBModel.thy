@@ -652,7 +652,6 @@ text \<open>
 fun I4_rb_valid :: "'a CleanQ_RB_State \<Rightarrow> bool"
   where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb)))"
 
-
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>All CleanQ RB Invariants\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -917,8 +916,7 @@ proof(auto)
 
 qed
 
-
-lemma CleanQ_RB_enq_y_I4 :
+lemma CleanQ_RB_enq_x_I4 :
  assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSX rb" and
          X_enq: "rb' = CleanQ_RB_enq_x b rb" and  can_enq: "CleanQ_RB_enq_x_possible rb"
   shows "I4_rb_valid rb'"
@@ -926,6 +924,14 @@ lemma CleanQ_RB_enq_y_I4 :
   using can_enq unfolding CleanQ_RB_enq_x_def CleanQ_RB_list_def CleanQ_RB_enq_x_possible_def
   using Inv by(simp add:rb_enq_remains_valid)
 
+
+lemma CleanQ_RB_enq_y_I4 :
+ assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSY rb" and
+         Y_enq: "rb' = CleanQ_RB_enq_y b rb" and  can_enq: "CleanQ_RB_enq_y_possible rb"
+  shows "I4_rb_valid rb'"
+  apply(subst Y_enq)
+  using can_enq unfolding CleanQ_RB_enq_y_def CleanQ_RB_list_def CleanQ_RB_enq_y_possible_def
+  using Inv by(simp add:rb_enq_remains_valid)
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
@@ -1247,6 +1253,7 @@ definition CleanQ_RB_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a Cle
 
   
 end 
+
 (*
 
 text \<open>
@@ -1385,7 +1392,7 @@ text \<open>
 
 fun CleanQ_RB_Invariants :: "'a set \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
   where "CleanQ_RB_Invariants K rb \<longleftrightarrow> I1_img rb K \<and> I2_img rb \<and> I3_img rb \<and> I4 rb \<and> I5 rb"
-*)
+
 
 end (*Modulus end *)
 
