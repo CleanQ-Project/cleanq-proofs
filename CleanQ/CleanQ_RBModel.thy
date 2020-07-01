@@ -933,6 +933,24 @@ lemma CleanQ_RB_enq_y_I4 :
   using can_enq unfolding CleanQ_RB_enq_y_def CleanQ_RB_list_def CleanQ_RB_enq_y_possible_def
   using Inv by(simp add:rb_enq_remains_valid)
 
+lemma CleanQ_RB_enq_y_inv_all :
+ assumes Inv: "CleanQ_RB_Invariants K rb"  and  Y_owned: "b \<in> rSY rb" and
+         Y_enq: "rb' = CleanQ_RB_enq_y b rb" and  can_enq: "CleanQ_RB_enq_y_possible rb"
+  shows "CleanQ_RB_Invariants K rb'"
+  apply(subst Y_enq)
+  using can_enq unfolding CleanQ_RB_enq_y_def CleanQ_RB_list_def CleanQ_RB_enq_y_possible_def
+  by (metis CleanQ_RB_Invariants.elims(3) CleanQ_RB_enq_y_I1 CleanQ_RB_enq_y_I2 CleanQ_RB_enq_y_I3 
+      CleanQ_RB_enq_y_I4 CleanQ_RB_enq_y_def Inv Y_owned can_enq)
+
+lemma CleanQ_RB_enq_x_inv_all :
+ assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSX rb" and
+         X_enq: "rb' = CleanQ_RB_enq_x b rb" and  can_enq: "CleanQ_RB_enq_x_possible rb"
+  shows "CleanQ_RB_Invariants K rb'"
+  apply(subst X_enq)
+  using can_enq unfolding CleanQ_RB_enq_x_def CleanQ_RB_list_def CleanQ_RB_enq_x_possible_def
+  by (metis CleanQ_RB_Invariants.elims(3) CleanQ_RB_enq_x_I1 CleanQ_RB_enq_x_I2 
+      CleanQ_RB_enq_x_I3 CleanQ_RB_enq_x_I4 CleanQ_RB_enq_x_def Inv X_owned can_enq)
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -1164,7 +1182,6 @@ proof -
      by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def 
                 I2_rb_img.elims(2) I4_rb_valid.elims(2) IntI can_deq empty_iff 
                 rb_deq_list_was_in)
-
   (* ok that one should be rephrased... *)
   have X2: "rSX rb' \<inter> set (CleanQ_RB_list (rTXY rb')) = {}"
     apply(subst X_deq)+
@@ -1173,8 +1190,6 @@ proof -
     by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def 
               I2_rb_img.elims(2) I4_rb_valid.elims(2) insert_Diff insert_disjoint(1) 
               rb_deq_list_was_in)
-
-
 
   (* ok that one should be rephrased... *)
   have X3: "rSX rb' \<inter> set (CleanQ_RB_list (rTYX rb')) = {}"
@@ -1204,6 +1219,60 @@ proof -
     by(auto)
 qed
 
+lemma CleanQ_RB_deq_y_I2 :
+  assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "I2_rb_img rb'"
+proof -
+  have X1:
+    "rSX rb' \<inter> rSY rb' = {}"
+    apply(subst Y_deq)+
+    apply(simp add:CleanQ_RB_deq_y_def prod.case_eq_if) 
+     using invariants
+     by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_y_possible_def 
+                I2_rb_img.elims(2) I4_rb_valid.elims(2) IntI can_deq empty_iff 
+                rb_deq_list_was_in)
+
+  (* ok that one should be rephrased... *)
+  have X2: "rSX rb' \<inter> set (CleanQ_RB_list (rTXY rb')) = {}"
+    apply(subst Y_deq)+
+    apply(simp add:CleanQ_RB_deq_y_def prod.case_eq_if)
+    using can_deq invariants
+    by (smt CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_y_possible_def 
+        I2_rb_img.elims(2) I3_rb_img.elims(2) I4_rb_valid.elims(2) disjoint_iff_not_equal
+        psubsetD rb_deq_subset)
+
+  (* ok that one should be rephrased... *)
+  have X3: "rSX rb' \<inter> set (CleanQ_RB_list (rTYX rb')) = {}"
+    using can_deq invariants CleanQ_RB_deq_y_no_change
+    by (metis CleanQ_RB_Invariants.elims(2) I2_rb_img.elims(2) Y_deq)
+
+  have X4: "rSY rb' \<inter> set (CleanQ_RB_list (rTYX rb')) = {}"
+    apply(subst Y_deq)+
+    apply(simp add:CleanQ_RB_deq_y_def prod.case_eq_if)
+    using can_deq invariants
+    by (metis CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_y_possible_def I2_rb_img.elims(2) 
+        I4_rb_valid.elims(2) disjoint_insert(1) insert_Diff rb_deq_list_was_in)
+
+  have X5: "rSY rb' \<inter> set (CleanQ_RB_list (rTXY rb')) = {}" 
+    apply(subst Y_deq)+
+    apply(simp add:CleanQ_RB_deq_y_def prod.case_eq_if)
+    using can_deq invariants
+    by (smt CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_y_possible_def I2_rb_img.elims(2) 
+            I3_rb_img.elims(2) I4_rb_valid.elims(2) Int_commute Int_iff empty_set insert_Diff 
+            insert_disjoint(1) list_set_hd_tl_subtract rb_deq_list_not_in rb_deq_list_tail 
+            rb_deq_list_was_head rb_deq_list_was_in)
+
+
+  have X6: "set (CleanQ_RB_list (rTXY rb')) \<inter> set (CleanQ_RB_list (rTYX rb')) = {}"
+    using can_deq Y_deq invariants CleanQ_RB_deq_y_no_change CleanQ_RB_deq_y_subsets
+    by (smt CleanQ_RB_Invariants.elims(2) I2_rb_img.elims(2) disjoint_iff_not_equal psubsetD)
+
+  from X1 X2 X3 X4 X5 X6  show "I2_rb_img rb'"
+    by(auto)
+qed
+
+
 lemma CleanQ_RB_deq_x_I3 :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
     and invariants : "CleanQ_RB_Invariants K rb"
@@ -1220,7 +1289,6 @@ lemma CleanQ_RB_deq_y_I3 :
   by (metis CleanQ_List_deq_y_I3 CleanQ_RB_Invariants.elims(2)
             CleanQ_RB_deq_y_equal I3_rb_img_lift)
 
-
 lemma CleanQ_RB_deq_x_I4 :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
     and invariants : "CleanQ_RB_Invariants K rb"
@@ -1229,8 +1297,35 @@ lemma CleanQ_RB_deq_x_I4 :
   unfolding CleanQ_RB_deq_x_def CleanQ_RB_deq_x_possible_def 
   using can_deq invariants
   by(simp add: CleanQ_RB_deq_x_possible_def rb_deq_remains_valid prod.case_eq_if) 
-  
-  
+
+lemma CleanQ_RB_deq_y_I4 :
+  assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "I4_rb_valid rb'"
+  apply(subst Y_deq)
+  unfolding CleanQ_RB_deq_y_def CleanQ_RB_deq_y_possible_def 
+  using can_deq invariants
+  by(simp add: CleanQ_RB_deq_y_possible_def rb_deq_remains_valid prod.case_eq_if) 
+
+lemma CleanQ_RB_deq_x_all_inv :
+  assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "CleanQ_RB_Invariants K rb'"
+  apply(subst X_deq)
+  unfolding CleanQ_RB_deq_x_possible_def
+  using can_deq invariants CleanQ_RB_deq_x_I4 CleanQ_RB_deq_x_I3 CleanQ_RB_deq_x_I2 CleanQ_RB_deq_x_I1
+  unfolding CleanQ_RB_deq_x_def
+  by (metis CleanQ_RB_Invariants.elims(3))
+
+lemma CleanQ_RB_deq_y_all_inv :
+  assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+    and invariants : "CleanQ_RB_Invariants K rb"
+  shows "CleanQ_RB_Invariants K rb'"
+  apply(subst Y_deq)
+  unfolding CleanQ_RB_deq_y_possible_def
+  using can_deq invariants CleanQ_RB_deq_y_I4 CleanQ_RB_deq_y_I3 CleanQ_RB_deq_y_I2 CleanQ_RB_deq_y_I1
+  unfolding CleanQ_RB_deq_y_def
+  by (metis CleanQ_RB_Invariants.elims(3))
 
 (* ==================================================================================== *)
 subsection \<open>Pre- and post- conditions\<close>
@@ -1238,10 +1333,10 @@ subsection \<open>Pre- and post- conditions\<close>
 
 
 definition CleanQ_RB_enq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
-  where "CleanQ_RB_enq_x_pre K b =  Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and> b \<in> rSX rb }"
+  where "CleanQ_RB_enq_x_pre K b =  Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb }"
 
 definition CleanQ_RB_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
-  where "CleanQ_RB_enq_y_pre K b = Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and> b \<in> rSY rb}"
+  where "CleanQ_RB_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSY rb}"
 
 definition CleanQ_RB_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
   where "CleanQ_RB_deq_x_pre K buf = Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and>
