@@ -586,10 +586,10 @@ subsection \<open>Pre- and post- conditions\<close>
 (* ==================================================================================== *)
 
 definition CleanQ_List_enq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"
-  where "CleanQ_List_enq_x_pre K b =  Semantic.Normal ` {rb. I1_list_img rb K \<and> I2_list_img rb \<and> I3 rb \<and> b \<in> lSX rb \<and> b \<notin> set (lTXY rb)}"
+  where "CleanQ_List_enq_x_pre K b =  Semantic.Normal ` {rb. CleanQ_List_Invariants K rb \<and> b \<in> lSX rb \<and> b \<notin> set (lTXY rb)}"
 
 definition CleanQ_List_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"
-  where "CleanQ_List_enq_y_pre K b = Semantic.Normal ` {rb. I1_list_img rb K \<and> I2_list_img rb \<and> I3 rb \<and> b \<in> lSY rb \<and> b \<notin> set (lTYX rb)}"
+  where "CleanQ_List_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_List_Invariants K rb \<and> b \<in> lSY rb \<and> b \<notin> set (lTYX rb)}"
 
 definition CleanQ_List_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"        
   where "CleanQ_List_deq_x_pre K buf = Semantic.Normal ` {rb. I1_list_img rb K \<and> I2_list_img rb \<and> I3 rb \<and>
