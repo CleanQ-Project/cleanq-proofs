@@ -592,11 +592,11 @@ definition CleanQ_List_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a C
   where "CleanQ_List_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_List_Invariants K rb \<and> b \<in> lSY rb \<and> b \<notin> set (lTYX rb)}"
 
 definition CleanQ_List_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"        
-  where "CleanQ_List_deq_x_pre K buf = Semantic.Normal ` {rb. I1_list_img rb K \<and> I2_list_img rb \<and> I3 rb \<and>
+  where "CleanQ_List_deq_x_pre K buf = Semantic.Normal ` {rb.  CleanQ_List_Invariants K rb \<and>
                                                           (lTYX rb) \<noteq> [] \<and> buf = hd (lTYX rb) }"
 
 definition CleanQ_List_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"        
-  where "CleanQ_List_deq_y_pre K buf = Semantic.Normal ` {rb. I1_list_img rb K \<and> I2_list_img rb \<and> I3 rb \<and>
+  where "CleanQ_List_deq_y_pre K buf = Semantic.Normal ` {rb. CleanQ_List_Invariants K rb \<and>
                                                           (lTXY rb) \<noteq> [] \<and> buf = hd (lTXY rb) }"
 
 
