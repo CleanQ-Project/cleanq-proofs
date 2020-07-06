@@ -1336,7 +1336,7 @@ definition CleanQ_RB_enq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a Cle
   where "CleanQ_RB_enq_x_pre K b =  Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb }"
 
 definition CleanQ_RB_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
-  where "CleanQ_RB_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSY rb}"
+  where "CleanQ_RB_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_y_possible rb \<and> b \<in> rSY rb}"
 
 definition CleanQ_RB_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
   where "CleanQ_RB_deq_x_pre K buf = Semantic.Normal ` {rb. I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb \<and>
