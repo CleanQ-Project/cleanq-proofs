@@ -660,34 +660,6 @@ lemma CleanQ_List_deq_y_I3 :
   shows "I3 (CleanQ_List_deq_y rb)"
   unfolding CleanQ_List_deq_y_def using I3_holds distinct_tl by auto
 
-lemma frame2_w_I3_deq:
-  fixes a B c D a' B' c' D' K x
-  assumes I2: "I2 (lift1 (a',B',[x] @ c',D'))"
-      and I3: "I3 (a',B',[x] @ c',D')"
-      and frame: "frame2_weak (a',B',c',D' \<union> {x}) (a,B,c,D)"
-    shows "I3 (a,B,c,D)"
-proof(unfold I3.simps, intro conjI)
-  from frame obtain \<delta>aB \<delta>Bc where
-    fA: "a' = \<delta>aB @ a" and
-    fB: "B' \<union> set \<delta>aB = set \<delta>Bc \<union> B" and
-    fC: "c' @ \<delta>Bc = c" and
-    dBC: "B \<inter> set \<delta>Bc = {}" and
-    dsBC: "distinct \<delta>Bc" and
-    fD: "D' \<union> {x} = D"
-    by(auto)
-
-  from I3 have "distinct a'" by(auto)
-  with fA show "distinct a" by(auto)
-  from fA have "set (\<delta>aB @ a) = set a'" by(simp)
-  hence "set \<delta>aB \<subseteq> set a'" by(auto)
-  with fB have "set \<delta>Bc \<subseteq> set a' \<union> B'" by(auto)
-  with I2 have "set c' \<inter> set \<delta>Bc = {}" by(auto)
-  moreover from I3 have "distinct c'" by(auto)
-  ultimately show "distinct c"
-    using dsBC fC by(auto)
-qed
-
-
 text \<open>The weak frame condition for an dequeue  preserves invariant 3.\<close>
 lemma CleanQ_List_deq_x_weak_I3:
   fixes st st' K x
