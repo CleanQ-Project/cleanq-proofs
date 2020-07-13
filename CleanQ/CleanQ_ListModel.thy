@@ -23,7 +23,7 @@ text \<open>
 
 theory CleanQ_ListModel
 (*<*)
-  imports Main "../Simpl/Vcg"  "../Complx/OG_Hoare" "CleanQ_SetModel"
+  imports Main "../Simpl/Vcg"  "../Complx/OG_Hoare" CleanQ_SetModel CleanQ_Utils
 (*>*)
 begin
 
@@ -428,37 +428,7 @@ lemma CleanQ_List_deq_y_result :
 
 text \<open>
   We can now show that the operations have the same outcome of when lifted to the 
-  set model. We first define a helper lemma that lets us talk about the set subtraction
-  when we lift the list to a set. 
-\<close>
-
-
-lemma list_set_hd_tl_union:
-  "\<And>L. L\<noteq>[] \<Longrightarrow> set (L) =  set([hd L] @ (tl L))"
-  by(simp)
-
-
-lemma list_set_hd_tl_subtract: 
- assumes ne: "L \<noteq> []" and dist : "distinct L"
- shows "set (tl L) = set (L) - {hd L}"
-proof -
-  have X0 : "L = [hd L] @ tl L"
-    by (simp add: ne)
-
-  have X1: "set (L) = {hd L} \<union> set (tl L)"
-    by(subst X0, simp)
-
-  from dist X0 have dn :
-    "{hd L} \<inter> set (tl L) = {}"
-    apply(simp)
-    using  distinct.simps(2) by fastforce
-
-  show ?thesis 
-    using ne dist X1 dn by(simp)
-qed
-
-text \<open>
-  Using the helper lemma, we can now proof the commutativity
+  set model.
 \<close>
 
 lemma CleanQ_List_deq_x_equal : 
