@@ -180,7 +180,7 @@ text \<open>
 \<close>
 
 lemma CleanQ_Set_enq_x_I1 :
-  assumes I1_holds: "I1 rb K"  and  X_owned: "b \<in> SX rb"
+  assumes I1_holds: "I1 rb K"  and  X_owned: "b \<in> SX rb" 
     shows "I1 (CleanQ_Set_enq_x b rb) K"
   unfolding CleanQ_Set_enq_x_def 
   using I1_holds X_owned by auto
@@ -203,10 +203,18 @@ lemma CleanQ_Set_enq_y_I2 :
   unfolding CleanQ_Set_enq_y_def
   using I2_holds X_owned by auto
 
+
+text \<open>The frame condition as we currently have it can be defined as shown below. The essence of
+      it is that no set changes which is not specifically defined to change.\<close>
+fun frame_strong ::
+  "'a \<times> 'b \<times> 'c \<times> 'd \<Rightarrow>'a \<times> 'b \<times> 'c \<times> 'd \<Rightarrow> bool"
+  where "frame_strong (A',B',C',D') (A,B,C,D) \<longleftrightarrow> A' = A \<and> B' = B \<and> C' = C \<and> D' = D"
+
+
 text \<open>
-  For the concurrent case, we can also not assume that some of the sets do not change and for
-  this we have to weaken the frame condition that e.g. when enqueueing from X the sets TXY, SY
-  and TYX might change through actions of Y. With this we have to redo the proofs
+  For the concurrent case, we can not assume that the sets we do not explicitly modify by an operation
+  do not change and for this we have to weaken the frame condition that e.g. when enqueueing 
+  from X the sets TXY, SY and TYX might change through actions of Y.
 \<close>
 
 text \<open>@{term D} is in its initial state, but elements may move from @{term A} to @{term B}
@@ -222,9 +230,17 @@ fun frame_weak ::
     B \<inter> \<Delta>BC = {})
   \<and> D' = D"
 
+text \<open>
+  As a first step we have to show that the strong frame condition implies the weak one.
+\<close>
+
+lemma frame_s_w:
+  "frame_strong (A',B',C',D') (A,B,C,D) \<Longrightarrow> frame_weak (A',B',C',D') (A,B,C,D)"
+  unfolding frame_strong.simps frame_weak.simps by(blast)
 
 text \<open>The weak frame condition for an enqueue from @{term D} into @{term A} preserves
   invariant 1.\<close>
+
 lemma CleanQ_Set_enq_x_I1_weak:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
@@ -251,8 +267,6 @@ proof -
   finally show ?thesis by auto
 qed
 
-text \<open>The weak frame condition for an enqueue from @{term D} into @{term A} preserves
-  invariant 1.\<close>
 lemma CleanQ_Set_enq_y_I1_weak:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
@@ -279,8 +293,6 @@ proof -
   finally show ?thesis by auto
 qed
 
-text \<open>The weak frame condition for an enqueue from @{term D} into @{term A} preserves
-  invariant 2.\<close>
 lemma CleanQ_Set_enq_x_I2_weak:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
@@ -419,15 +431,37 @@ lemma CleanQ_Set_enq_x_Invariants :
   by (meson I_holds CleanQ_Set_Invariants.simps CleanQ_Set_enq_x_I1 
             CleanQ_Set_enq_x_I2 X_owned)
 
+lemma CleanQ_Set_enq_x_weak_Invariants :
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_enq_x b st'"
+      and frame: "frame_weak (TXY st' \<union> {b},SY st', TYX st', SX st' - {b}) (TXY st, SY st, TYX st, SX st)"
+      and owns: "b \<in> SX st'"
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_enq_x b st)"  
+  by (metis CleanQ_Set_State.ext_inject CleanQ_Set_State.surjective CleanQ_Set_enq_x_Invariants 
+      CleanQ_Set_enq_x_upd Diff_idemp I owns rb sup.right_idem)
+
+
 lemma CleanQ_Set_enq_y_Invariants :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> SY rb"
     shows "CleanQ_Set_Invariants K (CleanQ_Set_enq_y b rb)"  
   by (meson I_holds CleanQ_Set_Invariants.simps CleanQ_Set_enq_y_I1 
             CleanQ_Set_enq_y_I2 X_owned)
 
+lemma CleanQ_Set_enq_y_weak_Invariants :
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_enq_y b st'"
+      and frame: "frame_weak (TYX st' \<union> {b},SX st', TXY st', SY st' - {b}) (TYX st, SX st, TXY st, SY st)"
+      and owns: "b \<in> SY st'"
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_enq_y b st)"  
+  by (metis CleanQ_Set_State.ext_inject CleanQ_Set_State.surjective CleanQ_Set_enq_y_Invariants 
+      CleanQ_Set_enq_y_upd Diff_idemp I owns rb sup.right_idem)
+
 
 text \<open>
-  We can show that the buffers are ending up in the right set
+  We can show that the buffers are ending up in the right set under the assumption of the strong
+  frame condition
 \<close>
 
 lemma CleanQ_Set_enq_x_dst :
@@ -442,7 +476,7 @@ lemma CleanQ_Set_enq_y_dst :
 
 
 text \<open>
-  Next, we can show that the buffers are not in the other set
+  Next, we can show that the buffers are not in the other set assuming the strong frame condition
 \<close>
 
 lemma CleanQ_Set_enq_x_ndst1 :
@@ -572,6 +606,193 @@ lemma CleanQ_Set_deq_y_I2 :
   unfolding CleanQ_Set_deq_y_def
   using I2_holds TXY_owned by auto
 
+text \<open>
+  Similar to enqueue we also have to show the same for dequeue and the weak frame condition
+\<close>
+
+lemma CleanQ_Set_deq_x_weak_I1:
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_enq_y b st'"
+      and frame: "frame_weak (TXY st',SY st', TYX st' - {b}, SX st' \<union> {b}) (TXY st, SY st, TYX st, SX st)"
+      and owns: "b \<in> TYX st'"
+    shows "I1 st K"
+proof -
+  from frame obtain \<Delta>AB \<Delta>BC where
+    fA: "TXY st' = \<Delta>AB \<union> TXY st" and
+    fB: "SY st' \<union> \<Delta>AB = \<Delta>BC \<union> SY st" and
+    fC: "(TYX st' - {b}) \<union> \<Delta>BC = TYX st" and
+    fD: "SX st' \<union> {b} = SX st" and
+    dAB: "TXY st \<inter> \<Delta>AB = {}" and
+    dAC: "TXY st \<inter> \<Delta>BC = {}" and
+    dBC: "SY st \<inter> \<Delta>BC = {}"
+    by(auto)
+  from fC have "TYX st = (TYX st' - {b}) \<union> \<Delta>BC" by(simp)
+  hence "SY st  \<union> TYX st = (SY st \<union> \<Delta>BC) \<union> (TYX st' - {b})" by(simp add:ac_simps)
+  with fB have "SY st \<union> TYX st = (SY st' \<union> \<Delta>AB) \<union> (TYX st' - {b})" by(simp add:ac_simps)
+  hence "TXY st \<union> SY st \<union> TYX st = (TXY st \<union> \<Delta>AB) \<union> SY st' \<union> (TYX st' - {b})" by blast
+  with fA have "TXY st \<union> SY st \<union> TYX st = TXY st' \<union> SY st' \<union> (TYX st' - {b})" by(simp add:ac_simps)
+  with fD have "TXY st \<union> SY st \<union> TYX st \<union> SX st = TXY st' \<union> SY st' \<union> (TYX st' - {b}) \<union> (SX st' \<union> {b})" by(simp)
+  with owns have "TXY st \<union> SY st \<union> TYX st \<union> SX st = TXY st' \<union> SY st' \<union> TYX st' \<union> SX st'" by(auto)
+  also from I have "... = K" by auto
+  finally show ?thesis by auto
+qed
+
+lemma CleanQ_Set_deq_y_weak_I1:
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_enq_y b st'"
+      and frame: "frame_weak (TYX st',SX st', TXY st' - {b}, SY st' \<union> {b}) (TYX st, SX st, TXY st, SY st)"
+      and owns: "b \<in> TXY st'"
+    shows "I1 st K"
+proof -
+  from frame obtain \<Delta>AB \<Delta>BC where
+    fA: "TYX st' = \<Delta>AB \<union> TYX st" and
+    fB: "SX st' \<union> \<Delta>AB = \<Delta>BC \<union> SX st" and
+    fC: "(TXY st' - {b}) \<union> \<Delta>BC = TXY st" and
+    fD: "SY st' \<union> {b} = SY st" and
+    dAB: "TYX st \<inter> \<Delta>AB = {}" and
+    dAC: "TYX st \<inter> \<Delta>BC = {}" and
+    dBC: "SX st \<inter> \<Delta>BC = {}"
+    by(auto)
+
+  from fC have "TXY st = (TXY st' - {b}) \<union> \<Delta>BC" by(simp)
+  hence "SX st  \<union> TXY st = (SX st \<union> \<Delta>BC) \<union> (TXY st' - {b})" by(simp add:ac_simps)
+  with fB have "SX st \<union> TXY st = (SX st' \<union> \<Delta>AB) \<union> (TXY st' - {b})" by(simp add:ac_simps)
+  hence "TYX st \<union> SX st \<union> TXY st = (TYX st \<union> \<Delta>AB) \<union> SX st' \<union> (TXY st' - {b})" by blast
+  with fA have "TYX st \<union> SX st \<union> TXY st = TYX st' \<union> SX st' \<union> (TXY st' - {b})" by(simp add:ac_simps)
+  with fD have "TYX st \<union> SX st \<union> TXY st \<union> SY st = TYX st' \<union> SX st' \<union> (TXY st' - {b}) \<union> (SY st' \<union> {b})" by(simp)
+  with owns have "TYX st \<union> SX st \<union> TXY st \<union> SY st = TYX st' \<union> SX st' \<union> TXY st' \<union> SY st'" by(auto)
+  also from I have "... = K" by auto
+  finally show ?thesis by auto
+qed
+
+lemma CleanQ_Set_deq_x_weak_I2:
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_enq_x b st'"
+      and frame: "frame_weak (TXY st',SY st', TYX st' - {b}, SX st' \<union> {b}) (TXY st, SY st, TYX st, SX st)"
+      and owns: "b \<in> TYX st'"
+    shows "I2 st"
+proof(unfold I2.simps, intro conjI)
+  from frame obtain \<Delta>AB \<Delta>BC where
+    fA: "TXY st' = \<Delta>AB \<union> TXY st" and
+    fB: "SY st' \<union> \<Delta>AB = \<Delta>BC \<union> SY st" and
+    fC: "(TYX st' - {b}) \<union> \<Delta>BC = TYX st" and
+    fD: "SX st' \<union> {b} = SX st" and
+    dAB: "TXY st \<inter> \<Delta>AB = {}" and
+    dAC: "TXY st \<inter> \<Delta>BC = {}" and
+    dBC: "SY st \<inter> \<Delta>BC = {}"
+    by(auto)
+
+  from fA have ss_\<Delta>AB: "\<Delta>AB \<subseteq> TXY st'" by(auto)
+  with fB have ss_\<Delta>BC: "\<Delta>BC \<subseteq> TXY st' \<union> SY st'" by(auto)
+
+  from fA have ss_A: "TXY st \<subseteq> TXY st'" by(auto)
+  from fB ss_\<Delta>AB have ss_B: "SY st \<subseteq> TXY st' \<union> SY st'" by(auto)
+  from fC ss_\<Delta>BC have ss_C: "TYX st \<subseteq> TXY st' \<union> SY st' \<union> (TYX st' - {b})" by(auto)
+
+  from I owns ss_A show "SX st \<inter> TXY st = {}" by(unfold fD[symmetric], auto)
+  from I owns ss_B show "SX st \<inter> SY st = {}" by(unfold fD[symmetric], auto)
+  from I owns ss_C show "SX st \<inter> TYX st = {}" by(unfold fD[symmetric], auto)
+
+  from fC have "SY st \<inter> TYX st = SY st \<inter> ((TYX st' - {b}) \<union> \<Delta>BC)" by(simp)
+  also have "... = (SY st \<inter> (TYX st' - {b})) \<union> (SY st \<inter> \<Delta>BC)" by(auto)
+  also {
+    from ss_B have "SY st \<inter> (TYX st' - {b}) \<subseteq> (TXY st' \<union> SY st') \<inter> TYX st'" by(auto)
+    also from I have "... = {}" by(auto)
+    finally have "(SY st \<inter> (TYX st' - {b})) \<union> (SY st \<inter> \<Delta>BC) = SY st \<inter> \<Delta>BC" by(simp)
+  }
+  txt \<open>@{term "SY st \<inter> \<Delta>BC = {}"} is essential\<close>
+  finally have "SY st \<inter> TYX st = SY st \<inter> \<Delta>BC" .
+  with dBC show "SY st \<inter> TYX st = {}" by simp
+
+  from fC have "TXY st \<inter> TYX st = TXY st \<inter> ((TYX st' - {b}) \<union> \<Delta>BC)" by simp
+  also have "... = (TXY st \<inter> (TYX st' - {b})) \<union> (TXY st \<inter> \<Delta>BC)" by blast
+  also {
+    from ss_A have "TXY st \<inter> (TYX st' - {b}) \<subseteq> (TXY st' \<union> {b}) \<inter> (TYX st' - {b})" by(auto)
+    also from I have "... = {}" by(auto)
+    finally have "(TXY st \<inter> (TYX st' - {b})) \<union> (TXY st \<inter> \<Delta>BC) = TXY st \<inter> \<Delta>BC" by(simp)
+  }
+  txt \<open>@{term "TXY st \<inter> \<Delta>BC = {}"} is essential\<close>
+  finally have "TXY st \<inter> TYX st = TXY st \<inter> \<Delta>BC" .
+  with dAC show "TXY st \<inter> TYX st = {}" by(simp)
+
+  from fB have "TXY st \<inter> (\<Delta>BC \<union> SY st) = TXY st \<inter> (SY st' \<union> \<Delta>AB)" by(simp)
+  also have "... = (TXY st \<inter> SY st') \<union> (TXY st \<inter> \<Delta>AB)" by(auto)
+  also {
+    from ss_A have "TXY st \<inter> SY st' \<subseteq> (TXY st' \<union> {b}) \<inter> SY st'" by(auto)
+    also from I owns have "... = {}" by(auto)
+    finally have "(TXY st \<inter> SY st') \<union> (TXY st \<inter> \<Delta>AB) = TXY st \<inter> \<Delta>AB" by(simp)
+  }
+  txt \<open>@{term "TXY st \<inter> \<Delta>AB = {}"} is essential, given @{term "TXY st \<inter> \<Delta>BC = {}"}.\<close>
+  finally have "TXY st \<inter> (\<Delta>BC \<union> SY st) = TXY st \<inter> \<Delta>AB" .
+  with dAB show " SY st \<inter> TXY st = {}" by(auto)
+qed
+
+
+lemma CleanQ_Set_deq_y_weak_I2:
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_enq_y b st'"
+      and frame: "frame_weak (TYX st',SX st', TXY st' - {b}, SY st' \<union> {b}) (TYX st, SX st, TXY st, SY st)"
+      and owns: "b \<in> TXY st'"
+    shows "I2 st"
+proof(unfold I2.simps, intro conjI)
+  from frame obtain \<Delta>AB \<Delta>BC where
+    fA: "TYX st' = \<Delta>AB \<union> TYX st" and
+    fB: "SX st' \<union> \<Delta>AB = \<Delta>BC \<union> SX st" and
+    fC: "(TXY st' - {b}) \<union> \<Delta>BC = TXY st" and
+    fD: "SY st' \<union> {b} = SY st" and
+    dAB: "TYX st \<inter> \<Delta>AB = {}" and
+    dAC: "TYX st \<inter> \<Delta>BC = {}" and
+    dBC: "SX st \<inter> \<Delta>BC = {}"
+    by(auto)
+
+  from fA have ss_\<Delta>AB: "\<Delta>AB \<subseteq> TYX st'" by(auto)
+  with fB have ss_\<Delta>BC: "\<Delta>BC \<subseteq> TYX st' \<union> SX st'" by(auto)
+
+  from fA have ss_A: "TYX st \<subseteq> TYX st'" by(auto)
+  from fB ss_\<Delta>AB have ss_B: "SX st \<subseteq> TYX st' \<union> SX st'" by(auto)
+  from fC ss_\<Delta>BC have ss_C: "TXY st \<subseteq> TYX st' \<union> SX st' \<union> (TXY st' - {b})" by(auto)
+
+  from I owns ss_A show "SY st \<inter> TYX st = {}" by(unfold fD[symmetric], auto)
+  from I owns ss_B show "SX st \<inter> SY st = {}" by(unfold fD[symmetric], auto)
+  from I owns ss_C show "SY st \<inter> TXY st = {}" by(unfold fD[symmetric], auto)
+
+  from fC have "SX st \<inter> TXY st = SX st \<inter> ((TXY st' - {b}) \<union> \<Delta>BC)" by(simp)
+  also have "... = (SX st \<inter> (TXY st' - {b})) \<union> (SX st \<inter> \<Delta>BC)" by(auto)
+  also {
+    from ss_B have "SX st \<inter> (TXY st' - {b}) \<subseteq> (TYX st' \<union> SX st') \<inter> TXY st'" by(auto)
+    also from I have "... = {}" by(auto)
+    finally have "(SX st \<inter> (TXY st' - {b})) \<union> (SX st \<inter> \<Delta>BC) = SX st \<inter> \<Delta>BC" by(simp)
+  }
+  txt \<open>@{term "SX st \<inter> \<Delta>BC = {}"} is essential\<close>
+  finally have "SX st \<inter> TXY st = SX st \<inter> \<Delta>BC" .
+  with dBC show "SX st \<inter> TXY st = {}" by simp
+
+  from fC have "TYX st \<inter> TXY st = TYX st \<inter> ((TXY st' - {b}) \<union> \<Delta>BC)" by simp
+  also have "... = (TYX st \<inter> (TXY st' - {b})) \<union> (TYX st \<inter> \<Delta>BC)" by blast
+  also {
+    from ss_A have "TYX st \<inter> (TXY st' - {b}) \<subseteq> (TYX st' \<union> {b}) \<inter> (TXY st' - {b})" by(auto)
+    also from I have "... = {}" by(auto)
+    finally have "(TYX st \<inter> (TXY st' - {b})) \<union> (TYX st \<inter> \<Delta>BC) = TYX st \<inter> \<Delta>BC" by(simp)
+  }
+  txt \<open>@{term "TYX st \<inter> \<Delta>BC = {}"} is essential\<close>
+  finally have "TYX st \<inter> TXY st = TYX st \<inter> \<Delta>BC" .
+  with dAC show "TXY st \<inter> TYX st = {}" by auto
+
+  from fB have "TYX st \<inter> (\<Delta>BC \<union> SX st) = TYX st \<inter> (SX st' \<union> \<Delta>AB)" by(simp)
+  also have "... = (TYX st \<inter> SX st') \<union> (TYX st \<inter> \<Delta>AB)" by(auto)
+  also {
+    from ss_A have "TYX st \<inter> SX st' \<subseteq> (TYX st' \<union> {b}) \<inter> SX st'" by(auto)
+    also from I owns have "... = {}" by(auto)
+    finally have "(TYX st \<inter> SX st') \<union> (TYX st \<inter> \<Delta>AB) = TYX st \<inter> \<Delta>AB" by(simp)
+  }
+  txt \<open>@{term "TYX st \<inter> \<Delta>AB = {}"} is essential, given @{term "TYX st \<inter> \<Delta>BC = {}"}.\<close>
+  finally have "TYX st \<inter> (\<Delta>BC \<union> SX st) = TYX st \<inter> \<Delta>AB" .
+  with dAB show " SX st \<inter> TYX st = {}" by(auto)
+qed
 
 text \<open>
   Both invariants I1 and I2 are preserved by dequeue operations, thus we can combine them 
@@ -584,12 +805,33 @@ lemma CleanQ_Set_deq_x_Invariants :
   by (meson CleanQ_Set_Invariants.simps CleanQ_Set_deq_x_I1 CleanQ_Set_deq_x_I2 I_holds 
             TYX_owned)
 
+lemma CleanQ_Set_deq_x_weak_Invariants :
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_deq_x b st'"
+      and frame: "frame_weak (TXY st' ,SY st', TYX st' - {b}, SX st' \<union> {b}) (TXY st, SY st, TYX st, SX st)"
+      and owns: "b \<in> TYX st'"
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_x b st)"  
+  by (metis CleanQ_Set_State.select_convs(2) CleanQ_Set_State.select_convs(3) 
+      CleanQ_Set_State.select_convs(4) CleanQ_Set_deq_x_Invariants CleanQ_Set_deq_x_upd Diff_idemp I 
+      frame frame_weak.simps owns rb sup.right_idem)
+
 lemma CleanQ_Set_deq_y_Invariants :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  TXY_owned: "b \<in> TXY rb"
     shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_y b rb)" 
   by (meson CleanQ_Set_Invariants.simps CleanQ_Set_deq_y_I1 CleanQ_Set_deq_y_I2 I_holds
             TXY_owned)
 
+lemma CleanQ_Set_deq_y_weak_Invariants :
+  fixes st st' K b
+  assumes I: "CleanQ_Set_Invariants K st'"
+      and rb: "st = CleanQ_Set_deq_y b st'"
+      and frame: "frame_weak (TYX st' ,SX st', TXY st' - {b}, SY st' \<union> {b}) (TYX st, SX st, TXY st, SY st)"
+      and owns: "b \<in> TXY st'"
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_y b st)"   
+  by (metis CleanQ_Set_State.select_convs(1) CleanQ_Set_State.select_convs(3) 
+      CleanQ_Set_State.select_convs(4) CleanQ_Set_deq_y_Invariants CleanQ_Set_deq_y_upd Diff_idemp I 
+      frame frame_weak.simps owns rb sup.right_idem)
 
 text \<open>
   We can show that the buffers are ending up in the right set
@@ -599,6 +841,7 @@ lemma CleanQ_Set_deq_x_dst :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "b \<in> TYX rb"
     shows "b \<in> SX (CleanQ_Set_deq_x b rb)"
   by (simp add: CleanQ_Set_deq_x_upd)
+
 
 lemma CleanQ_Set_deq_y_dst :
   assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "b \<in> TXY rb"
@@ -949,11 +1192,6 @@ definition CleanQ_Set_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a Cl
 
 definition CleanQ_Set_enq_y_post :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_Set_State, 'a CleanQ_Set_State) Semantic.xstate set"
   where "CleanQ_Set_enq_y_post K b = Semantic.Normal ` { rb. I1 rb K \<and> I2 rb \<and> b \<in> TYX rb }"
-
-
-
-    
-
 
 
 (*<*)
