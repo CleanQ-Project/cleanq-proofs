@@ -205,6 +205,38 @@ fun I4_rb_valid :: "'a CleanQ_RB_State \<Rightarrow> bool"
   where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb)))"
 
 (* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Weak frame condition\<close>
+(* ------------------------------------------------------------------------------------ *)
+text \<open>
+  Assuming a two concurrently acting agents, we can not assume that all of the RB state
+  stays the same. In order to model this, we have to weaken the frame condition which
+  we up to now implicitly used. \<close>
+(* Need to express somehow that descriptors can be added by enq *)
+definition frame_weak_x :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "frame_weak_x st' st \<longleftrightarrow>
+    head (rTXY st') = head (rTXY st) \<and>
+    tail (rTYX st') = tail (rTYX st) \<and>
+    ring (rTXY st') = ring (rTXY st) \<and>
+    size (rTXY st') = size (rTXY st) \<and>
+    size (rTYX st') = size (rTYX st) \<and>
+    (\<exists>\<delta>hd \<delta>tl \<delta>dc.
+        tail (rTXY st') + \<delta>tl = tail (rTXY st)\<and>
+        head (rTYX st') + \<delta>hd = head (rTYX st)\<and>
+        CleanQ_RB_list (rTYX st') =  \<delta>dc @ CleanQ_RB_list (rTYX st))" (*Y adding something to ring*)
+
+definition frame_weak_y :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "frame_weak_y st' st \<longleftrightarrow>
+    head (rTYX st') = head (rTYX st) \<and>
+    tail (rTXY st') = tail (rTXY st) \<and>
+    ring (rTYX st') = ring (rTYX st) \<and>
+    size (rTYX st') = size (rTYX st) \<and>
+    size (rTXY st') = size (rTXY st) \<and>
+    (\<exists>\<delta>hd \<delta>tl \<delta>dc.
+        tail (rTYX st') + \<delta>tl = tail (rTYX st)\<and>
+        head (rTXY st') + \<delta>hd = head (rTXY st)\<and>
+        CleanQ_RB_list (rTXY st') =  \<delta>dc @ CleanQ_RB_list (rTXY st))" (*X adding something to ring*)
+
+(* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>All CleanQ RB Invariants\<close>
 (* ------------------------------------------------------------------------------------ *)
 
