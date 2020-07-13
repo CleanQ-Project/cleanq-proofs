@@ -27,9 +27,9 @@ theory CleanQ_RB
 begin
 
 
-(* ------------------------------------------------------------------------------------ *)
-subsection \<open>Bounded Descriptor Ring\<close>
-(* ------------------------------------------------------------------------------------ *)
+(* ==================================================================================== *)
+subsection \<open>Data Type Definition\<close>
+(* ==================================================================================== *)
 
 text \<open>
   We first define the type of a the bounded, circular descriptor ring, which we call
@@ -53,6 +53,11 @@ text \<open>
 
 definition rb_valid :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_valid rb \<longleftrightarrow> (head rb < size rb) \<and> (tail rb < size rb) \<and> (size rb > 1)"
+
+
+(* ==================================================================================== *)
+subsection \<open>Full and Empty Predicates\<close>
+(* ==================================================================================== *)
 
 text \<open>
   We say a ring buffer is full, if the enqueue operation would lead to the case
@@ -80,7 +85,7 @@ definition rb_empty :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_empty rb = ((head rb) = (tail rb))"
 
 text \<open>
-  
+  Next we can show that the empty and full predicates imply the negation of eachother
 \<close>
 
 lemma rb_full_not_empty:
@@ -88,6 +93,10 @@ lemma rb_full_not_empty:
   apply(simp add:rb_full_no_modulo)
   unfolding rb_empty_def rb_valid_def by presburger
 
+lemma rb_empty_not_full:
+  "rb_valid rb \<Longrightarrow> rb_empty rb \<Longrightarrow> \<not> rb_full rb"
+  apply(simp add:rb_full_no_modulo)
+  unfolding rb_empty_def rb_valid_def by presburger
 
 text \<open>
   A ringbuffer has a certain set of valid entries. We now provide definitions to 
@@ -106,107 +115,83 @@ definition rb_valid_entries :: "'a CleanQ_RB \<Rightarrow> nat list"
 
 text \<open>
   We can now define lemmas to talk about the head and tail entries, and whether
-  they are part of the valid entries.
+  they are part of the valid entries. First, the head is never part of the set of
+  valid entries.
 \<close>
 
 lemma rb_valid_entries_head :
   "(head rb) \<notin> set (rb_valid_entries rb)"
   unfolding rb_valid_entries_def by(auto)
 
-lemma rb_valid_entries_tail1 :
+text \<open>
+  Next, if the ring buffer is emtpy, then the tail is also not part of the set of
+  valid entries. In fact, the set is the empty set.
+\<close>
+
+lemma rb_valid_entries_tail_empty1 :
   "head rb = tail rb \<Longrightarrow> (tail rb) \<notin> set (rb_valid_entries rb)"
   unfolding rb_valid_entries_def by(simp)
 
-lemma rb_valid_entries_tail2 :
+lemma rb_valid_entries_tail_emtpy2 :
+  "rb_empty rb  \<Longrightarrow> (tail rb) \<notin> set (rb_valid_entries rb)"
+  unfolding rb_empty_def rb_valid_entries_def by(simp)
+
+lemma rb_valid_entries_empty_list :
+  "rb_empty rb \<Longrightarrow> rb_valid_entries rb = []"
+   unfolding rb_empty_def rb_valid_entries_def by(simp)
+
+lemma rb_valid_entries_empty_list2 :
+  "rb_valid rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> rb_valid_entries rb = []"
+   unfolding rb_empty_def rb_valid_entries_def rb_valid_def by(auto)
+
+lemma rb_valid_entries_empty_set :
+  "rb_empty rb \<Longrightarrow> set (rb_valid_entries rb) = {}"
+   unfolding rb_empty_def rb_valid_entries_def by(simp)
+
+lemma rb_valid_entries_empty_set2 :
+  "rb_valid rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> set (rb_valid_entries rb) = {}"
+   unfolding rb_empty_def rb_valid_entries_def rb_valid_def by(auto)
+
+text \<open>
+  Finally, when the ring buffer is not empty then the tail is part of the set of 
+  valid entries. The same applies if the ring buffer is full. 
+\<close>
+
+lemma rb_valid_entries_tail_not_empty1 :
   "rb_valid rb \<Longrightarrow> head rb \<noteq> tail rb \<Longrightarrow> (tail rb) \<in> set (rb_valid_entries rb)"
   unfolding rb_valid_entries_def rb_valid_def by(simp)
 
-lemma rb_valid_entries_tail3:
-  "\<not>rb_empty rb \<Longrightarrow> (tail rb) \<in> set (rb_valid_entries rb)"
+lemma rb_valid_entries_tail_not_empty2:
+  "rb_valid rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow> (tail rb) \<in> set (rb_valid_entries rb)"
+  unfolding rb_valid_entries_def rb_valid_def rb_empty_def by(simp)
+
+lemma rb_valid_entries_tail_not_empty3:
+  "rb_valid rb \<Longrightarrow> rb_full rb \<Longrightarrow> (tail rb) \<in> set (rb_valid_entries rb)"
+  using rb_full_not_empty rb_valid_entries_tail_not_empty2 by(auto)
 
 text \<open>
-  Using the valid entries, we can define the buffer elements in the descriptor ring
-  by mapping them onto the ring-function of the CleanQ RB:
+  Moreover, we can show that if there are valid elements in the ring buffer, 
+  then the tail is the first element (head) of the list of valid entries.
 \<close>
 
-definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
-  where "CleanQ_RB_list rb = map (ring rb) (rb_valid_entries rb)"
+lemma rb_valid_entries_tail_first1:
+  "rb_valid rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow> (tail rb) = hd (rb_valid_entries rb)"
+  unfolding rb_valid_def rb_empty_def rb_valid_entries_def by(auto)
+
+lemma rb_valid_entries_tail_first2:
+  "rb_valid rb \<Longrightarrow> rb_full rb \<Longrightarrow> (tail rb) = hd (rb_valid_entries rb)"
+  using rb_full_not_empty rb_valid_entries_tail_first1 by(auto)
+
+
+
+(* ==================================================================================== *)
+subsection \<open>Incrementing Tail and Head Pointers\<close>
+(* ==================================================================================== *)
 
 text \<open>
-  If the ring is valid, then the list is bounded by the size of the ring.
-\<close>
-
-lemma rb_valid_list_size:
-  "rb_valid rb \<Longrightarrow> (length (CleanQ_RB_list rb) < size rb)"
-  unfolding CleanQ_RB_list_def rb_valid_entries_def rb_valid_def
-  by auto
-
-
-text \<open>
- We can now show that the list of valid entries is empty, when the predicate 
- \verb+rb_empty+ is true.
-\<close>
-
-lemma 
-  assumes valid: "rb_valid rb"
-  shows "rb_empty rb \<longleftrightarrow> rb_valid_entries rb = []"
-  using valid unfolding  rb_valid_entries_def rb_valid_def 
-  by (metis Nil_is_append_conv  nat_less_le order.order_iff_strict
-            rb_empty_def upt_eq_Cons_conv upt_rec)
-
-
-
-
-
-
-
-
-(*
-old proof using the modulo
-
-proof
-  show "rb_empty rb \<Longrightarrow> rb_valid_entries rb = []"
-  proof -
-    assume e: "rb_empty rb"
-    from e have eq:  "((head rb) = (tail rb))"
-      unfolding rb_empty_def by(simp)
-
-    from sz have nz:
-      "nonzero_modulus (size rb)"
-      by (simp add: nonzero_modulus.intro)
-
-    from eq nz have el:  
-      "(nonzero_modulus.list_between (size rb) (tail rb) (head rb)) = []"
-       using nonzero_modulus.uptol_eq[where N="size rb" and l="tail rb" and h="head rb"]
-       by(auto)
-
-    from el show ?thesis  
-      unfolding rb_valid_entries_def by(simp)
-  qed
-next
-  show "rb_valid_entries rb = [] \<Longrightarrow> rb_empty rb"
-  proof - 
-    assume e: "rb_valid_entries rb = []"
-
-    from sz have nz:
-      "nonzero_modulus (size rb)"
-      by (simp add: nonzero_modulus.intro)    
-
-    from e sz nz have eq:
-      "(tail rb) = (head rb)"
-      unfolding rb_valid_entries_def 
-      using hh ll  nonzero_modulus.uptol_eq_both[where N="size rb" and l="tail rb" and h="head rb"]
-      by(auto)
-
-    from eq show ?thesis 
-      unfolding rb_empty_def by(auto)
-  qed
-qed
-*)
-
-
-text \<open>
-  We provide functions that increment the head and tail pointers of the queue.
+  We provide functions that increment the head and tail pointers of the queue. This
+  effectively changes the set of valid entries of the ring buffer, and likewise also the
+  valid buffers in the queue. Note we always use the modulo Operator.
 \<close>
 
 definition rb_incr_head :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
@@ -214,6 +199,19 @@ definition rb_incr_head :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
 
 definition rb_incr_tail :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
   where "rb_incr_tail rb = rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr>"
+
+text \<open>
+ We first show that the two increment functions are in fact preserving the valid predicate.
+\<close>
+
+lemma rb_incr_head_valid:
+  "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_head rb)"
+  unfolding rb_valid_def rb_incr_head_def by(simp)
+
+lemma rb_incr_tail_valid:
+  "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail rb)"
+  unfolding rb_valid_def rb_incr_tail_def by(simp)
+
 
 text \<open>
   The two functions that increment the head or tail either remove or add an entry to the
@@ -232,9 +230,30 @@ lemma rb_incr_tail_valid_entries_tail:
   shows "rb_valid_entries (rb_incr_tail rb) = tl (rb_valid_entries rb)"
   using  valid notempty by (simp add:rb_incr_tail_valid_entries)
 
+text \<open>
+  When we increment the tail, then the original tail is no longer in the set of
+  valid entries
+\<close>
+
+lemma rb_incr_tail_valid_entries_notin1:
+assumes notempty: "\<not> rb_empty rb" and  valid: "rb_valid rb" 
+  shows "(tail rb) \<notin> set(rb_valid_entries (rb_incr_tail rb))"
+  using notempty valid apply(simp add:rb_incr_tail_valid_entries_tail)
+  unfolding rb_valid_def rb_empty_def rb_valid_entries_def by(auto)
+
+lemma rb_incr_tail_valid_entries_notin2:
+assumes notempty: "\<not> rb_empty rb" and  valid: "rb_valid rb" 
+  shows "hd (rb_valid_entries rb) \<notin> set (rb_valid_entries (rb_incr_tail rb))"
+  using notempty valid rb_valid_entries_tail_first1 rb_incr_tail_valid_entries_notin1
+  by fastforce
+  
+text \<open> 
+  Incrementing the head then adds the current head pointer to the list of valid entries
+\<close>
+
 lemma rb_incr_head_valid_entries:
 assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid rb"  
-  shows "(rb_valid_entries rb) @ [(head rb)] = rb_valid_entries (rb_incr_head rb)"
+  shows "rb_valid_entries (rb_incr_head rb) = (rb_valid_entries rb) @ [(head rb)]"
   using notfull valid 
   unfolding rb_valid_entries_def rb_incr_head_def rb_full_def rb_valid_def
   apply(simp add: mod_Suc upt_Suc_append  upt_conv_Cons, auto)
@@ -242,11 +261,29 @@ assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid rb"
   
 lemma rb_incr_head_valid_entries_butlast:
 assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid rb"  
-shows "(rb_valid_entries rb) = butlast (rb_valid_entries (rb_incr_head rb))"
-   using  notfull valid by (metis butlast_snoc rb_incr_head_valid_entries)
+  shows "(rb_valid_entries rb) = butlast (rb_valid_entries (rb_incr_head rb))"
+  using notfull valid by (metis butlast_snoc rb_incr_head_valid_entries)
 
 text \<open>
-  And finally, the incrementing the head or tail does not change the contents of 
+  The head elementis added to the set of valid entries, in fact at the end of the
+  list.
+\<close>
+
+lemma rb_incr_head_valid_entries_head:
+assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid rb"  
+  shows "head rb \<in> set (rb_valid_entries (rb_incr_head rb))"
+  using notfull valid apply(subst rb_incr_head_valid_entries)
+  by(auto)
+  
+lemma rb_incr_head_valid_entries_last:
+assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid rb"  
+  shows "head rb  = last (rb_valid_entries (rb_incr_head rb))"
+  using notfull valid apply(subst rb_incr_head_valid_entries)
+  by(auto)
+
+
+text \<open>
+  And finally, the incrementing the head or tail pointers does not change the contents of 
   the ring. 
 \<close>
 
@@ -259,11 +296,16 @@ lemma rb_incr_tail_ring:
   unfolding rb_incr_tail_def by(auto)
 
 
+(* ==================================================================================== *)
+subsection \<open>Writing Entries in the Descriptor Ring\<close>
+(* ==================================================================================== *)
+
 text \<open>
-  Writing an entry into the ring buffer then corresponds to a function update. 
+  Writing an entry into the ring buffer then corresponds to a function update. The update
+  always modifies the element at the head position.
 \<close>
 
-definition rb_write :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow>'a CleanQ_RB"
+definition rb_write :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
   where "rb_write b rb = rb \<lparr> ring := (ring rb)((head rb) := b) \<rparr>"
 
 
@@ -280,7 +322,7 @@ definition rb_read_tail :: "'a CleanQ_RB \<Rightarrow> 'a"
 
 text \<open>
   Writing an entry preserves the list of valid entries as well as the validity of
-  the ring buffer. 
+  the ring buffer, as the head / tail pointers are not changed.
 \<close>
 lemma rb_write_perserves_valid_entries:
   "rb_valid_entries rb = rb_valid_entries (rb_write b rb)"
@@ -291,14 +333,34 @@ lemma rb_write_preserves_valid:
   unfolding rb_valid_def rb_write_def by(auto)
 
 
+(* ==================================================================================== *)
+subsection \<open>Enqueue Operation\<close>
+(* ==================================================================================== *)
+
+
+text \<open>
+  We can only enqueue something in the ring buffer, if there is space in the ring
+  buffer. In other words, the ring buffer is not full.
+\<close>
+
+definition rb_can_enq :: "'a CleanQ_RB \<Rightarrow> bool"
+  where "rb_can_enq rb \<longleftrightarrow> \<not>(rb_full rb)"
+
+
 text \<open>
   The enqueue operation is then the combination of the update and the increment
-  of the head.
+  of the head pointer. 
 \<close>
 
 definition rb_enq :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB" 
   where "rb_enq b rb = rb_incr_head (rb_write b rb)"
 
+text \<open>
+  This is a function composition of the head increment and the write to the ring:
+\<close>
+
+definition rb_enq_fun :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB" 
+  where "rb_enq_fun b rb = ((rb_incr_head o rb_write b)) rb"
 
 text \<open>
   This produces the following updates to the structure:
@@ -308,35 +370,91 @@ definition rb_enq_alt :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_
   where "rb_enq_alt b rb = rb \<lparr> ring := (ring rb)((head rb) := b),
                                 head := ((head rb) + 1) mod (size rb) \<rparr>"
 
+text \<open>
+  And we can show that the three enqueue definitions are in fact equivalent:
+\<close>
+
 lemma rb_enq_equiv:
   "rb_enq b rb = rb_enq_alt b rb"
   unfolding rb_enq_alt_def rb_enq_def rb_incr_head_def rb_write_def by(auto)
 
+lemma rb_enq_equiv_fun:
+  "rb_enq b rb = rb_enq_fun b rb"
+  unfolding rb_enq_fun_def rb_enq_def by(auto)
 
-lemma rb_enq_remains_valid:
-  assumes notfull: "\<not>rb_full rb" and  valid: "rb_valid rb"
-  shows "rb_valid (rb_enq b rb)"
-  using valid notfull unfolding rb_valid_def rb_enq_def rb_full_def rb_incr_head_def rb_write_def
-  by(auto)
 
 text \<open>
-  
+  The enqueue function preserves the validity predicate of the ring buffer. 
 \<close>
 
-definition rb_can_enq :: "'a CleanQ_RB \<Rightarrow> bool"
-  where "rb_can_enq rb \<longleftrightarrow> \<not>(rb_full rb)"
+lemma rb_enq_remains_valid:
+assumes  valid: "rb_valid rb"
+  shows "rb_valid (rb_enq b rb)"
+  apply(subst rb_enq_equiv_fun)
+  using valid rb_write_preserves_valid rb_incr_head_valid 
+  unfolding rb_enq_fun_def by fastforce
+
+
+text \<open>
+  We can now show that the enqueue operation leaves the buffer in the old head 
+  element. 
+\<close>
 
 lemma rb_enq_buf_ring :
-  assumes notfull: "\<not> rb_full rb" and valid: "rb_valid rb" 
-  shows "rb' = rb_enq b rb \<Longrightarrow> (ring (rb'))((head rb)) = b"
+  "rb' = rb_enq b rb \<Longrightarrow> (ring (rb'))((head rb)) = b"
   unfolding rb_enq_def rb_incr_head_def rb_write_def by(auto)
 
 lemma rb_enq_buf:
-  assumes notfull: "\<not> rb_full rb" and valid: "rb_valid rb" 
-  shows "rb' = rb_enq b rb \<Longrightarrow> rb_read (head rb) rb' = b"
+ "rb' = rb_enq b rb \<Longrightarrow> rb_read (head rb) rb' = b"
   by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
-  
-  
+
+lemma rb_enq_buf2:
+  "rb_read (head rb) (rb_enq b rb) = b"
+  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
+
+
+(* ==================================================================================== *)
+subsection \<open>Dequeue Operation\<close>
+(* ==================================================================================== *)
+
+
+
+(* ==================================================================================== *)
+subsection \<open>Lifting Ring Buffers to Lists\<close>
+(* ==================================================================================== *)
+
+text \<open>
+  Using the valid entries, we can define the buffer elements in the descriptor ring
+  by mapping them onto the ring-function of the CleanQ RB:
+\<close>
+
+definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
+  where "CleanQ_RB_list rb = map (ring rb) (rb_valid_entries rb)"
+
+text \<open>
+  If the ring is valid, then the list is bounded by the size of the ring.
+\<close>
+
+lemma rb_list_size:
+  "rb_valid rb \<Longrightarrow> (length (CleanQ_RB_list rb) < size rb)"
+  unfolding CleanQ_RB_list_def rb_valid_entries_def rb_valid_def
+  by auto
+
+
+text \<open>
+ We can now show that the list of valid entries is empty, when the predicate 
+ \verb+rb_empty+ is true.
+\<close>
+
+lemma rb_list_empty:
+  assumes valid: "rb_valid rb"
+  shows "rb_empty rb \<longleftrightarrow> CleanQ_RB_list rb = []"
+  unfolding  CleanQ_RB_list_def using valid rb_valid_entries_empty_list2 by(auto)
+
+
+
+
+
 
 
 text \<open>
