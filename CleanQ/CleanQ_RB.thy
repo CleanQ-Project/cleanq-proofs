@@ -422,20 +422,24 @@ assumes notfull: "rb_can_enq rb" and valid: "rb_valid rb"
 shows "rb_valid_entries (rb_enq b rb) =  rb_valid_entries (rb_incr_head rb)"
   apply(subst rb_enq_equiv_fun)
   apply(subst rb_enq_fun_def)
-  using notfull valid rb_write_perserves_valid_entries
-  
+  unfolding rb_write_def using notfull valid rb_write_perserves_valid_entries 
+  by (simp add: rb_incr_head_def rb_valid_entries_def rb_enq_equiv_fun)
 
-
-(*
-  by (metis rb_full_def rb_incr_head_valid_entries rb_write_def rb_write_preserves_valid 
-            select_convs(2) select_convs(3) select_convs(4) surjective update_convs(1))
-*)
 
 lemma rb_enq_valid_entries :
 assumes notfull: "rb_can_enq rb" and valid: "rb_valid rb"   
-shows "rb_valid_entries (rb) @ [(head rb)] = rb_valid_entries (rb_enq b rb)"
+shows "rb_valid_entries (rb_enq b rb) = rb_valid_entries (rb) @ [(head rb)]"
   using notfull valid rb_write_perserves_valid_entries rb_enq_valid_entries_incr_head
-  by (simp add: rb_enq_valid_entries_incr_head rb_incr_head_valid_entries)
+  by (simp add: rb_enq_valid_entries_incr_head rb_can_enq_def rb_incr_head_valid_entries)
+
+text \<open>
+  The enqueue operation preserves the already existing entries in the ring.
+\<close>
+
+lemma rb_enq_preserves_valid_entries:
+  assumes notfull: "rb_can_enq rb"  and valid: "rb_valid rb"   
+  shows "\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_enq b rb)) i = (ring rb) i"
+  by (simp add: rb_enq_def rb_incr_head_ring rb_valid_entries_head rb_write_def)
 
 
 (* ==================================================================================== *)
@@ -527,116 +531,69 @@ lemma rb_list_empty:
   unfolding  CleanQ_RB_list_def using valid rb_valid_entries_empty_list2 by(auto)
 
 
-
-
-
-
-
 text \<open>
   Doing the enqueue operation then behaves as adding the buffer to the end
   of the list.
 \<close>
 
-
-
-
-lemma rb_enq_preserves_valid_entries:
-  assumes notfull: "\<not> rb_full rb"  and valid: "rb_valid rb"   
-  shows "\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_enq b rb)) i = (ring rb) i"
-proof -
-  have X1: "\<And>i. (ring (rb_enq b rb)) i = ring (rb_incr_head (rb_write b rb)) i"
-    unfolding rb_enq_def by(auto)
-  have X2: "\<And>i. ring (rb_incr_head (rb_write b rb)) i =  ring (rb_write b rb) i"
-    using rb_incr_head_ring by metis
-  have X3: "(\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_enq b rb)) i = (ring rb) i) 
-               = (\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_write b rb) i = (ring rb) i))"
-    using X1 X2 by(auto)
-      
-  show ?thesis
-    using X3 notfull valid 
-    by (simp add: rb_valid_entries_head rb_write_def)
-qed
-
-lemma rb_enq_perserves_old_entries:
-  assumes notfull: "\<not> rb_full rb"and valid: "rb_valid rb"   
-  shows "(map (ring (rb_enq b rb)) (rb_valid_entries rb))
-           = (map (ring rb) (rb_valid_entries rb))"
-  using notfull valid
-  by (simp add: rb_enq_preserves_valid_entries)
-
-
 lemma rb_enq_list_add:
-assumes notfull: "\<not> rb_full rb" and valid: "rb_valid rb"   
-shows "CleanQ_RB_list(rb_enq b rb) = (CleanQ_RB_list rb) @ [b]"
-proof -  
-  have X0: "rb_valid_entries (rb_enq b rb) = rb_valid_entries (rb) @ [(head rb)]"
-    using valid notfull rb_enq_valid_entries by fastforce
-
-  have X1:
-    "CleanQ_RB_list(rb_enq b rb) = map (ring (rb_enq b rb)) (rb_valid_entries (rb_enq b rb))"
-    unfolding CleanQ_RB_list_def by simp
-
-  have X2: "... =  map (ring (rb_enq b rb)) (rb_valid_entries (rb) @ [(head rb)])"
-    by (simp add: X0)
-  have X3: "... =  map (ring (rb_enq b rb)) (rb_valid_entries (rb)) @ map (ring (rb_enq b rb)) ([head rb])"
-    by(auto)
-  have X4: "... =  map (ring (rb_enq b rb)) (rb_valid_entries (rb)) @ [(ring (rb_enq b rb)) (head rb)]"
-    by(auto)
-  have X5: "... = map (ring rb) (rb_valid_entries (rb)) @ [(ring (rb_enq b rb)) (head rb)]"
-    using notfull valid rb_enq_perserves_old_entries by(simp)
-
-  have X6: "(ring (rb_enq b rb)) (head rb) = b"
-    using notfull valid  by (simp add: rb_enq_buf_ring)
-
-  have X7 : "(CleanQ_RB_list rb) = map (ring rb) (rb_valid_entries (rb))"
-    unfolding CleanQ_RB_list_def by simp
-
-  show ?thesis 
-    using X1 X2 X3 X4 X5 X6 X7 by(auto)               
-qed
+assumes notfull: "rb_can_enq rb" and valid: "rb_valid rb"   
+  shows "CleanQ_RB_list (rb_enq b rb) = (CleanQ_RB_list rb) @ [b]"
+  using notfull valid unfolding CleanQ_RB_list_def
+  by (simp add: rb_enq_buf_ring rb_enq_preserves_valid_entries rb_enq_valid_entries)
 
 
+text \<open>
+  The dequeue operation returns an element which is in the list of the original state,
+  and the element is the head of this list.
+\<close>
 
 lemma rb_deq_list_was_head :
-  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
      and res: "rb' = rb_deq rb" 
    shows "(fst rb') = hd (CleanQ_RB_list rb)"
-  using res notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
-  by (simp add: rb_incr_tail_valid_entries)
+  using notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
+  by (simp add: rb_can_deq_def rb_deq_alt_def rb_deq_equiv rb_incr_tail_valid_entries res)
 
 lemma rb_deq_list_was_in :
-  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
      and res: "rb' = rb_deq rb" 
    shows "(fst rb') \<in> set (CleanQ_RB_list rb)"
-  using res notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
-  by (simp add: rb_incr_tail_valid_entries)
+  using res notempty valid rb_deq_list_was_head rb_can_deq_def rb_list_empty by fastforce
+
+text \<open>
+  Likewise, the remainder of the state will be the tail of the original list. 
+\<close>
 
 lemma rb_deq_list_tail :
-  assumes notempty: "\<not> rb_empty rb" and  valid: "rb_valid rb"   
+  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"   
   and  res: "rb' = rb_deq rb"
 shows "CleanQ_RB_list (snd (rb')) = tl (CleanQ_RB_list rb)"
   using  res notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
-  apply (simp)
-  by (metis Pair_inject map_tl rb_deq_def rb_incr_tail_def 
-            rb_incr_tail_valid_entries_tail res)
+  by (simp add: map_tl rb_can_deq_def rb_incr_tail_ring rb_incr_tail_valid_entries_tail)
+
 
 lemma rb_deq_list_not_in :
-  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
      and res: "rb' = rb_deq rb" and dist: "distinct (CleanQ_RB_list rb)"
-shows "(fst rb') \<notin> set (CleanQ_RB_list (snd rb')) "
-  using notempty valid res dist
-  by (metis (no_types, lifting) CleanQ_RB_list_def distinct.simps(2) 
-            fstI list.simps(9) map_tl rb_deq_def rb_deq_list_tail 
-              rb_incr_tail_valid_entries rb_incr_tail_valid_entries_tail)
+   shows "(fst rb') \<notin> set (CleanQ_RB_list (snd rb')) "
+  using notempty valid res  
+  apply(subst rb_deq_list_tail, simp_all)
+  using rb_deq_list_was_head dist 
+  by (metis distinct.simps(2) list.collapse rb_can_deq_def rb_list_empty)
+
 
 lemma rb_deq_subset :
-  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
+  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
      and res: "rb' = rb_deq rb" and dist: "distinct (CleanQ_RB_list rb)"
-   shows "set (CleanQ_RB_list (snd rb')) \<subset> set (CleanQ_RB_list rb) "
-  using notempty valid res dist
-  by (metis (no_types, lifting) CleanQ_RB_list_def insert_Diff insert_iff list.map(2) 
-            list.simps(3) list_set_hd_tl_subtract order.not_eq_order_implies_strict 
-            rb_deq_list_not_in rb_deq_list_tail rb_deq_list_was_head rb_deq_list_was_in 
-            rb_incr_tail_valid_entries subsetI)
+   shows "set (CleanQ_RB_list (snd rb')) \<subset> set (CleanQ_RB_list rb) " 
+  using notempty valid res
+  apply(simp add:rb_deq_list_tail)
+  using notempty valid res apply(simp_all)
+  
+
+
+  try
+
    
 end
