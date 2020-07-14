@@ -412,10 +412,85 @@ lemma rb_enq_buf2:
   "rb_read (head rb) (rb_enq b rb) = b"
   by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
 
+text \<open>
+  Next we can talk about the effects on the set of valid entries in the ring buffer, 
+  when we enqueue a new element to the ring buffer.
+\<close>
+
+lemma rb_enq_valid_entries_incr_head:
+assumes notfull: "rb_can_enq rb" and valid: "rb_valid rb"  
+shows "rb_valid_entries (rb_enq b rb) =  rb_valid_entries (rb_incr_head rb)"
+  apply(subst rb_enq_equiv_fun)
+  apply(subst rb_enq_fun_def)
+  using notfull valid rb_write_perserves_valid_entries
+  
+
+
+(*
+  by (metis rb_full_def rb_incr_head_valid_entries rb_write_def rb_write_preserves_valid 
+            select_convs(2) select_convs(3) select_convs(4) surjective update_convs(1))
+*)
+
+lemma rb_enq_valid_entries :
+assumes notfull: "rb_can_enq rb" and valid: "rb_valid rb"   
+shows "rb_valid_entries (rb) @ [(head rb)] = rb_valid_entries (rb_enq b rb)"
+  using notfull valid rb_write_perserves_valid_entries rb_enq_valid_entries_incr_head
+  by (simp add: rb_enq_valid_entries_incr_head rb_incr_head_valid_entries)
+
 
 (* ==================================================================================== *)
 subsection \<open>Dequeue Operation\<close>
 (* ==================================================================================== *)
+
+text \<open>
+  We can only dequeue something in the ring buffer, if there is an element in the ring
+  buffer. In other words, the ring buffer is not empty.
+\<close>
+
+definition rb_can_deq :: "'a CleanQ_RB \<Rightarrow> bool"
+  where "rb_can_deq rb \<longleftrightarrow> \<not>(rb_empty rb)"
+
+text \<open>
+ The dequeue operation then returns a tuple of the removed element and the remainder
+ of the queue. 
+
+ TODO: how is this best expressed ??
+\<close>
+
+definition rb_deq :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
+  where "rb_deq rb = (rb_read_tail rb, rb_incr_tail rb)"
+
+text \<open>
+  This produces the following updates to the structure:
+\<close>
+
+definition rb_deq_alt :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
+  where "rb_deq_alt rb = ((ring rb) (tail rb),  
+                      rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
+
+text \<open>
+  We can show that the two dequeue definitions produce the same outcome
+\<close>
+
+lemma rb_deq_equiv:
+  "rb_deq rb = rb_deq_alt rb"
+  unfolding rb_deq_def rb_deq_alt_def rb_read_tail_def rb_incr_tail_def rb_read_def
+  by(auto)
+  
+text \<open>
+  The dequeue operation preserves the validity of the ring buffer.
+\<close>
+
+lemma rb_deq_remains_valid:
+  assumes valid: "rb_valid rb" and notempty: "rb_can_deq rb"
+  shows "rb_valid (snd (rb_deq rb))"
+  unfolding rb_deq_def using rb_incr_tail_valid valid by(auto)
+  
+
+lemma rb_deq_buf:
+  assumes valid: "rb_valid rb" and notempty: "rb_can_deq rb"
+  shows "fst (rb_deq rb) \<longleftrightarrow> rb_read_tail rb"
+  by(simp add: rb_deq_def)
 
 
 
@@ -462,19 +537,7 @@ text \<open>
   of the list.
 \<close>
 
-lemma rb_enq_valid_entries_incr_head:
-assumes notfull: "\<not> rb_full rb" and valid: "rb_valid rb"  
-shows "rb_valid_entries (rb_enq b rb) =  rb_valid_entries (rb_incr_head rb)"
-  using notfull valid rb_write_perserves_valid_entries unfolding rb_enq_def
-  by (metis rb_full_def rb_incr_head_valid_entries rb_write_def rb_write_preserves_valid 
-            select_convs(2) select_convs(3) select_convs(4) surjective update_convs(1))
 
-
-lemma rb_enq_valid_entries :
-assumes notfull: "\<not> rb_full rb" and valid: "rb_valid rb"   
-shows "rb_valid_entries (rb) @ [(head rb)] = rb_valid_entries (rb_enq b rb)"
-  using notfull valid rb_write_perserves_valid_entries rb_enq_valid_entries_incr_head
-  by (simp add: rb_enq_valid_entries_incr_head rb_incr_head_valid_entries)
 
 
 lemma rb_enq_preserves_valid_entries:
@@ -532,19 +595,7 @@ proof -
     using X1 X2 X3 X4 X5 X6 X7 by(auto)               
 qed
 
-text \<open>
- TODO: how is this best expressed ??
-\<close>
-definition rb_deq :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
-  where "rb_deq rb = ((ring rb) (tail rb),  
-                      rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
 
-
-lemma rb_deq_remains_valid:
-  assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"
-  shows "rb_valid (snd (rb_deq rb))"
-  using valid notempty unfolding rb_valid_def rb_deq_def
-  by(simp)
 
 lemma rb_deq_list_was_head :
   assumes notempty: "\<not>rb_empty rb" and  valid: "rb_valid rb"  
