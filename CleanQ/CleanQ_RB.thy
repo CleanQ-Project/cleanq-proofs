@@ -583,17 +583,21 @@ lemma rb_deq_list_not_in :
   by (metis distinct.simps(2) list.collapse rb_can_deq_def rb_list_empty)
 
 
+lemma rb_deq_not_empty:
+assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb" 
+  shows "CleanQ_RB_list rb \<noteq> []"
+  unfolding CleanQ_RB_list_def
+  using valid notempty rb_can_deq_def rb_valid_entries_tail_not_empty2 by fastforce
+
 lemma rb_deq_subset :
   assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
      and res: "rb' = rb_deq rb" and dist: "distinct (CleanQ_RB_list rb)"
    shows "set (CleanQ_RB_list (snd rb')) \<subset> set (CleanQ_RB_list rb) " 
   using notempty valid res
   apply(simp add:rb_deq_list_tail)
-  using notempty valid res apply(simp_all)
+  using dist rb_deq_not_empty list_set_hd_tl_union2 rb_deq_list_not_in 
+        rb_deq_list_tail rb_deq_list_was_in 
+  by fastforce
   
-
-
-  try
-
    
 end
