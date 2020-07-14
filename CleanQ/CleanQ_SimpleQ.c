@@ -28,15 +28,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <pthread.h>
 #include <assert.h>
+#else
+#define NULL ((void *)0)
 #endif
 
-
-#ifndef COMPILE
-#define NULL ((void*)0)
-#endif
 
 ///< this is the architecture cache line size in bytes
 #define ARCH_CACHELINE_SIZE_BYTES 64
@@ -44,10 +41,16 @@
 ///< this is the architecture cache line size in machine words (8 bytes)
 #define ARCH_CACHELINE_SIZE_WORDS 8
 
-
+///< this is the default size in buffer for this example
 #define CONFIG_DEFAULT_BUFFER_SIZE 4096
+
+///< this is the default queue size
 #define CONFIG_DEFAULT_QUEUE_SIZE 4
+
+///< this is the number of buffers agent X does enqueue at the beginning
 #define CONFIG_DEFAULT_ENQ_BUFS 8
+
+///< this is the total number of buffers (K)
 #define CONFIG_DEFAULT_NUM_BUFS 128
 
 
@@ -87,8 +90,8 @@ struct buffer
     u64_t valid_offset;
     u64_t valid_length;
     u64_t flags;
-    struct buffer *_free;
-    struct buffer *_self;
+    struct buffer *nextfree;
+    struct buffer *self;
 };
 
 
@@ -115,9 +118,11 @@ struct rb
  * --------------------------------------------------------------------------------------
  */
 
-void rb_init(struct rb *rb, struct buffer *ring, u64_t size)
+static void rb_init(struct rb *rb, struct buffer *ring, u64_t size)
 {
+#ifdef COMPILE
     printf("RB init [%p | %lu ]\n", ring, size);
+#endif
     rb->ring = ring;
     rb->size = size;
     rb->head = 0;
@@ -133,7 +138,7 @@ void rb_init(struct rb *rb, struct buffer *ring, u64_t size)
 
 
 ///< function to check if there is space to enqueue a new element
-static bool rb_can_enq(struct rb *rb)
+static int rb_can_enq(struct rb *rb)
 {
     return (((rb->head + 1) % rb->size) != rb->tail);
 }
@@ -159,7 +164,7 @@ static int rb_enq(struct rb *rb, struct buffer slot)
 
 
 ///< function to check if there is an element to dequeue
-static bool rb_can_deq(struct rb *rb)
+static int rb_can_deq(struct rb *rb)
 {
     return (rb->head != rb->tail);
 }
@@ -205,13 +210,17 @@ struct simpleq
 
 static int simpleq_enq(struct simpleq *sq, struct buffer buf) 
 {
+#ifdef COMPILE
     printf("%s - enqueue to [%lu..%lu / %lu]\n", sq->name, sq->tx->tail, sq->tx->head, sq->tx->size);
+#endif
     return rb_enq(sq->tx, buf);
 }
 
 static int simpleq_deq(struct simpleq *sq, struct buffer *buf)
 {
+#ifdef COMPILE
     printf("%s - dequeue from [%lu..%lu / %lu]\n", sq->name, sq->rx->tail, sq->rx->head, sq->rx->size);
+#endif
     return rb_deq(sq->rx, buf);
 }
 
@@ -226,18 +235,22 @@ static struct buffer *K_bufs;
 static int simpleq_enq_x(void)
 {
     if (sqx.owned == NULL) {
+#ifdef COMPILE
         printf("%s - no available buffers\n", sqx.name);
+#endif
         return ERR_NO_BUFFERS;
     }
 
     struct buffer *buf = sqx.owned;
-    sqx.owned = buf->_free;
-
+    sqx.owned = buf->nextfree;
+#ifdef COMPILE
     printf("%s - sending [%lx..%lx]\n", sqx.name, buf->offset, buf->offset + buf->length - 1);
-
+#endif
     if (simpleq_enq(&sqx, *buf) != ERR_OK) {
+#ifdef COMPILE
         printf("%s - enqueue failed\n", sqx.name);
-        buf->_free = sqx.owned;
+#endif
+        buf->nextfree = sqx.owned;
         sqx.owned = buf;
         return ERR_QUEUE_FULL;
     }
@@ -247,18 +260,24 @@ static int simpleq_enq_x(void)
 static int simpleq_enq_y(void)
 {
     if (sqy.owned == NULL) {
+#ifdef COMPILE
         printf("%s - no available buffers\n", sqy.name);
+#endif
         return ERR_NO_BUFFERS;
     }
 
     struct buffer *buf = sqy.owned;
-    sqy.owned = buf->_free;
+    sqy.owned = buf->nextfree;
 
+#ifdef COMPILE
     printf("%s - sending [%lx..%lx]\n", sqy.name, buf->offset, buf->offset + buf->length - 1);
+#endif
 
     if (simpleq_enq(&sqy, *buf) != ERR_OK) {
+#ifdef COMPILE
         printf("%s - enqueue failed\n", sqy.name);
-        buf->_free = sqy.owned;
+#endif
+        buf->nextfree = sqy.owned;
         sqy.owned = buf;
         return ERR_QUEUE_FULL;
     }
@@ -266,34 +285,42 @@ static int simpleq_enq_y(void)
     return ERR_OK;
 }
 
+static  struct buffer deq_x_buf;
 static int simpleq_deq_x(void)
 {
-    struct buffer buf;
-    if (simpleq_deq(&sqx, &buf) != ERR_OK) {
+    if (simpleq_deq(&sqx, &deq_x_buf) != ERR_OK) {
+#ifdef COMPILE       
         printf("%s - dequeue failed\n", sqx.name);
+#endif
         return ERR_QUEUE_EMTPY;
     }
 
-    printf("%s - received [%lx..%lx]\n", sqx.name, buf.offset, buf.offset + buf.length - 1);
-
-    buf._self->_free = sqx.owned;
-    sqx.owned = buf._self;
+#ifdef COMPILE
+    printf("%s - received [%lx..%lx]\n", sqx.name, deq_x_buf.offset, deq_x_buf.offset + deq_x_buf.length - 1);
+#endif
+    deq_x_buf.self->nextfree = sqx.owned;
+    sqx.owned = deq_x_buf.self;
 
     return ERR_OK;
 }
 
+static  struct buffer deq_y_buf;
 static int simpleq_deq_y(void)
 {
-    struct buffer buf;
-    if (simpleq_deq(&sqy, &buf) != ERR_OK) {
+ 
+    if (simpleq_deq(&sqy, &deq_y_buf) != ERR_OK) {
+#ifdef COMPILE
         printf("%s - dequeue failed\n", sqy.name);
+#endif
         return ERR_QUEUE_EMTPY;
     }
 
-    printf("%s - received [%lx..%lx]\n", sqy.name, buf.offset, buf.offset + buf.length - 1);
+#ifdef COMPILE
+    printf("%s - received [%lx..%lx]\n", sqy.name, deq_y_buf.offset, deq_y_buf.offset + deq_y_buf.length - 1);
+#endif
 
-    buf._self->_free = sqy.owned;
-    sqy.owned = buf._self;
+    deq_y_buf.self->nextfree = sqy.owned;
+    sqy.owned = deq_y_buf.self;
 
     return ERR_OK;
 }
@@ -314,7 +341,9 @@ static void init_x(struct rb *rxy, struct buffer *txy, u64_t txy_size,
     sqx.rx = ryx;
     rb_init(sqx.tx, txy, txy_size);
     rb_init(sqx.rx, tyx, tyx_size);
+#ifdef COMPILE
     sqx.name = "[X]";
+#endif
 }
 
 static void init_y(struct rb *rxy, struct buffer *txy, u64_t txy_size, 
@@ -324,39 +353,31 @@ static void init_y(struct rb *rxy, struct buffer *txy, u64_t txy_size,
     sqy.rx = rxy;
     rb_init(sqy.tx, tyx, tyx_size);
     rb_init(sqy.rx, txy, txy_size);
+#ifdef COMPILE
     sqy.name = "[Y]";
+#endif
 }
 
-static int init_queue(u64_t txy_size, u64_t tyx_size, u64_t nbufs)
+static int init_queue(struct buffer *txy, u64_t txy_size, 
+                      struct buffer *tyx, u64_t tyx_size, u64_t nbufs)
 {
+#ifdef COMPILE
     printf("Initializing Queue...\n");
-    struct buffer *txy = calloc(txy_size, sizeof(struct buffer));
-    if (txy == NULL) {
-        return ERR_NO_BUFFERS;
-    }
-
-    struct buffer *tyx = calloc(tyx_size, sizeof(struct buffer));
-    if (tyx == NULL) {
-        free(txy);
-        return ERR_NO_BUFFERS;
-    }
+#endif
 
     init_x(&rxy, txy, txy_size, &ryx, tyx, tyx_size);
     init_y(&rxy, txy, txy_size, &ryx, tyx, tyx_size);
 
 
-    K_bufs = calloc(nbufs, sizeof(struct buffer));
     if (K_bufs == NULL) {
-        free(txy);
-        free(tyx);
         return ERR_NO_BUFFERS;
     }
 
     for (u64_t i = 0; i < nbufs; i++) {
         K_bufs[i].offset = (i+1) * CONFIG_DEFAULT_BUFFER_SIZE;
         K_bufs[i].length = CONFIG_DEFAULT_BUFFER_SIZE;
-        K_bufs[i]._self = &K_bufs[i];
-        K_bufs[i]._free = sqx.owned;
+        K_bufs[i].self = &K_bufs[i];
+        K_bufs[i].nextfree = sqx.owned;
         sqx.owned = &K_bufs[i];
     }
 
@@ -400,7 +421,7 @@ static void *agent_x(void *arg)
     struct buffer *buf = sqx.owned;
     while (buf) {
         count++;
-        buf = buf->_free;
+        buf = buf->nextfree;
     }
 
     printf("Received back %lu bufs\n", count);
@@ -434,7 +455,26 @@ int main(int argc, char** argv)
     }
     printf("\n");
 
-    ret = init_queue(CONFIG_DEFAULT_QUEUE_SIZE, CONFIG_DEFAULT_QUEUE_SIZE, CONFIG_DEFAULT_NUM_BUFS);
+
+    K_bufs = calloc(CONFIG_DEFAULT_NUM_BUFS, sizeof(struct buffer));
+    if (K_bufs == NULL) {
+        printf("Failed to allocate memory. exiting...\n");
+        return -1;
+    }
+    struct buffer *txy = calloc(CONFIG_DEFAULT_QUEUE_SIZE, sizeof(struct buffer));
+    if (txy == NULL) {
+        printf("Failed to allocate memory. exiting...\n");
+        return -1;
+    }
+
+    struct buffer *tyx = calloc(CONFIG_DEFAULT_QUEUE_SIZE, sizeof(struct buffer));
+    if (tyx == NULL) {
+        printf("Failed to allocate memory. exiting...\n");
+        return -1;
+    }
+
+    ret = init_queue(txy, CONFIG_DEFAULT_QUEUE_SIZE, tyx, CONFIG_DEFAULT_QUEUE_SIZE, 
+                     CONFIG_DEFAULT_NUM_BUFS);
     if (ret != ERR_OK) {
         printf("FAILED TO INITALIZE THE QUEUE\n");
         return -1;
