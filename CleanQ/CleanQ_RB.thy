@@ -200,6 +200,10 @@ definition rb_incr_head :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
 definition rb_incr_tail :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
   where "rb_incr_tail rb = rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr>"
 
+definition rb_incr_tail_alt :: "'a CleanQ_RB \<Rightarrow> nat\<Rightarrow> 'a CleanQ_RB"
+  where "rb_incr_tail_alt rb incr = rb \<lparr> tail := if (tail rb) + incr < (size rb) then (tail rb) + incr  
+                                                 else (tail rb) + incr - (size rb) \<rparr>"
+
 text \<open>
  We first show that the two increment functions are in fact preserving the valid predicate.
 \<close>
@@ -598,6 +602,154 @@ lemma rb_deq_subset :
   using dist rb_deq_not_empty list_set_hd_tl_union2 rb_deq_list_not_in 
         rb_deq_list_tail rb_deq_list_was_in 
   by fastforce
-  
+
+(* ==================================================================================== *)
+subsection \<open>Frame condition under concurrent operation of two sides\<close>
+(* ==================================================================================== *)  
+
+definition frame_rb_weak_left :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
+  where "frame_rb_weak_left st' st \<longleftrightarrow>
+    size st' = size st \<and>
+    head st' = head st \<and>
+    ring st' = ring st \<and>
+    rb_valid st' \<and> rb_valid st \<and>
+   (\<exists> \<delta>tl.
+    (if (tail st') + \<delta>tl < (size st') then tail st' + \<delta>tl
+     else (tail st') + \<delta>tl - (size st')) = tail st
+  )" 
+
+definition rb_delta_tail :: "'a CleanQ_RB \<Rightarrow> nat \<Rightarrow> nat list"
+  where "rb_delta_tail rb delta = (if (tail rb + delta) \<le> (size rb) then [(tail rb) ..< (tail rb + delta)]
+                                   else [(tail rb)..< (size rb)] @ [0..< ((tail rb + delta) - (size rb))])"
+
+lemma rb_delta_size_nonzero:
+  fixes st' st 
+  assumes frame: "frame_rb_weak_left st' st"
+  shows "delta > 0 \<Longrightarrow> (rb_delta_tail rb delta) \<noteq> []"
+  using assms
+  unfolding rb_delta_tail_def
+by auto
+
+lemma rb_weak_list_delta_empty:
+  fixes st' st 
+  assumes frame: "frame_rb_weak_left st' st" and
+          tl_asm:  "(tail st') + \<delta>tl = (tail st) \<and> \<delta>tl = 0"
+  shows "tail st' = tail st \<Longrightarrow> rb_valid_entries st' = (rb_delta_tail st' \<delta>tl) @ (rb_valid_entries st)"
+proof -
+  from tl_asm have "\<delta>tl = 0" 
+    by simp
+
+  from tl_asm have tl: "tail st' = tail st"
+    by simp
+
+  from tl_asm have rb_delta: "rb_delta_tail st' \<delta>tl = rb_delta_tail st' 0" 
+    unfolding rb_delta_tail_def 
+    by auto
+
+  from rb_delta have rb_delta_empty: "rb_delta_tail st' \<delta>tl = []"
+    unfolding rb_delta_tail_def
+    by (metis frame frame_rb_weak_left_def less_imp_le_nat less_irrefl rb_valid_def tl tl_asm upt_rec)
+
+  from rb_delta_empty have "rb_valid_entries st' = rb_valid_entries st"
+    unfolding rb_valid_entries_def
+    by (metis (no_types, hide_lams) frame frame_rb_weak_left_def tl)
+
+  show ?thesis using rb_delta_empty
+    by (simp add: \<open>rb_valid_entries st' = rb_valid_entries st\<close>)
+qed
+
+lemma rb_incr_tail_wrap:
+  fixes rb
+  assumes "rb_valid rb"
+  shows "tail rb = (size rb -1) \<Longrightarrow> tail (rb_incr_tail_alt rb 1) = 0" 
+  unfolding rb_incr_tail_alt_def
+  by (smt One_nat_def add.commute add_diff_cancel_left assms diff_zero less_iff_Suc_add 
+      nat_neq_iff plus_1_eq_Suc rb_valid_def select_convs(3) surjective update_convs(3))
+
+(*
+lemma rb_delta_one:
+  fixes st st'
+  assumes frame: "frame_rb_weak_left st' st"
+  assumes dlt: "delta = 1"
+  assumes tail: "tail st = tail (rb_incr_tail_alt st' delta)"
+  shows "delta = 1 \<Longrightarrow> (rb_delta_tail st' delta) = [tail st]"
+  unfolding rb_delta_tail_def rb_valid_def
+proof auto
+  from frame obtain delta where
+    sz: "size st' = size st" and
+    hd: "head st' = head st" and
+    ring: "ring st' = ring st" and
+    tl:"(if (tail st') + delta < (size st') then tail st' + delta
+         else (tail st') + delta - (size st')) = tail st"
+    by(auto simp:frame_rb_weak_left_def)
+
+  assume dlt2: "delta = 1"
+  from tail dlt have incr: "\<not> (Suc (tail st)) \<le> CleanQ_RB.size st \<longrightarrow> tail st = 0"
+    using discrete frame rb_valid_def unfolding frame_rb_weak_left_def
+    using Suc_leI 
+    by blast
+
+  from frame have st_tail: "tail st' < size st'"
+    using frame_rb_weak_left_def rb_valid_def by blast
+
+  from st_tail tail have tail_incr: "tail st = (if (tail st') + 1 < (size st') then (tail st') + 1  
+                                     else (tail st') + 1 - (size st'))"
+    using dlt2 tl by auto
+
+  from tail_incr have wrap: "tail st = (size st) -1 \<Longrightarrow> (if (tail st) + 1 < (size st) then (tail st) + 1  
+                                                   else (tail st) + 1 - (size st)) = 0"
+    unfolding rb_incr_tail_alt_def
+    using st_tail sz by auto
+
+  have wrap2: "(tail (rb_incr_tail_alt st' 1) = 0) \<Longrightarrow> (tail st') = (size st' -1)"
+    unfolding rb_incr_tail_alt_def using rb_incr_tail_wrap
+    by (smt add_implies_diff discrete ext_inject le_neq_implies_less less_one not_add_less2 st_tail 
+        surjective update_convs(3))
+
+  have core:"[0..<Suc (tail st') - CleanQ_RB.size st'] = [tail st]"
+    using tail_incr wrap rb_incr_tail_wrap st_tail wrap wrap2
+    unfolding rb_incr_tail_alt_def frame_rb_weak_left_def 
+    sorry
+
    
+  show "delta = Suc 0 \<Longrightarrow> \<not> Suc (tail st) \<le> CleanQ_RB.size st \<Longrightarrow> [0..<Suc (tail st) - CleanQ_RB.size st] = [tail st]" 
+    using core by blast
+qed
+
+
+lemma rb_weak_list_delta_one:
+  fixes st' st 
+  assumes frame: "frame_rb_weak_left st' st" and
+          tl_asm:  "if (tail st') + \<delta>tl > (size st') then tail st = (tail st) + \<delta>tl - (size st) else (tail st) = (tail st) + \<delta>tl = (tail st) \<and> \<delta>tl = 1"
+        shows "tail st' + \<delta>tl  = tail st \<Longrightarrow> rb_valid_entries st' = [tail st] @ (rb_valid_entries st)"
+proof -
+  from tl_asm have "\<delta>tl = 1" 
+    by simp
+
+  from tl_asm have tl: "tail st' + 1 = tail st"
+    by simp
+
+  from tl_asm have rb_delta: "rb_delta_tail st' \<delta>tl = rb_delta_tail st' 1" 
+    unfolding rb_delta_tail_def 
+    by auto
+
+  from rb_delta have rb_delta_one: "rb_delta_tail st' \<delta>tl = [tail st']"
+    unfolding rb_delta_tail_def
+    by (metis (no_types, lifting) One_nat_def add.right_neutral add_Suc_right add_le_same_cancel1 
+        frame frame_rb_weak_left_def le_less not_one_le_zero rb_valid_def tl_asm upt_eq_Nil_conv upt_rec)
+
+  from rb_delta_one frame have "rb_valid_entries st' = [tail st'] @ rb_valid_entries st"
+    unfolding rb_valid_entries_def
+  proof auto
+    sorry
+  qed
+
+
+
+
+qed
+
+*)
+
+
 end
