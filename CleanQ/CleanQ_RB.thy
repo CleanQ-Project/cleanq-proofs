@@ -68,7 +68,7 @@ text \<open>
   from nat to the element. Head and tail define the valid elements in the ring.\<close>
 
 record 'a CleanQ_RB =
-  ring :: "nat \<Rightarrow> 'a"
+  ring :: "nat \<Rightarrow> 'a option"
   head :: nat
   tail :: nat
   size :: nat
@@ -82,7 +82,11 @@ text \<open>
 \<close>
 
 definition rb_valid :: "'a CleanQ_RB \<Rightarrow> bool"
-  where "rb_valid rb \<longleftrightarrow> (head rb < size rb) \<and> (tail rb < size rb) \<and> (1 < size rb)"
+  where "rb_valid rb \<longleftrightarrow> (head rb < size rb) \<and> (tail rb < size rb) \<and> (1 < size rb) \<and>
+                         (\<forall>i < size rb. ring rb i \<noteq> None)"
+
+(* setting the entries to be defined for all entries in the ring for now... somehow
+   this should only be for the ones that are in the set of valid entries *)
 
 (* ==================================================================================== *)
 subsection \<open>Full and Empty Predicates\<close>
@@ -119,13 +123,13 @@ text \<open>
 
 lemma rb_full_not_empty:
   "rb_valid rb \<Longrightarrow> rb_full rb \<Longrightarrow> \<not> rb_empty rb"
-  apply(simp add:rb_full_no_modulo)
-  unfolding rb_empty_def rb_valid_def by presburger
+  apply(simp add:rb_full_no_modulo rb_empty_def rb_valid_def)
+  by (metis Suc_eq_plus1 less_irrefl_nat n_not_Suc_n)
 
 lemma rb_empty_not_full:
   "rb_valid rb \<Longrightarrow> rb_empty rb \<Longrightarrow> \<not> rb_full rb"
-  apply(simp add:rb_full_no_modulo)
-  unfolding rb_empty_def rb_valid_def by presburger
+  by(simp add:rb_full_no_modulo rb_empty_def rb_valid_def)
+
 
 text \<open>
   A ringbuffer has a certain set of valid entries. We now provide definitions to 
@@ -138,12 +142,22 @@ text \<open>
 \<close>
 
 definition rb_valid_entries :: "'a CleanQ_RB \<Rightarrow> nat list"
-  where "rb_valid_entries rb = (if (tail rb) \<le> (head rb) then [(tail rb) ..< (head rb)]
+  where "rb_valid_entries rb = (if (tail rb) \<le> (head rb) 
+                                then [(tail rb) ..< (head rb)]
                                 else [(tail rb)..< (size rb)] @ [0..<(head rb)])"
 
 definition rb_invalid_entries :: "'a CleanQ_RB \<Rightarrow> nat list"
-  where "rb_invalid_entries rb = (if (tail rb) \<le> (head rb) then [(head rb) ..< (size rb)] @ [0 ..< (tail rb)]
-                                else [(head rb)..< (tail rb)])"
+  where "rb_invalid_entries rb = (if (tail rb) \<le> (head rb) 
+                                  then [(head rb) ..< (size rb)] @ [0 ..< (tail rb)]
+                                  else [(head rb)..< (tail rb)])"
+
+
+lemma rb_valid_invalid_entries_set:
+  assumes valid: "rb_valid rb"
+  shows "set (rb_valid_entries rb) \<union> set (rb_invalid_entries rb) = {0..<(size rb)}"
+  using valid unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_def
+  by auto
+
 
 text \<open>
   We can now define lemmas to talk about the head and tail entries, and whether
@@ -227,7 +241,8 @@ lemma rb_valid_entries_less_size:
 proof auto
   show "tail rb \<le> head rb \<Longrightarrow> head rb - tail rb < CleanQ_RB.size rb" using valid
     by (simp add: less_imp_diff_less rb_valid_def)
-  show "\<not> tail rb \<le> head rb \<Longrightarrow> CleanQ_RB.size rb - tail rb + head rb < CleanQ_RB.size rb" using valid
+  show "\<not> tail rb \<le> head rb \<Longrightarrow> CleanQ_RB.size rb - tail rb + head rb < CleanQ_RB.size rb" 
+    using valid
     by (meson diff_less_mono2 less_diff_conv not_le_imp_less rb_valid_def)
 qed
 
@@ -242,6 +257,16 @@ proof auto
   show "\<not> tail rb \<le> head rb \<Longrightarrow> CleanQ_RB.size rb - tail rb + tail rb = CleanQ_RB.size rb" 
     by (meson diff_add less_le rb_valid_def valid)
 qed
+
+text \<open>
+  All entries within the set of valid entries are defined.
+\<close>
+
+lemma rb_valid_entries_defined:
+  assumes valid: "rb_valid rb"
+  shows "\<forall>i \<in> set (rb_valid_entries rb). (ring rb) i \<noteq> None"
+  using valid unfolding rb_valid_entries_def rb_valid_def
+  by auto
 
 
 
@@ -379,18 +404,20 @@ text \<open>
 \<close>
 
 definition rb_write :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
-  where "rb_write b rb = rb \<lparr> ring := (ring rb)((head rb) := b) \<rparr>"
+  where "rb_write b rb = rb \<lparr> ring := (ring rb)((head rb) := Some b) \<rparr>"
 
 
 text \<open>
   we can define functions to read the entries of the ring buffer:
 \<close>
 
-definition rb_read :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a"
+definition rb_read :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a option"
   where "rb_read i rb = (ring rb) i"
 
+
+
 definition rb_read_tail :: "'a CleanQ_RB \<Rightarrow> 'a"
-  where "rb_read_tail rb = rb_read (tail rb) rb"
+  where "rb_read_tail rb = the (rb_read (tail rb) rb)"
 
 
 text \<open>
@@ -440,7 +467,7 @@ text \<open>
 \<close>
 
 definition rb_enq_alt :: "'a \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB" 
-  where "rb_enq_alt b rb = rb \<lparr> ring := (ring rb)((head rb) := b),
+  where "rb_enq_alt b rb = rb \<lparr> ring := (ring rb)((head rb) := Some b),
                                 head := ((head rb) + 1) mod (size rb) \<rparr>"
 
 text \<open>
@@ -474,15 +501,27 @@ text \<open>
 \<close>
 
 lemma rb_enq_buf_ring :
-  "rb' = rb_enq b rb \<Longrightarrow> (ring (rb'))((head rb)) = b"
-  unfolding rb_enq_def rb_incr_head_def rb_write_def by(auto)
+  "rb' = rb_enq b rb \<Longrightarrow> (ring (rb'))((head rb)) = Some b"
+  by(simp add:rb_enq_equiv rb_enq_alt_def)
+
+lemma rb_enq_buf_ring2 :
+  "rb' = rb_enq b rb \<Longrightarrow> the ((ring (rb'))(head rb)) = b"
+  by(simp add:rb_enq_equiv rb_enq_alt_def)
 
 lemma rb_enq_buf:
- "rb' = rb_enq b rb \<Longrightarrow> rb_read (head rb) rb' = b"
+ "rb' = rb_enq b rb \<Longrightarrow> rb_read (head rb) rb' = Some b"
   by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
 
 lemma rb_enq_buf2:
-  "rb_read (head rb) (rb_enq b rb) = b"
+ "rb' = rb_enq b rb \<Longrightarrow> the (rb_read (head rb) rb') = b"
+  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
+
+lemma rb_enq_buf3:
+  "rb_read (head rb) (rb_enq b rb) = Some b"
+  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
+
+lemma rb_enq_buf4:
+  "the (rb_read (head rb) (rb_enq b rb)) = b"
   by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
 
 text \<open>
@@ -542,8 +581,8 @@ text \<open>
 \<close>
 
 definition rb_deq_alt :: "'a CleanQ_RB \<Rightarrow> ('a \<times> 'a CleanQ_RB)"
-  where "rb_deq_alt rb = ((ring rb) (tail rb),  
-                      rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
+  where "rb_deq_alt rb = (the (rb_read (tail rb) rb),  
+                          rb \<lparr> tail := ((tail rb) + 1) mod (size rb) \<rparr> )"
 
 text \<open>
   We can show that the two dequeue definitions produce the same outcome
@@ -580,8 +619,19 @@ text \<open>
   by mapping them onto the ring-function of the CleanQ RB:
 \<close>
 
+definition CleanQ_RB_list_opt :: "'a CleanQ_RB \<Rightarrow> ('a option) list"
+  where "CleanQ_RB_list_opt rb = map (ring rb) (rb_valid_entries rb)"
+
 definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
-  where "CleanQ_RB_list rb = map (ring rb) (rb_valid_entries rb)"
+  where "CleanQ_RB_list rb = map (the o ring rb) (rb_valid_entries rb)"
+
+lemma rb_list_opt_elements_not_none:
+  assumes valid : "rb_valid rb"
+  shows "\<forall>e \<in> set (CleanQ_RB_list_opt rb). e \<noteq> None"
+  unfolding CleanQ_RB_list_opt_def using valid rb_valid_entries_defined by(auto) 
+ 
+
+
 
 text \<open>
   If the ring is valid, then the list is bounded by the size of the ring.
@@ -625,8 +675,9 @@ lemma rb_deq_list_was_head :
   assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
      and res: "rb' = rb_deq rb" 
    shows "(fst rb') = hd (CleanQ_RB_list rb)"
-  using notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
-  by (simp add: rb_can_deq_def rb_deq_alt_def rb_deq_equiv rb_incr_tail_valid_entries res)
+  using notempty valid unfolding  CleanQ_RB_list_def res
+  apply(simp add:rb_deq_alt_def rb_deq_equiv)
+  by (simp add: rb_can_deq_def rb_incr_tail_valid_entries rb_read_def rb_valid_def)
 
 lemma rb_deq_list_was_in :
   assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
