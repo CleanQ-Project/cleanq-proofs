@@ -49,7 +49,7 @@ lemma "unat (addrlimit) = addrlimitnat"
 
 
 declare[[show_types ]]
-sledgehammer_params[timeout = 120, provers = cvc4 z3 spass e remote_vampire vampire]
+sledgehammer_params[timeout = 120, provers = cvc4 z3 spass e vampire]
   
 
 (* ==================================================================================== *)
@@ -338,7 +338,9 @@ definition
 *)
 definition rb_C_to_CleanQ_RB :: "lifted_globals \<Rightarrow> rb_C ptr \<Rightarrow> buffer_C  CleanQ_RB"
   where "rb_C_to_CleanQ_RB s rb = \<lparr> 
-                  ring = \<lambda>i. heap_buffer_C s (ring_C (heap_rb_C s rb)  +\<^sub>p i),
+                  ring = \<lambda>i. (if i < unat (size_C (heap_rb_C s rb))
+                               then Some (heap_buffer_C s (ring_C (heap_rb_C s rb)  +\<^sub>p i))
+                               else None),
                   head =  unat (head_C (heap_rb_C s rb)), 
                   tail =  unat (tail_C (heap_rb_C s rb)),
                   size =  unat (size_C (heap_rb_C s rb)) \<rparr>"
@@ -581,7 +583,7 @@ lemma c_rb_deq_state_update_head:
   apply(wp_once)+
   apply(simp add:c_rb_valid_def rb_deq_equiv rb_deq_alt_def rb_C_to_CleanQ_RB_def)
   using less_imp_le unat_1_0  word_le_def word_le_less_eq by blast
- 
+
   
 lemma c_rb_deq_state_update_tail:
   "\<lbrace> \<lambda>s. c_rb_valid s rb \<and> s0 = s \<and> rb0 = rb_C_to_CleanQ_RB s rb   \<and> is_valid_buffer_C s0 b  \<rbrace>
@@ -593,8 +595,10 @@ lemma c_rb_deq_state_update_tail:
   apply(wp_once)+
   apply(simp add:rb_can_deq_c_fun_def)
   apply(wp_once)+
-  apply(simp add:c_rb_valid_def rb_deq_equiv rb_deq_alt_def rb_C_to_CleanQ_RB_def)
-  by (metis unat_1 unat_1_0 unat_32word_succ_mod unat_word_lt word_le_def word_le_less_eq)
+  apply(auto simp add:c_rb_valid_def rb_deq_equiv rb_deq_alt_def rb_C_to_CleanQ_RB_def)
+  using unat_32word_succ_mod unat_word_lt apply fastforce
+  using unat_gt_0 apply fastforce
+  using word_le_def word_le_less_eq by blast
 
 
 lemma c_rb_deq_state_update_size:
@@ -610,11 +614,6 @@ lemma c_rb_deq_state_update_size:
   apply(simp add:c_rb_valid_def rb_deq_equiv rb_deq_alt_def rb_C_to_CleanQ_RB_def)
   using less_imp_le unat_1_0  word_le_def word_le_less_eq by blast
 
-
-lemma foobar:
-  "ring (snd (rb_deq (rb_C_to_CleanQ_RB s rb))) = ring (rb_C_to_CleanQ_RB s rb)"
-  unfolding rb_C_to_CleanQ_RB_def
-  by(auto simp: rb_deq_equiv rb_deq_alt_def)
 
 lemma c_rb_deq_state_update_ring:
   assumes notinring: "(\<forall>i \<le> uint (size_C (heap_rb_C s0 rb)). 
@@ -634,10 +633,52 @@ lemma c_rb_deq_state_update_ring:
   prefer 3 using word_le_def word_le_less_eq apply blast
    prefer 2 using unat_word_lt apply fastforce
   unfolding rb_C_to_CleanQ_RB_def using notinring by(auto)
- 
+
+lemma c_rb_deq_buffer:
+  assumes notinring: "(\<forall>i \<le> uint (size_C (heap_rb_C s0 rb)). 
+                                     (ring_C (heap_rb_C s0 rb) +\<^sub>p i) \<noteq> b)"
+  shows "
+   \<lbrace> \<lambda>s. c_rb_valid s rb \<and> s0 = s  \<and> rb0 = rb_C_to_CleanQ_RB s rb \<and>  is_valid_buffer_C s0 b  \<rbrace>
+   rb_deq_c_fun rb b
+   \<lbrace> \<lambda> r s. (r = ERR_OK \<or> r = ERR_QUEUE_EMPTY) \<and> 
+        (if r = ERR_OK then heap_buffer_C s b = fst (rb_deq rb0) else s = s0)
+    \<rbrace>!"
+  unfolding rb_deq_c_fun_def
+  apply(wp_once)+
+  apply(simp add:rb_can_deq_c_fun_def)
+  apply(wp_once)+ 
+  apply(auto simp:c_rb_valid_def  rb_deq_equiv rb_deq_alt_def)
+  prefer 3 
+  using word_le_def word_le_less_eq apply blast
+   prefer 2  
+  using unat_word_lt apply fastforce
+  unfolding rb_C_to_CleanQ_RB_def rb_deq_def rb_read_def
+  apply (simp add: int_unat)
+  using unat_word_lt by blast
+
+
+lemma ringhelper:
+  "ring_C (heap_rb_C (heap_rb_C_update (\<lambda>a::rb_C ptr \<Rightarrow> rb_C. a(rb := tail_C_update (\<lambda>a::32 word. (tail_C (heap_rb_C s0 rb) + (1::32 word)) mod size_C (heap_rb_C s0 rb)) (a rb)))
+                      (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(b := heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p uint (tail_C (heap_rb_C s0 rb))))) s0))
+                    rb) = ring_C (heap_rb_C s0 rb)"
+  by(auto)
+
+lemma bufferhelper:
+  " heap_buffer_C
+                (heap_rb_C_update (\<lambda>a::rb_C ptr \<Rightarrow> rb_C. a(rb := tail_C_update (\<lambda>a::32 word. (tail_C (heap_rb_C s0 rb) + (1::32 word)) mod size_C (heap_rb_C s0 rb)) (a rb)))
+                  (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(b := heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p uint (tail_C (heap_rb_C s0 rb))))) s0)) = 
+         heap_buffer_C
+                  (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(b := heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p uint (tail_C (heap_rb_C s0 rb))))) s0)"
+  by(auto)
+
+lemma bufferhelper2:
+  " (i::nat) < uint (size_C (heap_rb_C s0 rb)) \<Longrightarrow> (ring_C (heap_rb_C s0 rb) +\<^sub>p i) \<noteq> b \<Longrightarrow>
+  (heap_buffer_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(b := heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p uint (tail_C (heap_rb_C s0 rb))))) s0) (ring_C (heap_rb_C s0 rb) +\<^sub>p int i)) 
+  =  (heap_buffer_C (s0) (ring_C (heap_rb_C s0 rb) +\<^sub>p int i))"
+  by(auto)
 
 lemma c_rb_deq_correct:
-  assumes notinring: "(\<forall>i \<le> uint (size_C (heap_rb_C s0 rb)). 
+  assumes notinring: "(\<forall>i < uint (size_C (heap_rb_C s0 rb)). 
                                      (ring_C (heap_rb_C s0 rb) +\<^sub>p i) \<noteq> b)"
   shows "
    \<lbrace> \<lambda>s. c_rb_valid s rb \<and> s0 = s  \<and> rb0 = rb_C_to_CleanQ_RB s rb \<and>  is_valid_buffer_C s0 b  \<rbrace>
@@ -645,22 +686,31 @@ lemma c_rb_deq_correct:
    \<lbrace> \<lambda> r s. (r = ERR_OK \<or> r = ERR_QUEUE_EMPTY) \<and> 
         (if r = ERR_OK then rb_C_to_CleanQ_RB s rb = snd (rb_deq rb0) else s = s0)
     \<rbrace>!"
-  (* \<and> heap_buffer_C s b = fst (rb_deq rb0)*)
-
-    unfolding rb_deq_c_fun_def
+   unfolding rb_deq_c_fun_def
   apply(wp_once)+
   apply(simp add:rb_can_deq_c_fun_def)
   apply(wp_once)+ 
   apply(auto simp:c_rb_valid_def  rb_deq_equiv rb_deq_alt_def)
-  prefer 3 using word_le_def word_le_less_eq apply blast
-     prefer 2 using unat_word_lt apply fastforce
-    unfolding rb_C_to_CleanQ_RB_def using notinring 
+  prefer 3 
+  using word_le_def word_le_less_eq apply blast
+  prefer 2  
+  using unat_word_lt apply fastforce
+  unfolding rb_C_to_CleanQ_RB_def
+  apply(auto)
+  prefer 2 
+  using unat_32word_succ_mod unat_word_lt apply fastforce
+  apply(subst ringhelper)
+  apply(subst bufferhelper)
+(* WHOAH.... *)
+proof -
+  have "\<forall>n na. \<not> n < unat (size_C (heap_rb_C s0 rb)) \<or> \<not> na < unat (size_C (heap_rb_C s0 rb)) \<or> n < unat (size_C (heap_rb_C s0 rb)) \<and> na < unat (size_C (heap_rb_C s0 rb)) \<and> Some (heap_buffer_C (heap_buffer_C_update (\<lambda>f. f (b := heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p uint (tail_C (heap_rb_C s0 rb))))) s0) (ring_C (heap_rb_C s0 rb) +\<^sub>p int na)) = Some (heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p int na))"
+    by (metis CleanQ_SimpleQ.bufferhelper2 int_unat notinring of_nat_less_iff)
+  then show "(\<lambda>n. if n < unat (size_C (heap_rb_C s0 rb)) then Some (heap_buffer_C (heap_buffer_C_update (\<lambda>f. f (b := heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p uint (tail_C (heap_rb_C s0 rb))))) s0) (ring_C (heap_rb_C s0 rb) +\<^sub>p int n)) else None) = (\<lambda>n. if n < unat (size_C (heap_rb_C s0 rb)) then Some (heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p int n)) else None)"
+    by meson
+qed
 
-    (* XXX: can't show it like this, because we have to show that deq doesn't 
-            change the ring, there is a possibility to dequeue into the ring again. 
-            as deq takes a buffer pointer to return the value *)
-    oops
-  
+ 
+
 
 
 
@@ -973,7 +1023,7 @@ lemma c_rb_enq_state_update_ring_head:
 
 lemma c_rb_enq_state_ring_lifted_head:
   assumes eq:  "x = unat (head_C (heap_rb_C s rb))"
-    shows  "ring (rb_enq b (rb_C_to_CleanQ_RB s rb)) x = b"
+    shows  "ring (rb_enq b (rb_C_to_CleanQ_RB s rb)) x = Some b"
   unfolding rb_C_to_CleanQ_RB_def rb_enq_alt_def rb_enq_equiv
   using eq by(auto)
 
@@ -991,9 +1041,12 @@ lemma c_rb_enq_state_ring_head:
      and hupd: "s1 = heap_rb_C_update
                         (\<lambda>a. a(rb := head_C_update (\<lambda>a. 
                               (a + (1)) mod size_C (heap_rb_C s0 rb)) (a rb))) s"
-   shows "ring (rb_C_to_CleanQ_RB s1 rb) x = b"
+     and valid: "c_rb_valid s0 rb"
+   shows "ring (rb_C_to_CleanQ_RB s1 rb) x = Some b"
    apply(auto simp:rb_C_to_CleanQ_RB_def)
-   unfolding rb_C_to_CleanQ_RB_def using eq by(auto simp:supd hupd int_unat)
+  unfolding rb_C_to_CleanQ_RB_def using eq valid  
+   apply(auto simp:supd hupd int_unat c_rb_valid_def)
+  using unat_word_lt by blast
   
 
 lemma c_rb_enq_state_update_ring:
@@ -1036,13 +1089,162 @@ lemma c_rb_enq_state_update_ring2:
   using INT_MIN_MAX_lemmas(12) Suc_leI  unat_32word_leq_lt_lt apply blast
   using unat_gt_0 by fastforce     
   
-   
+   lemma enq_bufferhelper :
+  "   heap_buffer_C
+                (heap_rb_C_update
+                  (\<lambda>a::rb_C ptr \<Rightarrow> rb_C. a
+                      (rb :=
+                         head_C_update
+                          (\<lambda>a::32 word.
+                              (head_C (heap_rb_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0) rb) + (1::32 word)) mod
+                              size_C (heap_rb_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0) rb))
+                          (a rb)))
+                  (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0)) = 
 
-lemma c_rb_enq_state_update:
-assumes notfull: " rb_can_enq_c_fun rb = return (1) "
-  shows "\<lbrace> \<lambda>s. c_rb_valid s rb \<and> s0 = s \<and> rb0 = rb_C_to_CleanQ_RB s rb  \<rbrace>
+
+   heap_buffer_C
+                
+                  (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0)"
+
+     by(auto)
+
+lemma enq_ringhelper:
+"
+ 
+                (ring_C
+                  (heap_rb_C
+                    (heap_rb_C_update
+                      (\<lambda>a::rb_C ptr \<Rightarrow> rb_C. a
+                          (rb :=
+                             head_C_update
+                              (\<lambda>a::32 word.
+                                  (head_C (heap_rb_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0) rb) + (1::32 word)) mod
+                                  size_C (heap_rb_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0) rb))
+                              (a rb)))
+                      (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0))
+                    rb) +\<^sub>p
+                 int i)
+
+ = 
+                (ring_C
+                  (heap_rb_C s0 rb) +\<^sub>p                int i)
+
+"
+
+  by(auto)
+
+lemma 
+ ring_upd_helper:
+ "(heap_buffer_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0) (ring_C (heap_rb_C s0 rb) +\<^sub>p int i))
+  = (if i = unat (head_C (heap_rb_C s0 rb)) then b else (heap_buffer_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0) (ring_C (heap_rb_C s0 rb) +\<^sub>p int i)))"
+  apply(simp add: int_unat)
+
+  done
+
+lemmas unat_of_nat32' = unat_of_nat_eq[where 'a=32]
+lemmas unat_of_nat32 = unat_of_nat32'[unfolded word_bits_len_of]
+
+lemma ring_upd_helper2:
+  assumes ii:" j \<noteq> unat (head_C (heap_rb_C s0 rb)) \<and>  j <  unat (size_C (heap_rb_C s0 rb)) "
+shows  " (heap_buffer_C (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) := b)) s0) (ring_C (heap_rb_C s0 rb) +\<^sub>p int j))
+ =(heap_buffer_C s0 (ring_C (heap_rb_C s0 rb) +\<^sub>p int j))"
+proof -
+  from ii have ilimit:
+    "j < UINT_MAX"
+    using INT_MIN_MAX_lemmas(12) less_le_trans by blast
+
+  have is64: 
+    "unat((0x40::64 word)) = 64"
+    by(auto)
+
+  have inrangex: "j * unat((0x40::64 word)) < 2 ^ 64"
+    using ii ilimit apply(subst is64) by(auto simp:UINT_MAX_def)
+
+  have hlim:
+    "unat (of_int (uint (head_C (heap_rb_C s0 rb)))::64 word)  \<le> UINT_MAX"
+    by (metis (mono_tags, hide_lams) INT_MIN_MAX_lemmas(12) int_unat le_less le_trans of_int_of_nat_eq unat_le_helper)
+  
+  have inrangey: "unat (of_int (uint (head_C (heap_rb_C s0 rb)))::64 word) * unat((0x40::64 word)) < 2 ^ 64"
+    using hlim apply(subst is64) by(auto simp:UINT_MAX_def)   
+
+    have hlim2:
+    "unat (head_C (heap_rb_C s0 rb)) < 2 ^ 32"
+      using unat_lt2p 
+      by (metis len32)
+
+  have "unat (head_C (heap_rb_C s0 rb)) = unat ((of_int (uint (head_C (heap_rb_C s0 rb)))::64 word))"
+    using hlim2 apply(subst of_int_uint_ucast)
+    by(simp add:unat_ucast)
+    
+
+  have newq: "j \<noteq> unat ((of_int (uint (head_C (heap_rb_C s0 rb)))::64 word))"
+    using ii hlim2
+    apply(subst of_int_uint_ucast)
+    by(simp add:unat_ucast)
+
+
+  have  "x < 2^ 32 \<Longrightarrow> unat ((of_nat x)::64 word) = x"
+    by (simp add: unat_of_nat64 word_bits_conv)
+
+  have  "x < 2^ 32 \<Longrightarrow> unat ((of_nat x)::32 word) = x"
+    by (simp add: unat_of_nat32 word_bits_conv)
+ 
+  have  "x < 2^ 32 \<Longrightarrow> unat ((of_nat x)::64 word) = unat ((of_nat x)::32 word)"
+    by (simp add: unat_of_nat64 unat_of_nat32 word_bits_conv)
+
+  show ?thesis      
+  using ii inrangex inrangey newq apply(auto simp add:ptr_add_def)
+    by(simp add:word64_mult_inequality2)
+    
+qed
+
+
+
+lemma c_rb_enq_correct:
+   "\<lbrace> \<lambda>s. c_rb_valid s rb \<and> s0 = s \<and> rb0 = rb_C_to_CleanQ_RB s rb  \<rbrace>
            rb_enq_c_fun rb b
-         \<lbrace> \<lambda> r s. rb_C_to_CleanQ_RB s rb = rb_enq b rb0 \<rbrace>!"
+    \<lbrace> \<lambda>r s.  (r = ERR_OK \<or> r = ERR_QUEUE_FULL) \<and> 
+              (if r = ERR_OK then rb_C_to_CleanQ_RB s rb = rb_enq b rb0
+               else s = s0) \<rbrace>!"
+  unfolding rb_enq_c_fun_def  rb_C_to_CleanQ_RB_def rb_enq_equiv rb_enq_alt_def
+  apply(wp_once)+
+  apply(simp add:rb_can_enq_c_fun_def)
+  apply(wp_once)+
+  apply(auto)
+  prefer 8 using c_rb_valid_def apply blast
+  prefer 7 using c_rb_valid_def unat_gt_0 apply fastforce
+  prefer 6 using INT_MIN_MAX_lemmas(12) Suc_leI c_rb_valid_def unat_32word_leq_lt_lt apply blast
+  prefer 5 using c_rb_valid_def apply blast 
+  prefer 4 using c_rb_valid_def word_le_def word_le_less_eq apply blast
+  prefer 3 using c_rb_valid_def unat_gt_0 apply fastforce
+  prefer 2 using c_rb_valid_def unat_32word_succ_mod unat_word_lt apply fastforce
+  apply(subst enq_bufferhelper)
+  apply(subst enq_ringhelper)
+  apply(simp add:fun_upd_def)
+  apply(subst ring_upd_helper)
+  using ring_upd_helper2 c_rb_valid_def unat_word_lt 
+  by fastforce
+
+  
+
+(*
+ prefer 5 sledgehammer
+
+ prefer 4 sledgehammer
+
+ prefer 3 sledgehammer
+
+ prefer 2 sledgehammer
+ 
+*)
+  
+  
+  oops
+(*
+
+      prefer 2 sledgehammer
+
+
   (* doesn't work yet *)
   oops
 
