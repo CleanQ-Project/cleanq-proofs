@@ -99,13 +99,13 @@ struct buffer
 struct rb
 {
     ///< this is the head pointer of the ring buffer
-    u64_t head; 
+    u32_t head; 
 
     ///< this is the tail pointer of the ring buffer
-    u64_t tail;
+    u32_t tail;
 
     ///< this is the size of the ring buffer
-    u64_t size;
+    u32_t size;
 
     ///< this is the memory holding the ring buffer
     struct buffer *ring;
@@ -211,7 +211,7 @@ struct simpleq
 static int simpleq_enq(struct simpleq *sq, struct buffer buf) 
 {
 #ifdef COMPILE
-    printf("%s - enqueue to [%lu..%lu / %lu]\n", sq->name, sq->tx->tail, sq->tx->head, sq->tx->size);
+    printf("%s - enqueue to [%u..%u / %u]\n", sq->name, sq->tx->tail, sq->tx->head, sq->tx->size);
 #endif
     return rb_enq(sq->tx, buf);
 }
@@ -219,7 +219,7 @@ static int simpleq_enq(struct simpleq *sq, struct buffer buf)
 static int simpleq_deq(struct simpleq *sq, struct buffer *buf)
 {
 #ifdef COMPILE
-    printf("%s - dequeue from [%lu..%lu / %lu]\n", sq->name, sq->rx->tail, sq->rx->head, sq->rx->size);
+    printf("%s - dequeue from [%u..%u / %u]\n", sq->name, sq->rx->tail, sq->rx->head, sq->rx->size);
 #endif
     return rb_deq(sq->rx, buf);
 }
