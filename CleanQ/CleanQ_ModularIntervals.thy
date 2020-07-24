@@ -800,7 +800,7 @@ lemma upto_elements_wrap:
   using geq ll hh uptol_elements_wrap upto_set_list_eq
   by(auto)
 
-*) 
+
 
 lemma 
   assumes leq: "l \<le> h" and ll: "l \<le> N" and hh: "h \<le> N"
@@ -833,7 +833,7 @@ proof -
   with X4 show ?thesis
     by(auto)
 qed    
-    
+    *) 
 
 
 (*
