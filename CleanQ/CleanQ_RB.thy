@@ -31,6 +31,36 @@ begin
 subsection \<open>Data Type Definition\<close>
 (* ==================================================================================== *)
 
+(* 
+
+  Some comments regarding the definition of the Clean_RB below. 
+
+  The current definition of the ring is as a function. 
+    
+    ring :: "nat \<Rightarrow> 'a"
+
+  This is problematic, as the ring has its size and buffers outside of 0..<size are 
+  not defined. 
+
+  There are a few options how to deal with this:
+
+    1) The ring is a partial function, i.e. it returns something for some inputs (Some 'a)
+       and nothing otherwise (None)
+
+        ring :: "nat \<rightharpoonup> 'a "
+        ring :: "nat \<Rightarrow> 'a option"
+
+    2) The ring returns a set of buffers for every index. If its within a defined range, 
+       this is the single ton set {b::'a}, otherwise the emtpy set{} or UNIV is returned. 
+
+        ring :: "nat \<Rightarrow> 'a set"
+
+    3) Implement the own option type e.g. 
+
+        datatype 'a buffer =  Nil | Buf 'a 
+        ring :: "nat \<Rightarrow> 'a buffer"
+*)
+
 text \<open>
   We first define the type of a the bounded, circular descriptor ring, which we call
   ring buffer (RB). A ring buffer has a well-defined size, or number of slots, which
@@ -52,7 +82,7 @@ text \<open>
 \<close>
 
 definition rb_valid :: "'a CleanQ_RB \<Rightarrow> bool"
-  where "rb_valid rb \<longleftrightarrow> (head rb < size rb) \<and> (tail rb < size rb) \<and> (size rb > 1)"
+  where "rb_valid rb \<longleftrightarrow> (head rb < size rb) \<and> (tail rb < size rb) \<and> (1 < size rb)"
 
 (* ==================================================================================== *)
 subsection \<open>Full and Empty Predicates\<close>
