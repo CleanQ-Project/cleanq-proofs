@@ -353,7 +353,8 @@ text \<open>
 
 lemma "c_rb_valid s rb \<longrightarrow> rb_valid (rb_C_to_CleanQ_RB s rb)"
   unfolding c_rb_valid_def rb_valid_def rb_C_to_CleanQ_RB_def
-  using unat_word_lt by fastforce
+  using unat_word_lt
+  oops
 
 
 (* ==================================================================================== *)
@@ -652,7 +653,7 @@ lemma c_rb_deq_buffer:
   using word_le_def word_le_less_eq apply blast
    prefer 2  
   using unat_word_lt apply fastforce
-  unfolding rb_C_to_CleanQ_RB_def rb_deq_def rb_read_def
+  unfolding rb_C_to_CleanQ_RB_def rb_deq_def rb_read_tail_def
   apply (simp add: int_unat)
   using unat_word_lt by blast
 
@@ -1226,151 +1227,6 @@ lemma c_rb_enq_correct:
   by fastforce
 
   
-
-(*
- prefer 5 sledgehammer
-
- prefer 4 sledgehammer
-
- prefer 3 sledgehammer
-
- prefer 2 sledgehammer
- 
-*)
-  
-  
-  oops
-(*
-
-      prefer 2 sledgehammer
-
-
-  (* doesn't work yet *)
-  oops
-
-
-(* ========================== *)
-(* BAD LEMMAS FOLLOW WHICH USE SORRY *)
-(*
-
-
-
-lemma ddd:
-  "unat (of_int (uint (head_C (heap_rb_C s0 rb)))) \<le> UINT_MAX"
-proof -
-  have X0: "unat (h::uint_t) \<le> UINT_MAX"
-    by(auto)
-  from X0 have X1:
-    "uint (h::uint_t) \<le> UINT_MAX"
-    by (metis (full_types) INT_MIN_MAX_lemmas(12) int_unat of_nat_le_iff)
-  from X1 have X2:
-    "unat (of_int (uint (h::uint_t))) \<le> UINT_MAX"
-    by (metis INT_MIN_MAX_lemmas(12) int_unat le_cases le_unat_uoi of_int_of_nat_eq)
-  show ?thesis 
-    by (metis INT_MIN_MAX_lemmas(12) dual_order.trans int_unat of_int_of_nat_eq order_refl unat_le_helper)
-qed
-
-lemma hack:
-  assumes xbound: "x < unat (size_C (heap_rb_C s0 rb))" 
-    and valid: "c_rb_valid s0 rb"
-  shows
-  "ring_C (heap_rb_C s0 rb) +\<^sub>p int x = ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) \<longleftrightarrow>  x = unat (head_C (heap_rb_C s0 rb))"
-  unfolding ptr_add_def
-proof (auto)
-  assume p: "of_nat x * (0x40::64 word) = of_int (uint (head_C (heap_rb_C s0 rb))) * (0x40::64 word)"
-  show "x = unat (head_C (heap_rb_C s0 rb))"
-  proof -
-
-
-
-    from xbound have xlimnat:
-      "x \<le> 0xffffffff"
-      by (metis INT_MIN_MAX_lemmas(12) UINT_MAX_def dual_order.trans not_le order.asym)
-
-    from xbound have ofnatxless:
-      "of_nat x < size_C (heap_rb_C s0 rb)"
-      by (simp add: word_of_nat_less)
-     
-    from ofnatxless have xlim32:
-      "((of_nat x)::uint_t) \<le> 0xffffffff"
-      by (metis UINT_MAX_def of_nat_numeral word_and_le1 word_and_max_simps(3))
-
-    from xlim32 ofnatxless have 
-        "unat ((of_nat x)::ulong_t) = x"
-
-
-    have headlim32:
-      "(head_C (heap_rb_C s0 rb)) \<le> 0xffffffff"
-      by (metis word_and_le1 word_and_max_simps(3))
-
-    have unatheadlim32:
-      "unat (head_C (heap_rb_C s0 rb)) \<le> 0xffffffff"
-      using  UINT_MAX_def by auto
-
-    from xlimnat xlim32  have
-      "unat (of_nat x * (0x40::64 word)) = unat(of_nat x) * unat (0x40::64 word)"
-      sorry
-
-    from p have X0:
-      "((of_nat x)::64 word) = of_int (uint (head_C (heap_rb_C s0 rb)))"
-      sorry
-    from X0 have X1:
-      "unat ((of_nat x)::64 word) = unat (of_int (uint (head_C (heap_rb_C s0 rb))))"
-      sorry
-
-    show ?thesis
-      sorry
-  qed
-next
-  assume p: "x = unat (head_C (heap_rb_C s0 rb))"
-  show "of_nat (unat (head_C (heap_rb_C s0 rb))) * (0x40::64 word) = of_int (uint (head_C (heap_rb_C s0 rb))) * (0x40::64 word)"
-    by (metis int_unat of_int_of_nat_eq)
-qed
-
-
-(* !!!  THIS ONE IS BAD !!! *)
-
-
-lemma hack:
-  "ring_C (heap_rb_C s0 rb) +\<^sub>p int x = ring_C (heap_rb_C s0 rb) +\<^sub>p uint (head_C (heap_rb_C s0 rb)) \<longleftrightarrow>  x = unat (head_C (heap_rb_C s0 rb))"
-  unfolding ptr_add_def
-proof (auto)
-  assume p: "of_nat x * (0x40::64 word) = of_int (uint (head_C (heap_rb_C s0 rb))) * (0x40::64 word)"
-  show "x = unat (head_C (heap_rb_C s0 rb))"
-  proof -
-
-    from p have X0:
-      "((of_nat x)::64 word) = of_int (uint (head_C (heap_rb_C s0 rb)))"
-      sorry
-    from X0 have X1:
-      "unat ((of_nat x)::64 word) = unat (of_int (uint (head_C (heap_rb_C s0 rb))))"
-      sorry
-
-    show ?thesis
-      sorry
-  qed
-next
-  assume p: "x = unat (head_C (heap_rb_C s0 rb))"
-  show "of_nat (unat (head_C (heap_rb_C s0 rb))) * (0x40::64 word) = of_int (uint (head_C (heap_rb_C s0 rb))) * (0x40::64 word)"
-    by (metis int_unat of_int_of_nat_eq)
-qed
-
-lemma c_rb_enq_correct:
-  "\<lbrace> \<lambda>s. c_rb_valid s rb \<and> s0 = s \<and> rb0 = rb_C_to_CleanQ_RB s rb  \<rbrace>
-      rb_enq_c_fun rb b
-   \<lbrace> \<lambda> r s. (r = ERR_OK \<or> r = ERR_QUEUE_FULL) \<and> 
-              (if r = ERR_OK then rb_C_to_CleanQ_RB s rb = rb_enq b rb0 else s = s0) \<rbrace>!"
-  unfolding rb_enq_c_fun_def  rb_C_to_CleanQ_RB_def rb_enq_equiv rb_enq_alt_def
-  apply(wp_once)+
-  apply(simp add:rb_can_enq_c_fun_def)
-  apply(wp_once)+
-  apply(auto simp:fun_upd_def c_rb_valid_def  unat_32word_succ_mod word_less_nat_alt Suc_le_eq unat_32word_leq_lt_lt)
-  apply(subst hack)
-  using word_le_def word_le_less_eq word_less_nat_alt by blast+
-
-
-
-*)
 (* ####################################################### *)
 
 

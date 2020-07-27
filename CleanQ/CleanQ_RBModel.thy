@@ -85,7 +85,7 @@ text \<open>
   interpretation function. That lifts the CleanQ RB model state into the CleanQ
   list model state by extracting a list of buffers as a subset of the ringbuffer. 
   We first define a function to convert the ringbuffer representation in to a list, which
-  we use the nonzero_modulus locale to produce a list of indices into the bounded
+  we use the \verb+nonzero_modulus+ locale to produce a list of indices into the bounded
   buffer ring and apply them to the \verb+ring+ function of the ringbuffer.
 \<close>
 
@@ -332,8 +332,8 @@ lemma CleanQ_RB_enq_x_result :
   assumes X_owned: "b \<in> rSX rb"  and  X_enq: "rb' = CleanQ_RB_enq_x b rb"
     and invariants : "CleanQ_RB_Invariants K rb"  
     and can_enq:  "CleanQ_RB_enq_x_possible rb" 
-  shows  "b \<notin> rSX rb' \<and> b \<notin> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTYX rb')) 
-          \<and> Some b = rb_read (head (rTXY rb)) (rTXY rb')  \<and> b \<in> set (CleanQ_RB_list (rTXY rb'))"
+  shows  "b \<notin> rSX rb' \<and> b \<notin> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTYX rb')) \<and>
+          b \<in> set (CleanQ_RB_list (rTXY rb'))"
 proof -
   from can_enq invariants X_enq have X1:
     "b \<notin> rSX rb'"
@@ -347,19 +347,14 @@ proof -
     " b \<notin> set (CleanQ_RB_list (rTYX rb'))"
     using invariants X_owned unfolding CleanQ_RB_enq_x_def by auto
 
-   from can_enq invariants X_enq have X4:
-    "Some b = rb_read (head (rTXY rb)) (rTXY rb')"
-     using X_owned unfolding CleanQ_RB_enq_x_def CleanQ_RB_enq_x_possible_def
-     by (simp add: rb_enq_buf) 
-     
-    have X5:
+    have X4:
     "b \<in> set (CleanQ_RB_list (rTXY rb'))"
      apply (subst X_enq)
       apply (simp add:CleanQ_RB_enq_x_def)
       using CleanQ_RB_enq_x_possible_def can_enq invariants rb_enq_list_add by fastforce
           
   show ?thesis
-    using X1 X2 X3 X4 X5 by(auto)
+    using X1 X2 X3 X4  by(auto)
 qed 
 
 
@@ -367,8 +362,8 @@ lemma CleanQ_RB_enq_y_result :
   assumes Y_owned: "b \<in> rSY rb"  and  Y_enq: "rb' = CleanQ_RB_enq_y b rb"
     and invariants : "CleanQ_RB_Invariants K rb"  
     and can_enq:  "CleanQ_RB_enq_y_possible rb" 
-  shows  "b \<notin> rSX rb' \<and> b \<notin> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTXY rb')) 
-          \<and> Some b = rb_read (head (rTYX rb)) (rTYX rb')  \<and> b \<in> set (CleanQ_RB_list (rTYX rb'))"
+  shows  "b \<notin> rSX rb' \<and> b \<notin> rSY rb' \<and> b \<notin> set (CleanQ_RB_list (rTXY rb')) \<and>
+          b \<in> set (CleanQ_RB_list (rTYX rb'))"
 proof -
   from can_enq invariants Y_enq have X1:
     "b \<notin> rSY rb'"
@@ -382,19 +377,14 @@ proof -
     " b \<notin> set (CleanQ_RB_list (rTXY rb'))"
     using invariants Y_owned unfolding CleanQ_RB_enq_y_def by auto
 
-   from can_enq invariants Y_enq have X4:
-    "Some b = rb_read (head (rTYX rb)) (rTYX rb')"
-     using Y_owned unfolding CleanQ_RB_enq_y_def CleanQ_RB_enq_y_possible_def
-     by (simp add: rb_enq_buf) 
-     
-    have X5:
+  have X4:
     "b \<in> set (CleanQ_RB_list (rTYX rb'))"
      apply (subst Y_enq)
       apply (simp add:CleanQ_RB_enq_y_def)
       using CleanQ_RB_enq_y_possible_def can_enq invariants rb_enq_list_add by fastforce
           
   show ?thesis
-    using X1 X2 X3 X4 X5 by(auto)
+    using X1 X2 X3 X4 X4 by(auto)
 qed 
 
 text \<open>
@@ -616,9 +606,9 @@ proof -
 
   from invariants buf have X2a:
     "b \<notin> rSY rb" 
-    apply(auto simp:rb_read_def)
+    apply(auto simp:rb_read_tail_def)
     by (metis CleanQ_RB_deq_x_possible_def can_deq disjoint_iff_not_equal prod.sel(1) 
-              rb_deq_def rb_deq_list_was_in)
+              rb_deq_def rb_deq_list_was_in rb_read_tail_def)
 
   have X2:"b \<notin> rSY rb'" 
     using invariants buf X_deq X2a unfolding CleanQ_RB_deq_x_def
@@ -641,7 +631,7 @@ proof -
 
   have X4a:"b \<notin> set (CleanQ_RB_list (rTXY rb))"
     using invariants buf 
-    apply(auto simp:rb_read_def)
+    apply(auto simp:rb_read_tail_def)
     by (metis CleanQ_RB_deq_x_possible_def buf can_deq disjoint_iff_not_equal 
               prod.sel(1) rb_deq_def rb_deq_list_was_in)
 
@@ -663,7 +653,7 @@ lemma CleanQ_RB_deq_y_result :
 proof -
   have X1:"b \<in> rSY rb'"
     using buf Y_deq unfolding CleanQ_RB_deq_y_def
-    by (simp add: rb_deq_def rb_read_def)
+    by (simp add: rb_deq_def rb_read_tail_def)
     
   have X2:"b \<notin> rSX rb'" 
     using invariants buf Y_deq unfolding CleanQ_RB_deq_y_def
