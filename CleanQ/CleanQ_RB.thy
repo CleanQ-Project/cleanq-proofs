@@ -993,44 +993,25 @@ proof auto
     by (metis Suc_lessI append.right_neutral mod_self rb_valid_def upt_0 upt_rec valid)
 qed
 
-lemma rb_delta_one_unfold:
-  fixes st 
-  assumes frame: "rb_valid st"
-  assumes tl_hd: "(Suc (tail st)) \<le> head st" (* we can actually dequeue *)
-  shows "[tail st..<head st] = tail st # [Suc (tail st) mod CleanQ_RB.size st..<head st]"
-proof -
-  from tl_hd frame have no_mod:"Suc (tail st) mod CleanQ_RB.size st = Suc (tail st)"
-    by (metis Suc_lessI leD mod_less rb_valid_def)
-
-  have core:"[Suc (tail st) mod CleanQ_RB.size st..<head st] = [Suc (tail st)..<head st]"
-    using no_mod by auto 
-
-  show ?thesis using core
-    by (simp add: Suc_le_lessD tl_hd upt_conv_Cons)
-qed
-
 lemma rb_delta_one_tl_leq_hd:
   fixes st 
   assumes frame: "rb_valid st"
   assumes tl_hd: "tail st \<le> head st"
-  assumes deq: "rb_can_deq st \<and> (tail st + 1) mod size st \<noteq> head st" (* we can actually dequeue *)
-  shows "[tail st..<head st] = tail st # [Suc (tail st) mod CleanQ_RB.size st..<head st]"
-  using rb_delta_one deq tl_hd frame unfolding rb_incr_tail_alt_def 
-  by (metis Suc_leI le_less rb_can_deq_def rb_delta_one_unfold rb_empty_def)
+  assumes deq: "rb_can_deq st" (* we can actually dequeue *)
+  shows "[tail st..<head st] = tail st # [(Suc (tail st) mod (CleanQ_RB.size st))..<head st]"
+  using rb_delta_one deq tl_hd frame deq unfolding rb_incr_tail_alt_def 
+  by (metis Suc_leI le_antisym mod_less not_less rb_can_deq_def rb_empty_def rb_valid_def upt_rec)
 
-(*
+
 lemma rb_delta_one_tl_geq_hd:
   fixes st 
   assumes frame: "rb_valid st"
-  assumes tl_hd: "tail st > head st"
-  assumes deq: "rb_can_deq st \<and> (tail st + 1) mod size st \<noteq> head st" (* we can actually dequeue *)
-  shows "[tail st..<size st] @ [0..< head st]  = tail st # [(Suc (tail st)) mod CleanQ_RB.size st..<size st] @ [0..< head st]"
-  (* This seems to be wrong for the wrap around! Fix it!*)
+  assumes tl_hd: "tail st \<ge> head st"
+  assumes deq: "rb_can_deq st" (* we can actually dequeue *)
+  shows "[tail st..<size st] @ [0..< head st]  = tail st # [(Suc (tail st))..<size st] @ [0..< head st]"
   using rb_delta_one deq tl_hd frame unfolding rb_incr_tail_alt_def 
-proof -
-
-qed
-
+  using mod_Suc rb_valid_def upt_rec
+  by fastforce
 
 lemma rb_weak_list_delta_one:
   fixes st' st 
@@ -1052,22 +1033,32 @@ proof -
   have head:"head st = head st'" using frame unfolding frame_rb_weak_left_def
     by simp
 
-  have "rb_valid_entries st' = rb_delta_tail st' (Suc 0) @ rb_valid_entries st" 
-    using tail_incr delta deq unfolding rb_delta_tail_def rb_valid_entries_def 
-  proof auto
-    from head have core1: "[tail st'..<head st'] = tail st' # [Suc (tail st') mod CleanQ_RB.size st'..<head st]" 
-      using head valid rb_delta_one_unfold deq unfolding rb_can_deq_def apply simp 
-      try
-
-
-
+  show ?thesis 
+    unfolding rb_delta_tail_def rb_valid_entries_def
+    using tail_incr valid rb_delta_one_tl_leq_hd rb_delta_one_tl_geq_hd 
+    unfolding rb_incr_tail_alt_def
+    apply simp
+  proof -
+    assume a1: "rb_valid st \<and> rb_valid st'"
+    assume "tail st = Suc (tail st') mod CleanQ_RB.size st'"
+    have f2: "head st = head st'"
+      by (metis frame frame_rb_weak_left_def)
+    have "CleanQ_RB.size st = CleanQ_RB.size st'"
+      by (metis frame frame_rb_weak_left_def)
+    then show "(Suc (tail st') < CleanQ_RB.size st' \<longrightarrow> (Suc (tail st') \<le> head st \<longrightarrow> 
+               (tail st' \<le> head st' \<longrightarrow> [tail st'..<head st'] = tail st' # [Suc (tail st')..<head st]) \<and> 
+               (\<not> tail st' \<le> head st' \<longrightarrow> [tail st'..<CleanQ_RB.size st'] @ [0..<head st'] = tail st' # [Suc (tail st')..<head st])) \<and> 
+               (\<not> Suc (tail st') \<le> head st \<longrightarrow> (tail st' \<le> head st' \<longrightarrow> [tail st'..<head st'] = tail st' # [Suc (tail st')..<CleanQ_RB.size st] @ [0..<head st]) \<and> 
+               (\<not> tail st' \<le> head st' \<longrightarrow> [tail st'..<CleanQ_RB.size st'] @ [0..<head st'] = tail st' # [Suc (tail st')..<CleanQ_RB.size st] @ [0..<head st]))) \<and> 
+               (\<not> Suc (tail st') < CleanQ_RB.size st' \<longrightarrow> (Suc (tail st') mod CleanQ_RB.size st' \<le> head st \<longrightarrow> (tail st' \<le> head st' \<longrightarrow> [tail st'..<head st'] = 
+               [tail st'..<CleanQ_RB.size st'] @ [0..<Suc (tail st') mod CleanQ_RB.size st'] @ [Suc (tail st') mod CleanQ_RB.size st'..<head st]) \<and> 
+               (\<not> tail st' \<le> head st' \<longrightarrow> [0..<head st'] = [0..<Suc (tail st') mod CleanQ_RB.size st'] @ [Suc (tail st') mod CleanQ_RB.size st'..<head st])) \<and> 
+               (\<not> Suc (tail st') mod CleanQ_RB.size st' \<le> head st \<longrightarrow> (tail st' \<le> head st' \<longrightarrow> [tail st'..<head st'] = 
+               [tail st'..<CleanQ_RB.size st'] @ [0..<Suc (tail st') mod CleanQ_RB.size st'] @ [Suc (tail st') mod CleanQ_RB.size st'..<CleanQ_RB.size st] @ [0..<head st]) \<and> 
+               (\<not> tail st' \<le> head st' \<longrightarrow> [0..<head st'] = [0..<Suc (tail st') mod CleanQ_RB.size st'] @ [Suc (tail st') mod CleanQ_RB.size st'..<CleanQ_RB.size st] @ [0..<head st])))"
+      using f2 a1 by (metis (no_types) Suc_leD append.simps(1) append_Cons deq le_add2 le_add_same_cancel2 
+                      le_antisym mod_self not_le not_less_eq_eq rb_can_deq_def rb_empty_def rb_valid_def upt_0 upt_conv_Cons)
   qed
-
-
-
 qed
-
-*)
-
 
 end

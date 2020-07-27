@@ -205,36 +205,51 @@ fun I4_rb_valid :: "'a CleanQ_RB_State \<Rightarrow> bool"
   where "I4_rb_valid rb \<longleftrightarrow> ((rb_valid (rTXY rb)) \<and> (rb_valid (rTYX rb)))"
 
 (* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>Weak frame condition\<close>
+subsubsection \<open>Strong and Weak frame condition\<close>
 (* ------------------------------------------------------------------------------------ *)
+
+text \<open>The strong frame condition fixed the full state except for the part which should
+      change. \<close>
+definition frame_rb_strong :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "frame_rb_strong rb' rb \<longleftrightarrow> rb' = rb"
+
 text \<open>
   Assuming a two concurrently acting agents, we can not assume that all of the RB state
   stays the same. In order to model this, we have to weaken the frame condition which
   we up to now implicitly used. \<close>
 (* Need to express somehow that descriptors can be added by enq *)
-definition frame_weak_x :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
-  where "frame_weak_x st' st \<longleftrightarrow>
-    head (rTXY st') = head (rTXY st) \<and>
-    tail (rTYX st') = tail (rTYX st) \<and>
+definition frame_rb_weak_x :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "frame_rb_weak_x st' st \<longleftrightarrow>
+   (\<exists>\<delta>tyx \<delta>txy.
     ring (rTXY st') = ring (rTXY st) \<and>
     size (rTXY st') = size (rTXY st) \<and>
     size (rTYX st') = size (rTYX st) \<and>
-    (\<exists>\<delta>hd \<delta>tl \<delta>dc.
-        tail (rTXY st') + \<delta>tl = tail (rTXY st)\<and>
-        head (rTYX st') + \<delta>hd = head (rTYX st)\<and>
-        CleanQ_RB_list (rTYX st') =  \<delta>dc @ CleanQ_RB_list (rTYX st))" (*Y adding something to ring*)
+    rSX st' = rSX st \<and>
+    CleanQ_RB_list (rTXY st') =  CleanQ_RB_list (rTXY st) @ \<delta>tyx \<and>
+    \<delta>tyx @ CleanQ_RB_list (rTYX st') = CleanQ_RB_list (rTYX st) \<and>
+    rSY st' = \<delta>txy \<union> rSY st - (set \<delta>tyx))" 
 
-definition frame_weak_y :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
-  where "frame_weak_y st' st \<longleftrightarrow>
+definition frame_rb_weak_y :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "frame_rb_weak_y st' st \<longleftrightarrow>
     head (rTYX st') = head (rTYX st) \<and>
     tail (rTXY st') = tail (rTXY st) \<and>
     ring (rTYX st') = ring (rTYX st) \<and>
     size (rTYX st') = size (rTYX st) \<and>
     size (rTXY st') = size (rTXY st) \<and>
+    rSY st' = rSY st \<and>
     (\<exists>\<delta>hd \<delta>tl \<delta>dc.
         tail (rTYX st') + \<delta>tl = tail (rTYX st)\<and>
         head (rTXY st') + \<delta>hd = head (rTXY st)\<and>
         CleanQ_RB_list (rTXY st') =  \<delta>dc @ CleanQ_RB_list (rTXY st))" (*X adding something to ring*)
+
+lemma frame_rb_s_w_x:
+  "frame_rb_strong dev' dev \<Longrightarrow> frame_rb_weak_x dev' dev"
+  by (smt Diff_empty Un_commute append_Nil2 frame_rb_strong_def 
+      frame_rb_weak_x_def list.set(1) self_append_conv2 sup_bot.comm_neutral)
+
+lemma frame_rb_s_w_y:
+  "frame_rb_strong dev' dev \<Longrightarrow> frame_rb_weak_y dev' dev"
+  by(simp add:frame_rb_strong_def frame_rb_weak_y_def)
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>All CleanQ RB Invariants\<close>
@@ -260,6 +275,38 @@ lemma CleanQ_RB_Invariants_List_Invariants:
   unfolding CleanQ_RB2List_def by simp
 
 
+(*
+text \<open>The list weak frame condition implies the ring buffer weak frame condition.\<close>
+lemma frame_rb_weak_x_list_weak:
+  fixes rb rb' K
+  assumes I1: "CleanQ_RB_Invariants K rb'"
+      and frame: "frame_rb_weak_x rb' rb"
+    shows "frame_list_weak (lTXY (CLeanQ_RB2List rb'), lSY (CleanQ_RB2List rb'), lTYX (CleanQ_RB2List rb'), lSX (CleanQ_RB2List rb')) 
+                           (lTXY (CLeanQ_RB2List rb), lSY (CleanQ_RB2List rb), lTYX (CleanQ_RB2List rb), lSX (CleanQ_RB2List rb))"
+  unfolding CleanQ_RB2List_def
+proof auto
+
+  show "\<And>x. x \<in> rSX rb' \<Longrightarrow> x \<in> rSX rb" using frame by (simp add: frame_rb_weak_x_def)
+  show "\<And>x. x \<in> rSX rb \<Longrightarrow> x \<in> rSX rb'" using frame by (simp add: frame_rb_weak_x_def)
+
+    from frame obtain \<delta>hd \<delta>tl where
+    dHd: "head (rTXY rb') + \<delta>hd = head (rTXY rb)" and
+    dTl: "tail (rTYX rb') + \<delta>tl = tail (rTYX rb)"
+      by (simp add: frame_rb_weak_x_def)
+
+
+  define \<delta>txy where "\<delta>txy =  map (ring (rTXY rb')) \<delta>hd"
+  define \<delta>bc where "\<delta>bc = slice (BF dev') (dn dev') (dn dev)"
+  (* Somehow this does not seem to work
+    from frame obtain \<delta>dc where
+    dDc: "CleanQ_RB_list (rTXY rb') = \<delta>dc @ CleanQ_RB_list (rTXY rb)"  
+      unfolding CleanQ_RB_list_def
+  *)
+    
+
+
+qed
+*) 
 (* ==================================================================================== *)
 subsection \<open>State Transition Operations\<close>
 (* ==================================================================================== *)
