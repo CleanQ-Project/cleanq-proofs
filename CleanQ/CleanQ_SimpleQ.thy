@@ -308,10 +308,67 @@ abbreviation "c_rb_valid_ring s rb \<equiv> (\<forall>i \<le> uint (size_C (heap
                                     ptr_val (ring_C (heap_rb_C s rb) +\<^sub>p i) \<le> addrlimit)"
 
 (* this one should be the pre-condition for the operation *)
-definition c_rb_valid :: " lifted_globals \<Rightarrow> rb_C ptr \<Rightarrow> bool"
+definition c_rb_valid :: "lifted_globals \<Rightarrow> rb_C ptr \<Rightarrow> bool"
   where "c_rb_valid s rb \<longleftrightarrow> c_rb_valid_is_valid s rb 
                             \<and> c_rb_valid_size s rb  \<and> c_rb_valid_head s rb
                             \<and> c_rb_valid_tail s rb  \<and> c_rb_valid_ring s rb"
+
+
+text "We can now define the set of valid entries in the ring buffer"
+
+definition c_rb_valid_entries :: "lifted_globals \<Rightarrow> rb_C ptr \<Rightarrow> nat list"
+  where "c_rb_valid_entries s rb = 
+            (if (tail_C (heap_rb_C s rb)) \<le> (head_C (heap_rb_C s rb))
+             then [unat (tail_C (heap_rb_C s rb)) ..< unat (head_C (heap_rb_C s rb))]
+             else [unat (tail_C (heap_rb_C s rb))..< unat (size_C (heap_rb_C s rb))]
+                     @ [0..<unat (head_C (heap_rb_C s rb))])"
+
+
+definition c_rb_empty ::  "lifted_globals \<Rightarrow> rb_C ptr \<Rightarrow> bool"
+  where "c_rb_empty s rb = (tail_C (heap_rb_C s rb) = head_C (heap_rb_C s rb))"
+
+
+
+lemma c_rb_not_empty_valid_entries:
+  "c_rb_valid s0 rb \<Longrightarrow> \<not> c_rb_empty s0 rb \<Longrightarrow> c_rb_valid_entries s0 rb \<noteq> []"
+  unfolding c_rb_valid_entries_def c_rb_valid_def c_rb_empty_def
+  apply(auto simp add: word_le_nat_alt) 
+  using dual_order.antisym apply fastforce
+  using unat_eq_zero apply force
+  using leD unat_word_lt by blast
+
+
+lemma c_rb_valid_entries_head_not_in_set:
+  "unat (head_C (heap_rb_C s0 rb)) \<notin> set (c_rb_valid_entries s0 rb)"
+  unfolding c_rb_valid_entries_def 
+  by (auto simp: word_le_nat_alt)
+
+
+
+lemma c_rb_valid_entries_tail_first1:
+  "c_rb_valid s0 rb \<Longrightarrow> \<not> c_rb_empty s0 rb \<Longrightarrow>
+       unat (tail_C (heap_rb_C s0 rb)) = hd (c_rb_valid_entries s0 rb)"
+proof -
+  assume p1: "c_rb_valid s0 rb"
+  assume p2: "\<not> c_rb_empty s0 rb"
+
+  from p1 have p3: "  unat (tail_C (heap_rb_C s0 rb)) < unat (size_C (heap_rb_C s0 rb))"
+    by(simp add:unat_mono c_rb_valid_def)
+
+  show "unat (tail_C (heap_rb_C s0 rb)) = hd (c_rb_valid_entries s0 rb)"
+    using p3  unfolding c_rb_valid_entries_def apply(auto simp:unat_word_lt)  
+    by (metis CleanQ_SimpleQ.c_rb_empty_def hd_upt order_leE p2 word_less_nat_alt)
+qed
+  
+
+
+lemma c_rb_valid_entries_tail_in_set:
+  "c_rb_valid s0 rb \<Longrightarrow> \<not> c_rb_empty s0 rb \<Longrightarrow>
+    unat (tail_C (heap_rb_C s0 rb)) \<in> set (c_rb_valid_entries s0 rb)"
+  using c_rb_valid_entries_tail_first1 c_rb_not_empty_valid_entries
+  by(auto)
+  
+
 
 
 (* ==================================================================================== *)
