@@ -388,15 +388,8 @@ lemma rb_incr_head_n_ring:
   "(ring (rb_incr_head_n i rb)) = ring rb"
   unfolding rb_incr_head_n_def by(auto)
 
-definition rb_incr_tail_alt :: "'a CleanQ_RB \<Rightarrow> nat\<Rightarrow> 'a CleanQ_RB"
-  where "rb_incr_tail_alt rb incr = rb \<lparr> tail := ((tail rb) + incr) mod (size rb) \<rparr>"
-
 definition rb_incr_tail_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a CleanQ_RB"
   where "rb_incr_tail_n n rb  = rb \<lparr> tail := ((tail rb) + n) mod (size rb) \<rparr>"
-
-lemma rb_incr_tail_alt_n_equiv:
-  "rb_incr_tail_n n rb = rb_incr_tail_alt rb n"
-  unfolding rb_incr_tail_n_def rb_incr_tail_alt_def by(auto)
 
 lemma rb_incr_tail_0:
   "rb_valid rb \<Longrightarrow> rb_incr_tail_n 0 rb = rb"
@@ -591,14 +584,6 @@ assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb"
 shows "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_n 1 rb)"
   apply(subst rb_incr_tail_1)
   using notempty valid rb_incr_tail_valid  by(auto)
-
-
-lemma rb_incr_tail_alt_one_valid:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb" 
-  shows "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_alt rb 1)"
-  apply(simp only:rb_incr_tail_alt_n_equiv[symmetric] rb_incr_tail_1)
-  using notempty valid rb_incr_tail_valid by(auto)
-
 
 lemma 
 assumes const_delta: "delta \<le> length (rb_valid_entries rb)"  and  valid: "rb_valid rb"
@@ -1040,20 +1025,20 @@ qed
 lemma rb_incr_tail_wrap:
   fixes rb
   assumes "rb_valid rb"
-  shows "tail rb = (size rb -1) \<Longrightarrow> tail (rb_incr_tail_alt rb 1) = 0" 
-  unfolding rb_incr_tail_alt_def
+  shows "tail rb = (size rb -1) \<Longrightarrow> tail (rb_incr_tail_n 1 rb) = 0" 
+  unfolding rb_incr_tail_n_def
   by (metis assms le_add_diff_inverse2 less_imp_le_nat mod_self rb_valid_def select_convs(3) 
       surjective update_convs(3))
 
 lemma rb_delta_one:
   fixes st st'
-  assumes tail: "tail st = tail (rb_incr_tail_alt st' 1) \<and> head st = head st'"
+  assumes tail: "tail st = tail (rb_incr_tail_n 1 st') \<and> head st = head st'"
   assumes valid: "rb_valid st'"
   shows "(rb_delta_tail st' 1) = [tail st']"
   unfolding rb_delta_tail_def rb_valid_def
 proof auto
   have st_st_prime: "tail st' + 1 < CleanQ_RB.size st' \<Longrightarrow> (tail st' + 1) = tail st"
-    using tail unfolding rb_incr_tail_alt_def
+    using tail unfolding rb_incr_tail_n_def
     by simp
 
   show "\<not> Suc (tail st') < CleanQ_RB.size st' \<Longrightarrow> [tail st'..<CleanQ_RB.size st'] @ [0..<Suc (tail st') mod CleanQ_RB.size st'] = [tail st']"
@@ -1066,7 +1051,7 @@ lemma rb_delta_one_tl_leq_hd:
   assumes tl_hd: "tail st \<le> head st"
   assumes deq: "rb_can_deq st" (* we can actually dequeue *)
   shows "[tail st..<head st] = tail st # [(Suc (tail st) mod (CleanQ_RB.size st))..<head st]"
-  using rb_delta_one deq tl_hd frame deq unfolding rb_incr_tail_alt_def 
+  using rb_delta_one deq tl_hd frame deq unfolding rb_incr_tail_n_def 
   by (metis Suc_leI le_antisym mod_less not_less rb_can_deq_def rb_empty_def rb_valid_def upt_rec)
 
 
@@ -1076,14 +1061,14 @@ lemma rb_delta_one_tl_geq_hd:
   assumes tl_hd: "tail st \<ge> head st"
   assumes deq: "rb_can_deq st" (* we can actually dequeue *)
   shows "[tail st..<size st] @ [0..< head st]  = tail st # [(Suc (tail st))..<size st] @ [0..< head st]"
-  using rb_delta_one deq tl_hd frame unfolding rb_incr_tail_alt_def 
+  using rb_delta_one deq tl_hd frame unfolding rb_incr_tail_n_def 
   using mod_Suc rb_valid_def upt_rec
   by fastforce
 
 lemma rb_weak_list_delta_one:
   fixes st' st 
   assumes frame: "frame_rb_weak_left st' st" and
-          tail: "tail st = tail (rb_incr_tail_alt st' 1)" and
+          tail: "tail st = tail (rb_incr_tail_n 1 st')" and
           deq: "rb_can_deq st'"
   shows  "rb_valid_entries st' = (rb_delta_tail st' 1) @ (rb_valid_entries st)"
   using rb_delta_one deq
@@ -1095,7 +1080,7 @@ proof -
       unfolding frame_rb_weak_left_def by fastforce
 
   have tail_incr: "tail st = ((tail st' + 1) mod size st')" 
-    using tail unfolding rb_incr_tail_alt_def by auto
+    using tail unfolding rb_incr_tail_n_def by auto
 
   have head:"head st = head st'" using frame unfolding frame_rb_weak_left_def
     by simp
@@ -1103,7 +1088,7 @@ proof -
   show ?thesis 
     unfolding rb_delta_tail_def rb_valid_entries_def
     using tail_incr valid rb_delta_one_tl_leq_hd rb_delta_one_tl_geq_hd 
-    unfolding rb_incr_tail_alt_def
+    unfolding rb_incr_tail_n_def
     apply simp
   proof -
     assume a1: "rb_valid st \<and> rb_valid st'"
@@ -1127,5 +1112,9 @@ proof -
                       le_antisym mod_self not_le not_less_eq_eq rb_can_deq_def rb_empty_def rb_valid_def upt_0 upt_conv_Cons)
   qed
 qed
+
+text \<open>
+  Similar proofs but for delta larger than 1: TODO
+\<close>
 
 end
