@@ -475,6 +475,11 @@ assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb"
   shows "rb_valid_entries (rb_incr_tail rb) = tl (rb_valid_entries rb)"
   using valid notempty by (simp add:rb_incr_tail_valid_entries)
 
+lemma rb_incr_tail_valid_entries_drop:
+assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb"  
+  shows "rb_valid_entries (rb_incr_tail rb) = drop 1 (rb_valid_entries rb)"
+  using valid notempty by (simp add:rb_incr_tail_valid_entries)
+
 
 text\<open>
   The set of valid entries after the tail increment is a strict subset of the original
@@ -824,6 +829,12 @@ lemma rb_can_incr_tail_1:
   unfolding rb_can_incr_tail_n_def using rb_valid_entries_not_empty_list2 less_Suc_eq_le 
   by auto
 
+lemma rb_can_incr_tail_large:
+  "rb_valid rb \<Longrightarrow> n \<ge> size rb \<Longrightarrow> \<not> rb_can_incr_tail_n n rb"
+  unfolding rb_can_incr_tail_n_def
+  using rb_valid_entries_less_size by fastforce
+
+
 definition rb_can_incr_head_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
   where "rb_can_incr_head_n n rb = (n < length (rb_invalid_entries rb))"
 
@@ -836,9 +847,14 @@ lemma rb_can_incr_head_1:
   unfolding rb_can_incr_head_n_def
   using rb_invalid_entries_full_num rb_invalid_entries_not_full_num by auto
 
+lemma rb_can_incr_head_large:
+  "rb_valid rb \<Longrightarrow> n \<ge> size rb \<Longrightarrow> \<not> rb_can_incr_head_n n rb"
+  unfolding rb_can_incr_head_n_def
+  using rb_invalid_entries_less_size by fastforce
+
+
 lemma "rb_can_incr_tail_n (Suc n) rb \<Longrightarrow> rb_can_incr_tail_n n rb"
   unfolding rb_can_incr_tail_n_def by(auto)
-
 
 
 
@@ -850,40 +866,82 @@ primrec rb_can_incr_tail_n_rec ::  "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>
 
 
 
+lemma rb_inct_tail_n_drop_first_n:
+assumes valid: "rb_valid rb" 
+shows "rb_can_incr_tail_n n rb  \<Longrightarrow> rb_valid_entries (rb_incr_tail_n n rb) = drop n (rb_valid_entries rb)"
+proof (induct n)
+  case 0
+  then show ?case 
+    by (simp add: rb_incr_tail_0 valid)
+next
+  case (Suc n)
+  then show ?case
+  proof -
+    assume p: "rb_can_incr_tail_n n rb \<Longrightarrow> rb_valid_entries (rb_incr_tail_n n rb) = drop n (rb_valid_entries rb)"
+    assume p2: "rb_can_incr_tail_n (Suc n) rb"
+
+    from p2 have p1:
+      "rb_can_incr_tail_n n rb"
+      by (simp add: rb_can_incr_tail_n_def)
+
+    from p1 p have x0:
+      "rb_valid_entries (rb_incr_tail_n n rb) = drop n (rb_valid_entries rb)"
+      by blast
+
+    have notempty: "\<not> rb_empty (rb_incr_tail_n n rb)"
+      using p2 
+      unfolding rb_can_incr_tail_n_def rb_incr_tail_n_def  rb_empty_def rb_valid_entries_def
+      
+      apply(auto)
+      apply(cases " tail rb \<le> (tail rb + n) mod CleanQ_RB.size rb")
+       apply(auto)
+       apply (metis add.commute le_diff_conv mod_less_eq_dividend not_less_eq_eq)
+      using valid unfolding rb_valid_def apply(auto)
+    proof -
+      assume a1: "Suc n \<le> CleanQ_RB.size rb + (tail rb + n) mod CleanQ_RB.size rb - tail rb"
+      assume a2: "head rb = (tail rb + n) mod CleanQ_RB.size rb"
+      assume a3: "\<not> tail rb \<le> (tail rb + n) mod CleanQ_RB.size rb"
+      assume "tail rb < CleanQ_RB.size rb"
+      have "head rb = n + tail rb"
+        using a2 a1 by (metis (no_types) Nat.le_diff_conv2 add.commute diff_diff_left diff_is_0_eq mod_if mod_less_eq_dividend not_less not_less_eq_eq)
+      then show False
+        using a3 a2 by linarith
+    qed
+
+    have valid2 : "rb_valid (rb_incr_tail_n n rb)"
+      apply(cases "n=0")
+      unfolding rb_incr_tail_n_def rb_incr_tail_def rb_valid_def 
+      using rb_valid_def valid apply fastforce
+      apply(auto)
+      using rb_valid_def valid apply blast
+      using rb_valid_def valid apply force
+      using rb_valid_def valid apply auto[1]
+      using rb_valid_def valid apply(auto simp:rb_valid_def) 
+      by (metis in_set_dropD rb_incr_tail_n_def x0)
+   
+      
 
 
-lemma 
-assumes valid: "rb_valid rb"  and  emptyn: "rb_can_incr_tail_n n rb "
-  shows "rb_valid_entries (rb_incr_tail_n n rb) = drop n (rb_valid_entries rb)"
-  using valid emptyn unfolding rb_can_incr_tail_n_def rb_incr_tail_n_def
-  unfolding rb_valid_entries_def  
-  apply(auto)
-  apply (simp add: Nat.le_diff_conv2 rb_valid_def)
-    apply (simp add: Nat.le_diff_conv2 rb_valid_def)
-  prefer 2
+    have xn1: "rb_valid_entries (rb_incr_tail (rb_incr_tail_n n rb)) = tl (rb_valid_entries (rb_incr_tail_n n rb))"
+      using valid2 notempty rb_incr_tail_valid_entries_tail by(auto)
+
+    have xn: "rb_valid_entries (rb_incr_tail (rb_incr_tail_n n rb)) = tl (drop n (rb_valid_entries rb))"
+      using xn1
+      by (simp add: x0)
+
+    show ?thesis
+      using xn
+      by (simp add: drop_Suc rb_incr_tail_n_ind tl_drop)
+  qed
+qed
   
-  oops
 
 
 lemma 
 assumes const_delta: "delta \<le> length (rb_valid_entries rb)"  and  valid: "rb_valid rb"
   shows "set (rb_valid_entries (rb_incr_tail_n delta rb)) \<subseteq> set (rb_valid_entries rb)"
-  apply (cases "delta = 0")
-   apply(simp add: rb_incr_tail_0 valid) 
-   
-   apply(simp add:valid)
-  unfolding rb_valid_entries_def rb_incr_tail_n_def
-  apply(auto)
-  
-  unfolding 
-  using const_delta valid  
-  
-  apply(subst rb_incr_tail_compow)
-   apply(simp add:valid)
-  
-  using rb_valid_entries_distinct rb_incr_tail_valid_entries_subset valid const_delta
-  
-  oops
+  using const_delta valid rb_inct_tail_n_drop_first_n 
+  by (simp add: rb_inct_tail_n_drop_first_n rb_can_incr_tail_n_def set_drop_subset)
   
 
 lemma rb_incr_tail_n_valid:
@@ -899,15 +957,6 @@ assumes const_delta: "delta \<le> length (rb_valid_entries rb)"  and  valid: "rb
   apply(auto)
   oops
   
-  
-
-lemma rb_incr_tail_alt_delta_valid:
-assumes const_delta: "delta \<le> length (rb_valid_entries rb)"  and  valid: "rb_valid rb"
-    and notempty: "\<not>rb_empty rb"
-  shows "rb_valid (rb_incr_tail_alt rb delta)"
-  oops
-
-
 
 
 (* ==================================================================================== *)
