@@ -97,6 +97,17 @@ definition rb_invalid_entries :: "'a CleanQ_RB \<Rightarrow> nat list"
                                   then [(head rb) ..< (size rb)] @ [0 ..< (tail rb)]
                                   else [(head rb)..< (tail rb)])"
 
+text \<open>
+  The list of valid and invalid entries are distinct.
+\<close>
+
+lemma rb_valid_entries_distinct:
+  "distinct (rb_valid_entries rb)"
+  unfolding rb_valid_entries_def by(auto)
+
+lemma rb_invalid_entries_distinct:
+  "distinct (rb_invalid_entries rb)"
+  unfolding rb_invalid_entries_def by(auto)
 
 text \<open>
   A ring buffer is valid if its head and tail pointers are within the size of the buffer,
@@ -181,6 +192,20 @@ lemma rb_valid_entries_empty_set2 :
 lemma rb_invalid_entries_empty: 
   "rb_valid rb \<Longrightarrow> rb_empty rb \<Longrightarrow> set (rb_invalid_entries rb) = {0..< size rb}"
   unfolding rb_valid_def rb_empty_def rb_invalid_entries_def by(auto)
+
+
+lemma rb_valid_entries_not_empty_list :
+  "rb_valid rb \<Longrightarrow> \<not> rb_empty rb \<Longrightarrow> rb_valid_entries rb \<noteq> []"
+   unfolding rb_empty_def rb_valid_entries_def rb_valid_def by(auto)
+
+lemma rb_valid_entries_not_empty_list2 :
+  "rb_valid rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> rb_valid_entries rb \<noteq> []"
+  unfolding rb_empty_def rb_valid_entries_def rb_valid_def by auto
+
+lemma rb_valid_entries_not_empty_set :
+  "rb_valid rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow> set (rb_valid_entries rb) \<noteq> {}"
+  using rb_valid_entries_not_empty_list by(auto)
+
 
 lemma rb_valid_entries_full:
   "rb_valid rb \<Longrightarrow> rb_full rb \<Longrightarrow> set (rb_valid_entries rb) = {0..< size rb} - {head rb}"
@@ -292,13 +317,18 @@ lemma rb_valid_invalid_entries_size:
   unfolding rb_valid_def rb_valid_entries_def rb_invalid_entries_def by(auto)
 
 
-lemma rb_valid_entries_tail_subset:
+lemma rb_valid_entries_tail_subseteq:
   "set (tl (rb_valid_entries rb))  \<subseteq>  set ((rb_valid_entries rb))"
   by (metis list.set_sel(2) subsetI tl_Nil)
 
-lemma rb_valid_entries_head_subset:
+lemma rb_valid_entries_tail_subset:
+  "rb_valid_entries rb \<noteq> [] \<Longrightarrow> set (tl (rb_valid_entries rb)) \<subset> set ((rb_valid_entries rb))"
+  using list_set_hd_tl_subtract rb_valid_entries_distinct by fastforce
+
+lemma rb_valid_entries_head_subseteq:
   "set (rb_valid_entries rb)  \<subseteq>  set ((rb_valid_entries rb) @ [x])"
   by(auto)
+
 
 (* ==================================================================================== *)
 subsection \<open>Incrementing Tail and Head Pointers\<close>
@@ -342,8 +372,13 @@ definition rb_incr_head_alt :: "'a CleanQ_RB \<Rightarrow> nat\<Rightarrow> 'a C
 definition rb_incr_head_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a CleanQ_RB"
   where "rb_incr_head_n n rb  = rb \<lparr> head := ((head rb) + n) mod (size rb) \<rparr>"
 
-lemma "rb_incr_head_n n rb = rb_incr_head_alt rb n"
+lemma rb_incr_head_alt_n_eqiv:
+  "rb_incr_head_n n rb = rb_incr_head_alt rb n"
   unfolding rb_incr_head_n_def rb_incr_head_alt_def by(auto)
+
+lemma rb_incr_head_0:
+  "rb_valid rb \<Longrightarrow> rb_incr_head_n 0 rb = rb"
+  unfolding rb_incr_head_n_def rb_incr_tail_def rb_valid_def by(auto)
 
 lemma rb_incr_head_1:
   "rb_incr_head_n 1 rb = rb_incr_head rb"
@@ -359,9 +394,13 @@ definition rb_incr_tail_alt :: "'a CleanQ_RB \<Rightarrow> nat\<Rightarrow> 'a C
 definition rb_incr_tail_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a CleanQ_RB"
   where "rb_incr_tail_n n rb  = rb \<lparr> tail := ((tail rb) + n) mod (size rb) \<rparr>"
 
-lemma rb_incr_tail_alt_n:
+lemma rb_incr_tail_alt_n_equiv:
   "rb_incr_tail_n n rb = rb_incr_tail_alt rb n"
   unfolding rb_incr_tail_n_def rb_incr_tail_alt_def by(auto)
+
+lemma rb_incr_tail_0:
+  "rb_valid rb \<Longrightarrow> rb_incr_tail_n 0 rb = rb"
+  unfolding rb_incr_tail_n_def rb_incr_tail_def rb_valid_def by(auto)
 
 lemma rb_incr_tail_1:
   "rb_incr_tail_n 1 rb = rb_incr_tail rb"
@@ -449,6 +488,18 @@ assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb"
   shows "rb_valid_entries (rb_incr_tail rb) = tl (rb_valid_entries rb)"
   using valid notempty by (simp add:rb_incr_tail_valid_entries)
 
+text \<open>
+  Incrementing the tail then always creates a subset of the valid entries set.
+\<close>
+
+lemma rb_incr_tail_valid_entries_subset:
+assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb"  
+  shows "set (rb_valid_entries (rb_incr_tail rb)) \<subset> set (rb_valid_entries rb)"
+  apply(subst rb_incr_tail_valid_entries_tail)
+  using notempty valid apply(simp_all) 
+  using notempty valid rb_valid_entries_not_empty_list rb_valid_entries_tail_subset
+  by fastforce
+
 
 text \<open>
   When we increment the tail, then the original tail is no longer in the set of
@@ -488,7 +539,7 @@ assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid rb"
 
 
 text \<open>
-  The head elementis added to the set of valid entries, in fact at the end of the
+  The head element is added to the set of valid entries, in fact at the end of the
   list.
 \<close>
 
@@ -545,17 +596,33 @@ shows "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_n 1 rb)"
 lemma rb_incr_tail_alt_one_valid:
 assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb" 
   shows "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_alt rb 1)"
-  apply(simp only:rb_incr_tail_alt_n[symmetric] rb_incr_tail_1)
+  apply(simp only:rb_incr_tail_alt_n_equiv[symmetric] rb_incr_tail_1)
   using notempty valid rb_incr_tail_valid by(auto)
 
 
-
+lemma 
+assumes const_delta: "delta \<le> length (rb_valid_entries rb)"  and  valid: "rb_valid rb"
+  shows "set (rb_valid_entries (rb_incr_tail_n delta rb)) \<subseteq> set (rb_valid_entries rb)"
+  apply (cases "delta = 0")
+   apply(simp add: rb_incr_tail_0 valid) 
+  using const_delta valid  
+  apply(subst rb_incr_tail_compow)
+   apply(simp add:valid)
+  
+  using rb_valid_entries_distinct rb_incr_tail_valid_entries_subset valid const_delta
+  
+  oops
+  
 
 lemma rb_incr_tail_n_valid:
 assumes const_delta: "delta \<le> length (rb_valid_entries rb)"  and  valid: "rb_valid rb"
     and notempty: "\<not>rb_empty rb"
   shows "rb_valid (rb_incr_tail_n delta rb)"
-  unfolding rb_valid_def  rb_incr_tail_n_ring
+  unfolding rb_valid_def  rb_incr_tail_n_ring apply(auto) (* 4 goals *)
+  using valid apply(simp add: rb_valid_def rb_incr_tail_n_def)
+  using valid apply(simp add: rb_valid_def rb_incr_tail_n_def)
+  using valid apply(simp add: rb_valid_def rb_incr_tail_n_def)
+  using valid unfolding rb_valid_def
   using const_delta valid unfolding rb_valid_def rb_incr_tail_n_def
   apply(auto)
   oops
