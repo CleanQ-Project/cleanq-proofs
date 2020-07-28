@@ -1145,6 +1145,11 @@ lemma rb_deq_subset :
 subsection \<open>Frame condition under concurrent operation of two sides\<close>
 (* ==================================================================================== *)  
 
+text \<open>
+  This is the frame condition for the left side i.e. the side which enqueues buffers into this
+  particular RB. This means in the frame condition the head is fixed, but the tail can move
+  according how the model permits it.  
+\<close>
 
 definition frame_rb_weak_left :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
   where "frame_rb_weak_left st' st \<longleftrightarrow>
@@ -1154,14 +1159,20 @@ definition frame_rb_weak_left :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Righ
     rb_valid st' \<and> rb_valid st \<and>
    (\<exists> \<delta>tl.
     (if (tail st') + \<delta>tl < (size st') then tail st' + \<delta>tl
-     else (tail st') + \<delta>tl - (size st')) = tail st
+     else ((tail st') + \<delta>tl) mod (size st')) = tail st
   )" 
+
+text \<open>
+  To talk about the previously introduced delta, we need some lemmas  
+\<close>
 
 definition rb_delta_tail :: "'a CleanQ_RB \<Rightarrow> nat \<Rightarrow> nat list"
   where "rb_delta_tail rb delta = (if (tail rb + delta) < (size rb) then [(tail rb) ..< ((tail rb) + delta)]
                                    else [(tail rb)..< (size rb)] @ [0..< ((tail rb) + delta) mod (size rb)])"
-
-lemma rb_delta_size_nonzero:
+text \<open>
+  This next lemma shows properties about the definition of rb_delta_tail
+\<close>
+lemma rb_delta_tail_size_nonzero:
   fixes st' st 
   assumes frame: "frame_rb_weak_left st' st"
   shows "delta > 0 \<Longrightarrow> (rb_delta_tail st delta) \<noteq> []"
@@ -1169,7 +1180,7 @@ lemma rb_delta_size_nonzero:
   unfolding rb_delta_tail_def
 by (simp add: frame_rb_weak_left_def rb_valid_def)
 
-lemma rb_weak_list_delta_empty:
+lemma rb_weak_list_delta_tail_empty:
   fixes st' st 
   assumes frame: "frame_rb_weak_left st' st" and
           tl_asm:  "(tail st') + \<delta>tl = (tail st) \<and> \<delta>tl = 0"
@@ -1205,7 +1216,11 @@ lemma rb_incr_tail_wrap:
   by (metis assms le_add_diff_inverse2 less_imp_le_nat mod_self rb_valid_def select_convs(3) 
       surjective update_convs(3))
 
-lemma rb_delta_one:
+text \<open>
+  Similarly we show the influence of the tail moving on the valid entries in the ring buffer
+\<close>
+
+lemma rb_delta_tail_one:
   fixes st st'
   assumes tail: "tail st = tail (rb_incr_tail_n 1 st') \<and> head st = head st'"
   assumes valid: "rb_valid st'"
@@ -1226,7 +1241,7 @@ lemma rb_delta_one_tl_leq_hd:
   assumes tl_hd: "tail st \<le> head st"
   assumes deq: "rb_can_deq st" (* we can actually dequeue *)
   shows "[tail st..<head st] = tail st # [(Suc (tail st) mod (CleanQ_RB.size st))..<head st]"
-  using rb_delta_one deq tl_hd frame deq unfolding rb_incr_tail_n_def 
+  using rb_delta_tail_one deq tl_hd frame deq unfolding rb_incr_tail_n_def 
   by (metis Suc_leI le_antisym mod_less not_less rb_can_deq_def rb_empty_def rb_valid_def upt_rec)
 
 
@@ -1236,22 +1251,22 @@ lemma rb_delta_one_tl_geq_hd:
   assumes tl_hd: "tail st \<ge> head st"
   assumes deq: "rb_can_deq st" (* we can actually dequeue *)
   shows "[tail st..<size st] @ [0..< head st]  = tail st # [(Suc (tail st))..<size st] @ [0..< head st]"
-  using rb_delta_one deq tl_hd frame unfolding rb_incr_tail_n_def 
+  using rb_delta_tail_one deq tl_hd frame unfolding rb_incr_tail_n_def 
   using mod_Suc rb_valid_def upt_rec
   by fastforce
 
-lemma rb_weak_list_delta_one:
+lemma rb_weak_list_delta_tail_one:
   fixes st' st 
   assumes frame: "frame_rb_weak_left st' st" and
           tail: "tail st = tail (rb_incr_tail_n 1 st')" and
           deq: "rb_can_deq st'"
   shows  "rb_valid_entries st' = (rb_delta_tail st' 1) @ (rb_valid_entries st)"
-  using rb_delta_one deq
+  using rb_delta_tail_one deq
 proof -
   from frame tail have valid: "rb_valid st \<and> rb_valid st'"
     using frame_rb_weak_left_def by blast
 
-  have delta: "rb_delta_tail st' (Suc 0) = [tail st']" using rb_delta_one frame tail
+  have delta: "rb_delta_tail st' (Suc 0) = [tail st']" using rb_delta_tail_one frame tail
       unfolding frame_rb_weak_left_def by fastforce
 
   have tail_incr: "tail st = ((tail st' + 1) mod size st')" 
@@ -1289,7 +1304,118 @@ proof -
 qed
 
 text \<open>
+  Now, similar the left side, we also need the frame condition for the right side i.e. tail is fixed
+  but the head can move
+\<close>
+
+definition frame_rb_weak_right :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
+  where "frame_rb_weak_right st' st \<longleftrightarrow>
+    size st' = size st \<and>
+    tail st' = tail st \<and>
+    ring st' = ring st \<and>
+    rb_valid st' \<and> rb_valid st \<and>
+   (\<exists> \<delta>tl.
+    (if (head st') + \<delta>tl < (size st') then head st' + \<delta>tl
+     else ((head st') + \<delta>tl) mod (size st')) = head st
+  )" 
+
+definition rb_delta_head :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
+  where "rb_delta_head delta rb = (if (head rb + delta) < (size rb) then [(head rb) ..< ((head rb) + delta)]
+                                   else [(head rb)..< (size rb)] @ [0..< ((head rb) + delta) mod (size rb)])"
+
+text \<open>
+  This next lemma shows properties about the definition of rb_delta_head
+\<close>
+lemma rb_delta_head_size_nonzero:
+  fixes st' st 
+  assumes frame: "frame_rb_weak_right st' st"
+  shows "delta > 0 \<Longrightarrow> (rb_delta_head delta st) \<noteq> []"
+  using assms
+  unfolding rb_delta_head_def
+by (simp add: frame_rb_weak_right_def rb_valid_def)
+
+lemma rb_weak_list_delta_head_empty:
+  fixes st' st 
+  assumes frame: "frame_rb_weak_right st' st" and
+          hd_asm:  "(head st') + \<delta>hd = (head st) \<and> \<delta>hd = 0"
+  shows "head st' = head st \<Longrightarrow> rb_delta_head \<delta>hd st' @ rb_valid_entries st'  = (rb_valid_entries st)"
+proof -
+  from hd_asm have "\<delta>hd = 0" 
+    by simp
+
+  from hd_asm have hd: "head st' = head st"
+    by simp
+
+  from hd_asm have rb_delta: "rb_delta_head \<delta>hd st' = rb_delta_head 0 st'" 
+    unfolding rb_delta_head_def 
+    by auto
+
+  from rb_delta have rb_delta_empty: "rb_delta_head \<delta>hd st' = []"
+    unfolding rb_delta_head_def
+    by (metis frame frame_rb_weak_right_def less_irrefl rb_valid_def hd hd_asm upt_rec)
+
+  from rb_delta_empty have "rb_valid_entries st' = rb_valid_entries st"
+    unfolding rb_valid_entries_def
+    by (metis (no_types, hide_lams) frame frame_rb_weak_right_def hd)
+
+  show ?thesis using rb_delta_empty
+    by (simp add: \<open>rb_valid_entries st' = rb_valid_entries st\<close>)
+qed
+
+lemma rb_incr_head_wrap:
+  fixes rb
+  assumes "rb_valid rb"
+  shows "head rb = (size rb -1) \<Longrightarrow> head (rb_incr_head_n 1 rb) = 0" 
+  unfolding rb_incr_head_n_def
+  by (metis assms ext_inject le_add_diff_inverse2 less_imp_le_nat mod_self rb_valid_def surjective update_convs(2))
+
+text \<open>
+  Similarly we show the influence of the tail moving on the valid entries in the ring buffer
+\<close>
+
+lemma rb_delta_head_one:
+  fixes st st'
+  assumes head: "head st = tail (rb_incr_head_n 1 st') \<and> tail st = tail st'"
+  assumes valid: "rb_valid st' \<and> rb_valid st"
+  shows "(rb_delta_head 1 st') = [head st']"
+  unfolding rb_delta_head_def rb_valid_def
+proof auto
+  show "\<not> Suc (head st') < CleanQ_RB.size st' \<Longrightarrow> [head st'..<CleanQ_RB.size st'] @ [0..<Suc (head st') mod CleanQ_RB.size st'] = [head st']"
+    by (metis Suc_lessI append.right_neutral mod_self rb_valid_def upt_0 upt_rec valid)
+qed
+
+
+lemma rb_delta_one_hd_geq_tl:
+  fixes st 
+  assumes frame: "rb_valid st"
+  assumes tl_hd: "tail st \<le> head st"
+  assumes enq: "rb_can_enq st" (* we can actually enqueue *)
+  shows "[tail st..<head st] @ [head st] = [tail st..<(Suc (head st))]"
+  using enq tl_hd frame unfolding rb_incr_head_n_def 
+  by simp
+
+lemma rb_delta_one_hd_leq_tl:
+  fixes st 
+  assumes frame: "rb_valid st"
+  assumes tl_hd: "tail st \<ge> head st"
+  assumes enq: "rb_can_enq st" (* we can actually enqueue *)
+  shows "[tail st..<size st] @ [0..< head st] @ [head st]  = [tail st..<size st] @ [0..< Suc (head st)]"
+  using enq tl_hd frame unfolding rb_incr_head_n_def 
+  by (metis less_eq_nat.simps(1) upt_Suc)
+  
+lemma rb_weak_list_delta_head_one:
+  fixes st' st 
+  assumes frame: "frame_rb_weak_left st' st" and
+          tail: "head st = head (rb_incr_head_n 1 st')" and
+          enq: "rb_can_enq st'"
+  shows  "rb_valid_entries st' @ rb_delta_head 1 st' = (rb_valid_entries st)"
+  using enq
+  by (metis frame frame_rb_weak_left_def rb_can_enq_def rb_incr_head_1 rb_incr_head_valid_entries_head rb_valid_entries_head tail)
+
+text \<open>
   Similar proofs but for delta larger than 1: TODO
 \<close>
+
+
 
 end
