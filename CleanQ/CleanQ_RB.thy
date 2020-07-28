@@ -453,6 +453,7 @@ assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb"
   using notempty valid rb_valid_entries_tail_first1 rb_incr_tail_valid_entries_notin1
   by fastforce
 
+
 text \<open>
   Incrementing the tail pointer is preserving the validity invariant of the ring buffer
 \<close>
@@ -558,6 +559,56 @@ definition rb_incr_head_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a C
 definition rb_incr_tail_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a CleanQ_RB"
   where "rb_incr_tail_n n rb  = rb \<lparr> tail := ((tail rb) + n) mod (size rb) \<rparr>"
 
+
+text \<open>
+  We can define the increment N recursively as:
+\<close>
+
+primrec rb_incr_head_n_rec ::  "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a CleanQ_RB"
+  where "rb_incr_head_n_rec 0 rb = rb" |
+        "rb_incr_head_n_rec (Suc n) rb = rb_incr_head (rb_incr_head_n_rec n rb)"
+
+primrec rb_incr_tail_n_rec ::  "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a CleanQ_RB"
+  where "rb_incr_tail_n_rec 0 rb = rb" |
+        "rb_incr_tail_n_rec (Suc n) rb = rb_incr_tail (rb_incr_tail_n_rec n rb)"
+
+
+text \<open>
+  We can now show that for any N, we can reach the next N by applying the single
+  head or tail incrementors.
+\<close>
+
+lemma rb_incr_head_n_ind:
+  shows "rb_incr_head_n (Suc n) rb = rb_incr_head (rb_incr_head_n n rb)"
+  unfolding rb_incr_head_n_def rb_incr_head_def
+  by (simp add: mod_Suc_eq)
+
+lemma rb_incr_tail_n_ind:
+  "rb_incr_tail_n (Suc n) rb = rb_incr_tail (rb_incr_tail_n n rb)"
+  unfolding rb_incr_tail_n_def rb_incr_tail_def
+  by (simp add: mod_Suc_eq)
+
+
+text \<open>
+  Using the lemmas above, we can show that the recursive definition produces the same
+  result as the direct formulation. 
+\<close>
+
+lemma rb_incr_head_n_req_equiv:
+assumes valid : "rb_valid rb"
+  shows "rb_incr_head_n_rec n rb = rb_incr_head_n n rb"
+  apply(induct n)
+  using valid apply(simp add: rb_incr_head_n_rec_def rb_incr_head_n_def rb_valid_def)
+  by (simp add: rb_incr_head_n_ind)
+
+lemma rb_incr_tail_n_req_equiv:
+assumes valid : "rb_valid rb"
+  shows "rb_incr_tail_n_rec n rb = rb_incr_tail_n n rb"
+  apply(induct n)
+  using valid apply(simp add: rb_incr_tail_n_rec_def rb_incr_tail_n_def rb_valid_def)
+  by (simp add: rb_incr_tail_n_ind)
+
+  
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>The Ring is not Changed\<close>
