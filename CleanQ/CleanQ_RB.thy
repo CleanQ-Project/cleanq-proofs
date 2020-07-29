@@ -1328,7 +1328,52 @@ text \<open>
 \<close>
 primrec rb_delta_tail::  "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
   where "rb_delta_tail 0 rb = []" |
-        "rb_delta_tail (Suc n) rb = [tail rb] @ (rb_delta_tail n (rb_incr_tail rb))"
+        "rb_delta_tail (Suc n) rb = [tail rb] @ (rb_delta_tail n (rb_incr_tail_n 1 rb))"
+
+lemma rb_take_tail:
+  assumes tail: "rb_can_incr_tail_n 1 st' \<and> tail st' \<le> head st'" and
+          frame: "frame_rb_weak_left st' st" and
+          valid: "rb_valid st'"
+  shows "[tail st' ..< head st'] = [tail st'] @ ([tail (rb_incr_tail_n 1 st') ..< head st'])"
+  unfolding rb_incr_tail_n_def using tail assms(3) rb_can_incr_tail_1 rb_valid_def 
+            rb_valid_entries_tail_empty2 rb_valid_entries_tail_not_empty1 upt_eq_Cons_conv by fastforce
+
+lemma rb_take_tail2:
+  assumes tail: "rb_can_incr_tail_n n st' \<and> tail st' \<le> head st'" and
+          frame: "frame_rb_weak_left st' st" and
+          valid: "rb_valid st'"
+  shows "take n [tail st' ..< head st'] = take n ([tail st'] @ ([tail (rb_incr_tail_n 1 st') ..< head st']))"
+  using rb_take_tail assms unfolding rb_incr_tail_n_def
+proof -
+  show "take n [tail st'..<head st'] = take n ([tail st'] @ [tail (st'\<lparr>tail := (tail st' + 1) mod CleanQ_RB.size st'\<rparr>)..<head st']) "
+    using rb_take_tail apply auto
+  proof -
+    have f1: "\<forall>n na. \<not> (n::nat) < na \<or> n mod na = n"
+      using mod_less by blast
+    have f2: "n \<le> length (rb_valid_entries st')"
+      using rb_can_incr_tail_n_def tail by blast
+    have "rb_valid_entries st' = [tail st'..<head st']"
+      by (meson rb_valid_entries_def tail)
+    then show "take n [tail st'..<head st'] = take n (tail st' # [Suc (tail st') mod CleanQ_RB.size st'..<head st'])"
+      using f2 f1 by (metis (no_types) assms(2) frame_rb_weak_left_def le_zero_eq less_trans_Suc list.size(3) rb_valid_def take_eq_Nil upt_rec)
+  qed
+qed
+
+lemma rb_take_tail3:
+  fixes n x xs
+  assumes "(x @ xs) \<noteq> [] \<and> length x = 1 \<and> n \<ge> 0"
+  shows "(take (Suc n) (x @ xs)) = (x @ (take n xs))"
+  by (simp add: assms)
+
+(*
+lemma rb_delta_tail_take :
+  assumes tail: "rb_can_incr_tail_n n st' \<and> st = (rb_incr_tail_n n st')" and
+          frame: "frame_rb_weak_left st' st" and
+          valid: "rb_valid st'"
+  shows "rb_delta_tail n st' = take n (rb_valid_entries st')"
+  unfolding rb_valid_entries_def using rb_take_tail rb_take_tail2 rb_take_tail3 assms 
+*)
+  
 
 text \<open>
   This next lemma shows properties about the definition of rb_delta_tail
@@ -1526,14 +1571,26 @@ text \<open>
 \<close>
 
 (*
-lemma rb_weak_list_delta_tail_rec_n:
-  fixes st' st 
+lemma rb_weak_list_delta_tail_n:
+  fixes st' st n
   assumes frame: "frame_rb_weak_left st' st" and
           tail: "tail st = tail (rb_incr_tail_n n st')" and
           deq: "rb_can_incr_tail_n n st'"
   shows  "rb_valid_entries st' = (rb_delta_tail n st') @ (rb_valid_entries st)"
-  using assms unfolding rb_delta_tail_def rb_can_incr_tail_n_def frame_rb_weak_left_def
-  apply auto
+  using assms
+proof -
+  have drop: "rb_valid_entries st = drop n (rb_valid_entries st')"
+    by (metis (no_types, lifting) assms(2) assms(3) ext_inject frame frame_rb_weak_left_def 
+        rb_incr_tail_n_def rb_inct_tail_n_drop_first_n rb_valid_entries_def surjective update_convs(3))
+
+  have take: "" 
+    unfolding rb_delta_tail_def rb_valid_entries_def rb_incr_tail_def
+    apply auto
+    
+  
+  
+qed
+
 
 lemma rb_weak_list_delta_head_n:
   fixes st' st 
