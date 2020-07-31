@@ -285,6 +285,7 @@ text \<open>
   the head.
 \<close>
 
+
 lemma rb_valid_entries_full:
   "rb_valid rb \<Longrightarrow> rb_full rb \<longleftrightarrow> set (rb_valid_entries rb) = {0..< size rb} - {head rb}"
 proof 
@@ -375,27 +376,12 @@ lemma rb_valid_entries_gt_zero:
 
 lemma rb_valid_entries_full_num:
   "rb_valid rb \<Longrightarrow> rb_full rb \<longleftrightarrow> length (rb_valid_entries rb) = size rb - 1"
-proof 
-  assume valid: "rb_valid rb"
-  assume full: "rb_full rb"
-
-  show "length (rb_valid_entries rb) = size rb - 1"
-    using valid full rb_invalid_entries_full rb_valid_invalid_entries_lengths 
-    by fastforce
-next
-  assume valid: "rb_valid rb"
-  assume len: "length (rb_valid_entries rb) = size rb - 1"
-
-  have eq:
-    "(head rb + 1) mod CleanQ_RB.size rb = tail rb"
-    using len valid unfolding rb_valid_entries_def rb_valid_def
-    apply(cases " tail rb \<le> head rb ", auto)
-    by (smt Suc_le_eq diff_Suc_1 diff_Suc_eq_diff_pred diff_diff_cancel diff_right_commute
-            le_add_diff_inverse2 le_eq_less_or_eq mod_self zero_diff zero_less_Suc)
-
-  show " rb_full rb"
-    using eq unfolding rb_full_def by simp
-qed
+  apply(rule iffI)
+  using rb_invalid_entries_full rb_valid_invalid_entries_lengths apply fastforce
+  unfolding rb_valid_entries_def rb_valid_def rb_full_def
+  apply(cases " tail rb \<le> head rb ", auto)
+  by (smt One_nat_def Suc_le_eq diff_0_eq_0 diff_Suc_1 diff_commute diff_diff_cancel 
+          le_add_diff_inverse2 le_less mod_self)
 
 lemma rb_valid_entries_empty_num:
    "rb_valid rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> length (rb_valid_entries rb) = 0"
@@ -877,7 +863,6 @@ definition rb_incr_head_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a C
 definition rb_incr_tail_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>  'a CleanQ_RB"
   where "rb_incr_tail_n n rb  = rb \<lparr> tail := ((tail rb) + n) mod (size rb) \<rparr>"
 
-
 text \<open>
   We can define the increment N recursively as:
 \<close>
@@ -926,7 +911,50 @@ assumes valid : "rb_valid rb"
   using valid apply(simp add: rb_incr_tail_n_rec_def rb_incr_tail_n_def rb_valid_def)
   by (simp add: rb_incr_tail_n_ind)
 
-  
+
+text \<open>
+  We can now move the tail or head pointers in several steps in one go. We can now
+  move forward to show that if there is enough space or there are enough entries in
+  the ring, then for any N less than this, the operation leaves the buffer in the 
+  same valid state. 
+\<close>
+
+definition rb_can_incr_tail_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
+  where "rb_can_incr_tail_n n rb = (n \<le> length (rb_valid_entries rb))"
+
+definition rb_can_incr_head_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
+  where "rb_can_incr_head_n n rb = (n < length (rb_invalid_entries rb))"
+
+
+text \<open>
+  The maximum amounts the head and tail pointers can be increased is given by the
+  length of the list of valid entries
+\<close>
+
+definition rb_can_incr_tail_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
+  where "rb_can_incr_tail_n_max rb = length (rb_valid_entries rb)"
+
+definition rb_can_incr_head_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
+  where "rb_can_incr_head_n_max rb = length (rb_invalid_entries rb) - 1"
+
+
+text \<open>
+  We can now define the delta sets when the tail or head pointer is increased in terms
+  of the valid or invalid entries.
+\<close>
+
+definition rb_incr_head_n_valid_delta :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
+  where "rb_incr_head_n_valid_delta n rb  = take n (rb_invalid_entries rb)"
+
+definition rb_incr_head_n_invalid_delta :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
+  where "rb_incr_head_n_invalid_delta n rb  = take n (rb_invalid_entries rb)"
+
+definition rb_incr_tail_n_valid_delta :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
+  where "rb_incr_tail_n_valid_delta n rb  = take n (rb_valid_entries rb)"
+
+definition rb_incr_tail_n_invalid_delta :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
+  where "rb_incr_tail_n_invalid_delta n rb  = drop n (rb_valid_entries rb)"
+
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>The Ring is not Changed\<close>
@@ -985,6 +1013,35 @@ lemma rb_incr_tail_0:
 
 
 text \<open>
+  Therefore, incrementing the tail and head is always possible, as it doesn't change the
+   state of the ring.
+\<close>
+
+lemma rb_can_incr_tail_0:
+  "rb_can_incr_tail_n 0 rb"
+  unfolding rb_can_incr_tail_n_def by(auto)
+
+lemma rb_can_incr_head_0:
+  "rb_valid rb \<Longrightarrow> rb_can_incr_head_n 0 rb"
+  unfolding rb_can_incr_head_n_def using rb_invalid_entries_gt_zero by(auto)
+
+
+text \<open>
+  If the maximum that can we increase the tail or head pointer is 0, then the ring
+  is either full or empty.
+\<close>
+
+lemma rb_can_incr_tail_max_0_empty:
+  "rb_valid rb \<Longrightarrow> rb_can_incr_tail_n_max rb = 0 \<longleftrightarrow> rb_empty rb"
+  by (simp add: rb_valid_entries_empty_num rb_can_incr_tail_n_max_def)
+
+lemma rb_can_incr_head_max_0_full:
+  "rb_valid rb \<Longrightarrow> rb_can_incr_head_n_max rb = 0 \<longleftrightarrow> rb_full rb"
+  unfolding rb_can_incr_head_n_max_def
+  using rb_invalid_entries_not_full_num by fastforce
+
+
+text \<open>
   We can show that incremements to head and tail with N=1 are the same as the single
   increments above. 
 \<close>
@@ -996,6 +1053,36 @@ lemma rb_incr_head_1:
 lemma rb_incr_tail_1:
   "rb_incr_tail_n 1 rb = rb_incr_tail rb"
   unfolding rb_incr_tail_n_def rb_incr_tail_def by(auto)
+
+text \<open>
+  If we can increment the tail or head by one, then this means the ring is not empty
+  or full.
+\<close>
+
+lemma rb_can_incr_tail_1:
+  "rb_valid rb \<Longrightarrow> rb_can_incr_tail_n 1 rb \<longleftrightarrow> \<not> rb_empty rb"
+  unfolding rb_can_incr_tail_n_def using rb_valid_entries_not_empty_list less_Suc_eq_le 
+  by auto
+
+lemma rb_can_incr_head_1:
+  "rb_valid rb \<Longrightarrow> rb_can_incr_head_n 1 rb \<longleftrightarrow> \<not> rb_full rb"
+  unfolding rb_can_incr_head_n_def
+  using rb_invalid_entries_full_num rb_invalid_entries_not_full_num by auto
+
+
+text \<open>
+  In fact, if the maximum to increase the tail and head pointers is bigger than 
+  zero, then the ring is not empty or not full.  
+\<close>
+
+lemma rb_can_incr_max_not_empty:
+  "rb_valid rb \<Longrightarrow> 0 < rb_can_incr_tail_n_max rb \<Longrightarrow> \<not> rb_empty rb"
+  by (metis not_less_zero rb_can_incr_tail_n_max_def rb_valid_entries_empty_num)
+
+lemma rb_can_incr_max_not_full:
+  "rb_valid rb \<Longrightarrow> 0 < rb_can_incr_head_n_max rb \<Longrightarrow> \<not> rb_full rb"
+  by (simp add: rb_can_incr_head_n_max_def rb_invalid_entries_full_num)
+
 
 text \<open>
   They also satisfy the validity constraints. As they are in fact the same as above.
@@ -1073,68 +1160,36 @@ lemma rb_incr_head_n_compow:
   by(simp add:rb_incr_head_n_req_equiv[symmetric] rb_incr_head_n_rec_compow)
 
 
-text \<open>
-  We can now move the tail or head pointers in several steps in one go. We can now
-  move forward to show that if there is enough space or there are enough entries in
-  the ring, then for any N less than this, the operation leaves the buffer in the 
-  same valid state. 
-\<close>
 
-definition rb_can_incr_tail_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
-  where "rb_can_incr_tail_n n rb = (n \<le> length (rb_valid_entries rb))"
-
-definition rb_can_incr_head_n :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
-  where "rb_can_incr_head_n n rb = (n < length (rb_invalid_entries rb))"
-
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Increments by N > 1\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 text \<open>
-  The maximum amounts the head and tail pointers can be increased is given by the
-  length of the list of valid entries
+  If we can increment it (N+1) times, then it also goes for N times, of in fact any
+  n < N.
 \<close>
 
-definition rb_can_incr_tail_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
-  where "rb_can_incr_tail_n_max rb = length (rb_valid_entries rb)"
-
-definition rb_can_incr_head_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
-  where "rb_can_incr_head_n_max rb = length (rb_invalid_entries rb) - 1"
-
-
-lemma rb_can_incr_max_not_empty:
-  "rb_valid rb \<Longrightarrow> n < rb_can_incr_tail_n_max rb \<Longrightarrow> \<not> rb_empty rb"
-  by (metis not_less_zero rb_can_incr_tail_n_max_def rb_valid_entries_empty_num)
-
-lemma rb_can_incr_max_not_full:
-  "rb_valid rb \<Longrightarrow> n < rb_can_incr_head_n_max rb \<Longrightarrow> \<not> rb_full rb"
-  by (simp add: rb_can_incr_head_n_max_def rb_invalid_entries_full_num)
-
-
-text \<open>
-  Incrementing the tail or head by 0 or 1 is the same as the single step above. 
-\<close>
-
-lemma rb_can_incr_tail_0:
-  "rb_can_incr_tail_n 0 rb"
+lemma rb_can_incr_tail_n_suc:
+  "rb_can_incr_tail_n (Suc n) rb \<Longrightarrow> rb_can_incr_tail_n n rb"
   unfolding rb_can_incr_tail_n_def by(auto)
 
-lemma rb_can_incr_head_0:
-  "rb_valid rb \<Longrightarrow> rb_can_incr_head_n 0 rb"
-  unfolding rb_can_incr_head_n_def using rb_invalid_entries_gt_zero by(auto)
+lemma rb_can_incr_head_n_suc:
+  "rb_can_incr_head_n (Suc n) rb \<Longrightarrow> rb_can_incr_head_n n rb"
+  unfolding rb_can_incr_head_n_def by(auto)
 
+lemma rb_can_incr_tail_n_lt:
+  "rb_can_incr_tail_n N rb \<Longrightarrow> n < N \<Longrightarrow> rb_can_incr_tail_n n rb"
+  unfolding rb_can_incr_tail_n_def by(auto)
 
-lemma rb_can_incr_tail_1:
-  "rb_valid rb \<Longrightarrow> rb_can_incr_tail_n 1 rb \<longleftrightarrow> \<not> rb_empty rb"
-  unfolding rb_can_incr_tail_n_def using rb_valid_entries_not_empty_list less_Suc_eq_le 
-  by auto
-
-lemma rb_can_incr_head_1:
-  "rb_valid rb \<Longrightarrow> rb_can_incr_head_n 1 rb \<longleftrightarrow> \<not> rb_full rb"
-  unfolding rb_can_incr_head_n_def
-  using rb_invalid_entries_full_num rb_invalid_entries_not_full_num by auto
+lemma rb_can_incr_head_n_lt:
+  "rb_can_incr_head_n N rb \<Longrightarrow> n < N \<Longrightarrow> rb_can_incr_head_n n rb"
+  unfolding rb_can_incr_head_n_def by(auto)
 
 
 text \<open>
   Attempting to increase it by more than the size of the ring always results in False.
-  The same with increasing it larger than the maximum number.
+  The same with increasing it larger than the maximum possible number.
 \<close>
 
 lemma rb_can_incr_tail_n_large:
@@ -1158,21 +1213,9 @@ lemma rb_can_incr_head_n_exceeds:
   by (metis One_nat_def Suc_pred not_less_eq rb_invalid_entries_gt_zero)
   
 
-
 text \<open>
-  If we can increment it (N+1) times, then it also goes for N times. 
-\<close>
-
-lemma rb_can_incr_tail_n_suc:
-  "rb_can_incr_tail_n (Suc n) rb \<Longrightarrow> rb_can_incr_tail_n n rb"
-  unfolding rb_can_incr_tail_n_def by(auto)
-
-lemma rb_can_incr_head_n_suc:
-  "rb_can_incr_head_n (Suc n) rb \<Longrightarrow> rb_can_incr_head_n n rb"
-  unfolding rb_can_incr_head_n_def by(auto)
-
-text \<open>
-  This holds for all n which are smaller than the maximum.
+  For any number $N$ which is smaller than the maximum possible increase, we can 
+  increase the head or tail pointer by this number $N$.
 \<close>
 
 lemma rb_can_incr_tail_n_lt_max:
@@ -1187,7 +1230,8 @@ lemma rb_can_incr_head_n_lt_max:
 
 
 text \<open>
-  Incrementing the head or tail pointer to the maximum, renders the ring empty or full
+  If we increment the tail or head pointer to the maximum possible, the resulting
+  state is either empty or full.
 \<close>
 
 lemma rb_incr_tail_n_max_empty:
@@ -1218,10 +1262,10 @@ assumes valid: "rb_valid rb"
   unfolding rb_can_incr_tail_n_max_def rb_empty_def rb_incr_tail_n_def rb_valid_entries_def
   apply(cases " tail rb \<le> head rb")
   apply (simp_all add: add.commute leD le_diff_conv rb_valid_def)
-   apply (metis leD less_diff_conv mod_less_eq_dividend)
+  apply (metis leD less_diff_conv mod_less_eq_dividend)
   using less_diff_conv mod_if by auto
 
-lemma rb_incr_head_n_not_empty:
+lemma rb_incr_head_n_not_full:
 assumes valid: "rb_valid rb"
   shows "n < rb_can_incr_head_n_max rb \<Longrightarrow>  \<not>rb_full (rb_incr_head_n n rb)"
   using valid 
@@ -1235,8 +1279,8 @@ assumes valid: "rb_valid rb"
 
 
 text \<open>
-  Increasing the tail or head pointer several times, preserves the validity of the 
-  ring buffer.
+  For any increase in the tail or head pointer which is less or equal to the maximum, 
+  the resulting ring buffer state remains valid. We do the proof by induction over n.
 \<close>
 
 lemma rb_incr_tail_n_valid:
@@ -1250,28 +1294,20 @@ next
   case (Suc n)
   then show ?case
   proof -
-    assume sn: "Suc n \<le> N"
+    assume sn: "Suc n \<le> N" 
     assume p: "n \<le> N \<Longrightarrow> rb_valid (rb_incr_tail_n n rb)"
 
-    from sn p have valid2:
-      "rb_valid (rb_incr_tail_n n rb)"
+    from sn p have valid2:  "rb_valid (rb_incr_tail_n n rb)"
       by(auto)
 
-    from incrtail sn have can_incr:      
-      "rb_can_incr_tail_n n rb"
+    from incrtail sn have can_incr:  "rb_can_incr_tail_n n rb"
       by (simp add: rb_can_incr_tail_n_def rb_can_incr_tail_n_max_def)
 
-    have notempty:
-      "\<not> rb_empty (rb_incr_tail_n n rb)"
-      
-      apply(subst rb_incr_tail_n_not_empty)
-      using valid2 can_incr   
-        apply(auto)
-       apply (simp add: valid) 
+    have notempty:  "\<not> rb_empty (rb_incr_tail_n n rb)"
+      apply(subst rb_incr_tail_n_not_empty, auto simp:valid)
       using Suc_le_lessD incrtail sn by blast
    
-    have ind:
-      "rb_valid (rb_incr_tail (rb_incr_tail_n n rb))"
+    have ind:  "rb_valid (rb_incr_tail (rb_incr_tail_n n rb))"
       using notempty valid2 rb_incr_tail_valid by blast
     
     show ?thesis
@@ -1281,10 +1317,40 @@ qed
 
 
 lemma rb_incr_head_n_valid:
-assumes valid: "rb_valid rb"  and  incrtail: "N = rb_can_incr_head_n_max rb"
-shows "n \<le> N \<Longrightarrow> rb_valid (rb_incr_head_n n rb)"
+assumes valid: "rb_valid rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
+    and ringdef: " ring rb (head rb) = Some y"
+  shows "n \<le> N \<Longrightarrow> rb_valid (rb_incr_head_n n rb)"
   oops
+(*
+proof (induct n)
+  case 0
+  then show ?case 
+    by(simp add: rb_incr_head_0 valid incrhead)
+next
+  case (Suc n)
+  then show ?case 
+  proof -
+    assume sn: "Suc n \<le> N" 
+    assume p: "n \<le> N \<Longrightarrow> rb_valid (rb_incr_head_n n rb)"
+   
+    from sn p have valid2:  "rb_valid (rb_incr_head_n n rb)"
+      by(auto)
 
+    from incrhead sn have can_incr:  "rb_can_incr_head_n n rb"
+      using Suc_leD rb_can_incr_head_n_lt_max valid by blast
+
+    have notfull:  "\<not> rb_full (rb_incr_head_n n rb)"
+      apply(subst rb_incr_head_n_not_full, auto simp:valid)
+      using Suc_le_lessD incrhead sn by blast
+
+    have ind: "rb_valid (rb_incr_head (rb_incr_head_n n rb))"
+        using notfull valid2 rb_incr_head_valid ringdef apply(auto)
+
+    show ?thesis 
+       using ind by (simp add: rb_incr_head_n_ind)
+  qed
+qed
+*)
 
 text \<open>
   Incrementing the tail or head pointer by a fixed amount of 0 or 1 keeps the number
