@@ -23,7 +23,7 @@
 
 CC=gcc
 
-CFLAGS=-O2 -Wall -Wextra -Werror -DCOMPILE
+CFLAGS=-O2 -Wall -Wextra -Werror -DCOMPILE -Wno-error=unused-function
 CFILES=CleanQ_SimpleQ.c
 HFILES=
 LIBS=-lpthread

@@ -90,8 +90,10 @@ struct buffer
     u64_t valid_offset;
     u64_t valid_length;
     u64_t flags;
+#ifdef COMPILE
     struct buffer *nextfree;
     struct buffer *self;
+#endif
 };
 
 
@@ -156,6 +158,57 @@ static int rb_enq(struct rb *rb, struct buffer slot)
     return ERR_OK;
 }
 
+///< enqueue function
+static int rb_enq_inlined(struct rb *rb, struct buffer slot)
+{
+    u32_t head = rb->head;
+    u32_t tail = rb->tail;
+    u32_t size = rb->size;
+    if (!(((head + 1) % size) != tail)) {
+        return ERR_QUEUE_FULL;
+    }
+    
+    struct buffer *ring = rb->ring;
+    ring[head].region = slot.region;
+    ring[head].offset = slot.offset;
+    ring[head].length = slot.length;
+    ring[head].valid_offset = slot.valid_offset;
+    ring[head].valid_length = slot.valid_length;
+    ring[head].flags = slot.flags;
+    
+    rb->head = head + 1 % size;
+
+    return ERR_OK;
+}
+
+
+
+static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
+{
+    u32_t head = rb->head;
+    u32_t tail = rb->tail;
+    u32_t size = rb->size;
+    if (!(((head + 1) % size) != tail)) {
+        return ERR_QUEUE_FULL;
+    }
+    
+    struct buffer *ring = rb->ring;
+    u32_t head1 = rb->head;
+    ring[head1].region = slot.region;
+    ring[head1].offset = slot.offset;
+    ring[head1].length = slot.length;
+    ring[head1].valid_offset = slot.valid_offset;
+    ring[head1].valid_length = slot.valid_length;
+    ring[head1].flags = slot.flags;
+    
+
+    u32_t head2 = rb->head;
+    u32_t size2 = rb->size;
+    rb->head = head2 + 1 % size2;
+
+    return ERR_OK;
+}
+
 /* 
  * --------------------------------------------------------------------------------------
  * Dequeue Operation
@@ -178,6 +231,56 @@ static int rb_deq(struct rb *rb, struct buffer *ret)
 
     *ret = rb->ring[rb->tail];
     rb->tail = (rb->tail + 1) % rb->size;
+
+    return ERR_OK;
+}
+
+static int rb_deq_inlined(struct rb *rb, struct buffer *ret)
+{
+
+    u32_t head = rb->head;
+    u32_t tail = rb->tail;
+    if (!(head != tail)) {
+        return ERR_QUEUE_EMTPY;
+    }
+
+
+    struct buffer *ring = rb->ring;
+    ret->region = ring[tail].region;
+    ret->offset = ring[tail].offset;
+    ret->length = ring[tail].length;
+    ret->valid_offset = ring[tail].valid_offset;
+    ret->valid_length = ring[tail].valid_length;
+    ret->flags = ring[tail].flags;
+
+    u32_t size = rb->size;
+    rb->tail = (tail + 1) % size;
+
+    return ERR_OK;
+}
+
+static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
+{
+
+    u32_t head = rb->head;
+    u32_t tail = rb->tail;
+    if (!(head != tail)) {
+        return ERR_QUEUE_EMTPY;
+    }
+
+
+    struct buffer *ring = rb->ring;
+    u32_t tail1 = rb->tail;
+    ret->region = ring[tail1].region;
+    ret->offset = ring[tail1].offset;
+    ret->length = ring[tail1].length;
+    ret->valid_offset = ring[tail1].valid_offset;
+    ret->valid_length = ring[tail1].valid_length;
+    ret->flags = ring[tail1].flags;
+
+    u32_t size = rb->size;
+    u32_t tail2 = rb->tail;
+    rb->tail = (tail2 + 1) % size;
 
     return ERR_OK;
 }
