@@ -1225,7 +1225,7 @@ lemma rb_incr_head_n_delta_valid_1:
 lemma rb_incr_head_n_delta_invalid_1:
  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_full rb \<Longrightarrow>
   rb_incr_head_n_delta 1 rb @ rb_invalid_entries (rb_incr_head_n 1 rb) = rb_invalid_entries rb"
-  by (metis append_Cons append_Nil list.collapse rb_incr_head_1 rb_incr_head_invalid_entries
+  by (metis append_Cons append_Nil list.collapse rb_incr_head_1 rb_incr_head_invalid_entries_tail
             rb_incr_head_n_delta_1 rb_invalid_entries_head2 rb_invalid_entries_never_empty_list)
 
 lemma rb_incr_tail_n_delta_valid_1:
@@ -1395,14 +1395,6 @@ shows "n \<le> N \<Longrightarrow> rb_valid_ptr (rb_incr_tail_n n rb)"
   by (simp add: incrtail rb_incr_tail_n_ind rb_incr_tail_n_not_empty 
                 rb_incr_tail_valid_ptr valid)
 
-lemma rb_incr_tail_n_valid:
-assumes valid: "rb_valid rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-shows "n \<le> N \<Longrightarrow> rb_valid (rb_incr_tail_n n rb)"
-  apply(induct n, simp add: rb_incr_tail_zero_valid_ptr valid)
-  by (simp add: incrtail rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_valid 
-                rb_valid_implies_ptr_valid valid)
-
-
 lemma rb_incr_head_n_valid_ptr:
 assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
   shows "n \<le> N \<Longrightarrow> rb_valid_ptr (rb_incr_head_n n rb)"
@@ -1410,14 +1402,8 @@ assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
   by (simp add: incrhead rb_incr_head_n_ind rb_incr_head_n_not_full 
                 rb_incr_head_valid_ptr valid)
 
-lemma rb_incr_head_n_valid:
-assumes valid: "rb_valid rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
- shows "n \<le> N \<Longrightarrow> \<forall>i \<in> set (rb_incr_head_n_delta n rb). ring rb (i) = Some y \<Longrightarrow> rb_valid (rb_incr_head_n n rb)"
-  apply(induct n, simp add: rb_incr_head_zero_valid valid)
-  unfolding rb_valid_def
-  apply(auto simp:incrhead rb_incr_head_n_valid_ptr rb_valid_implies_ptr_valid valid)
-  unfolding rb_incr_head_n_ind rb_incr_head_n_delta_def 
-  oops
+
+
 
 
 text \<open>
@@ -1531,7 +1517,7 @@ assumes valid: "rb_valid_ptr rb"  and  canincr: "N = rb_can_incr_head_n_max rb"
   shows "n \<le> N \<Longrightarrow> rb_invalid_entries (rb_incr_head_n n rb) = drop n (rb_invalid_entries rb)"
   apply(induct n, simp add:rb_incr_head_0 rb_valid_implies_ptr_valid valid)  
   using valid canincr
-  by (simp add: drop_Suc rb_incr_head_invalid_entries rb_incr_head_n_ind 
+  by (simp add: drop_Suc rb_incr_head_invalid_entries_tail rb_incr_head_n_ind 
                 rb_incr_head_n_not_full rb_incr_head_n_valid_ptr rb_valid_implies_ptr_valid tl_drop)
 
 
@@ -1555,7 +1541,7 @@ lemma rb_incr_head_n_delta_invalid_entries:
   rb_incr_head_n_delta n rb @ rb_invalid_entries (rb_incr_head_n n rb) = rb_invalid_entries rb"
   apply(induct n, simp add: rb_incr_head_0 rb_incr_head_n_delta_0)
   unfolding rb_incr_head_n_delta_def
-  by (metis Suc_leD Suc_le_lessD append_take_drop_id drop_Suc rb_incr_head_invalid_entries 
+  by (metis Suc_leD Suc_le_lessD append_take_drop_id drop_Suc rb_incr_head_invalid_entries_tail 
             rb_incr_head_n_ind rb_incr_head_n_not_full rb_incr_head_n_valid_ptr 
             same_append_eq tl_drop)
 
@@ -1576,18 +1562,6 @@ lemma rb_incr_tail_n_delta_invalid_entries:
       rb_incr_tail_1 rb_incr_tail_n_delta_def rb_incr_tail_n_delta_invalid_1 
       rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_n_valid_drop 
       rb_incr_tail_n_valid_ptr take_add)
-
-
-(* some more lemmas follow, needs sorting *)
-
-
-lemma rb_inct_tail_n_drop_first_n:
-assumes valid: "rb_valid_ptr rb" 
-  shows "rb_can_incr_tail_n n rb  \<Longrightarrow> rb_valid_entries (rb_incr_tail_n n rb) = drop n (rb_valid_entries rb)"
-  apply(induct n, simp add: rb_incr_tail_0 valid)
-  by (simp add: rb_can_incr_tail_n_lt_max rb_incr_tail_n_valid_drop valid)
-
-
 
 
 
@@ -1630,40 +1604,34 @@ assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
   by (metis diff_Suc_eq_diff_pred  length_drop rb_can_incr_head_n_max_def 
             rb_incr_head_n_max_n)
 
+ 
+
+text \<open>
+  Finally, we can show that increasing the head or tail pointer several times 
+\<close>
+
+
+lemma rb_incr_tail_n_valid:
+assumes valid: "rb_valid rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
+shows "n \<le> N \<Longrightarrow> rb_valid (rb_incr_tail_n n rb)"
+  apply(induct n, simp add: rb_incr_tail_zero_valid_ptr valid)
+  by (simp add: incrtail rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_valid 
+                rb_valid_implies_ptr_valid valid)
+
+lemma rb_incr_head_n_valid:
+assumes valid: "rb_valid rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
+ shows "n \<le> N \<Longrightarrow> \<forall>i \<in> set (rb_incr_head_n_delta n rb). ring rb (i) = Some y \<Longrightarrow> rb_valid (rb_incr_head_n n rb)"
+  apply(induct n, simp add: rb_incr_head_zero_valid valid)
+  using valid incrhead unfolding rb_valid_def 
+  apply(auto simp:incrhead rb_incr_head_n_valid_ptr rb_valid_implies_ptr_valid valid)
+  apply(subst rb_incr_head_n_ind)
+  by (metis Un_iff rb_incr_head_n_delta_valid_entries rb_incr_head_n_ind rb_incr_head_n_ring 
+            rb_valid_implies_ptr_valid set_append valid)
 
 
 
 
 
-lemma 
-assumes const_delta: "delta \<le> length (rb_valid_entries rb)"  and  valid: "rb_valid rb"
-  shows "set (rb_valid_entries (rb_incr_tail_n delta rb)) \<subseteq> set (rb_valid_entries rb)"
-  using const_delta valid rb_inct_tail_n_drop_first_n 
-  by (simp add: rb_inct_tail_n_drop_first_n rb_can_incr_tail_n_def rb_valid_def set_drop_subset)
-  
-
-
-  
-
-lemma rb_incr_head_n_ind_invalid:
-  assumes valid: "rb_valid rb" and
-          incr: "rb_can_incr_head_n 1 rb"
-  shows "rb_invalid_entries rb = [head rb] @ rb_invalid_entries (rb_incr_head_n 1 rb)"
-  by (metis append_Cons append_Nil incr list.exhaust_sel rb_can_incr_head_1 rb_incr_head_1 
-      rb_incr_head_invalid_entries rb_invalid_entries_head2 rb_invalid_entries_never_empty_list 
-      rb_valid_def valid)
-
-(*
-lemma rb_incr_head_n_ind_invalid2:
-  assumes valid: "rb_valid rb" and
-          incr: "rb_can_incr_head_n 2 rb"
-  shows "rb_invalid_entries rb = [head rb, head (rb_incr_head_n 1 rb)] @ rb_invalid_entries (rb_incr_head_n 2 rb)"
-proof -
-  from rb_incr_head_n_ind_invalid assms 
-  have "rb_invalid_entries rb = [head rb] @ [head (rb_incr_head_n 1 rb)] @ rb_invalid_entries (rb_incr_head_n 2 rb)"
-  
-qed
-*)
 
 (* ==================================================================================== *)
 subsection \<open>Writing Entries in the Descriptor Ring\<close>
