@@ -2155,8 +2155,11 @@ lemma rb_delta_head_inv_helper2:
   using rb_delta_head_inv_helper assms
 proof -
   from assms have core: "rb_invalid_entries rb = [head rb] @ rb_invalid_entries (rb_incr_head_n 1 rb)"
-    unfolding rb_invalid_entries_def  
-    by (smt Suc_1 rb_can_incr_head_n_suc rb_incr_head_n_ind_invalid rb_invalid_entries_def)
+    unfolding rb_incr_head_1
+    by (simp add: rb_can_incr_head_n_def rb_incr_head_invalid_entries_tail 
+                  rb_invalid_entries_head2 rb_invalid_entries_never_empty_list 
+                  rb_invalid_entries_not_full_num rb_valid_def)
+    
 
   from core have core2: "take 1 (rb_invalid_entries rb) = [head rb]"
     by simp
@@ -2211,11 +2214,11 @@ lemma rb_delta_head_inv_helper3:
   assumes frame: "frame_rb_weak_right st' st" and
           head: "head st = head (rb_incr_head_n n st')" and
           enq: "rb_can_incr_head_n n st'"
-  shows "rb_incr_head_n_delta (Suc n) st' = [head st'] @ rb_incr_head_n_delta n (rb_incr_head_n 1 st')" 
+        shows "rb_incr_head_n_delta (Suc n) st' = [head st'] @ rb_incr_head_n_delta n (rb_incr_head_n 1 st')" 
   by (metis (no_types, lifting) One_nat_def Suc_eq_plus1 append_Cons append_Nil diff_Suc_1 enq 
       frame frame_rb_weak_right_def less_eq_Suc_le list.size(3) list.size(4) not_add_less1 
       order.order_iff_strict plus_1_eq_Suc rb_can_incr_head_n_def rb_incr_head_1 
-      rb_incr_head_invalid_entries rb_incr_head_n_delta_def rb_invalid_entries_full2 
+      rb_incr_head_invalid_entries_tail rb_incr_head_n_delta_def rb_invalid_entries_full2 
       rb_invalid_entries_head2 rb_invalid_entries_never_empty_list rb_valid_def take_Suc take_eq_Nil)
 
 text \<open>
@@ -2314,8 +2317,9 @@ lemma rb_weak_delta_tail_n:
           deq: "rb_can_incr_tail_n n st'"
   shows  "rb_valid_entries st' = (rb_delta_tail n st') @ (rb_valid_entries st)"
   using assms unfolding rb_delta_tail_def frame_rb_weak_left_def
-  using frame_rb_weak_left_def frame_rb_weak_left_state 
-        rb_inct_tail_n_drop_first_n rb_valid_implies_ptr_valid by fastforce
+  by (metis append_take_drop_id frame frame_rb_weak_left_state rb_can_incr_tail_n_lt_max 
+            rb_incr_tail_n_valid_drop rb_valid_def)
+
 
 lemma rb_weak_delta_head_n:
   fixes st' st 
