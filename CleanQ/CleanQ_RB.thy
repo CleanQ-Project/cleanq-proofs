@@ -184,8 +184,8 @@ subsection \<open>Reasoning about valid entries\<close>
 
 text \<open>
   First, we can show that the union of the set of valid entries and invalid entries produce
-  the set of entries from ${0..< size}$. And the two sets are distinct from each other,
-  i.e. their intersection is empty. 
+  the set of entries from ${0..< size}$. We can further show, that the two sets have an 
+  empty intersection, as both are distinct from one another. 
 \<close>
 
 lemma rb_valid_invalid_entries_union:
@@ -199,9 +199,36 @@ lemma rb_valid_invalid_entries_inter:
   unfolding rb_valid_entries_def rb_invalid_entries_def
   by auto
 
+text \<open>
+  Taking the set difference between the set of all entries and the valid or invalid
+  set we can obtain the respective other set.
+\<close>
+
+lemma rb_valid_invalid_entries_diff1:
+assumes valid: "rb_valid_ptr rb"
+  shows "set (rb_valid_entries rb) = {0..<(size rb)} - set (rb_invalid_entries rb)"
+  using rb_valid_invalid_entries_union rb_valid_invalid_entries_inter valid by blast
+
+
+lemma rb_valid_invalid_entries_diff2:
+assumes valid: "rb_valid_ptr rb"
+  shows "set (rb_invalid_entries rb) = {0..<(size rb)} - set (rb_valid_entries rb)"
+  using rb_valid_invalid_entries_union rb_valid_invalid_entries_inter valid by blast
+
+
+text \<open>
+  The length of the lists sums up to the number of entries.
+\<close>
+
 lemma rb_valid_invalid_entries_lengths:
 assumes valid: "rb_valid_ptr rb"
   shows "length (rb_valid_entries rb) + length (rb_invalid_entries rb) = (size rb)"
+  using valid unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_ptr_def
+  by(auto)
+
+lemma rb_valid_invalid_entries_lengths2:
+assumes valid: "rb_valid_ptr rb"
+  shows "length (rb_valid_entries rb) + length (rb_invalid_entries rb) = length [0..< size rb]"
   using valid unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_ptr_def
   by(auto)
 
@@ -292,27 +319,26 @@ text \<open>
   the head.
 \<close>
 
+lemma rb_invalid_entries_full:
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> rb_invalid_entries rb = [head rb]"
+  unfolding rb_invalid_entries_def rb_full_def 
+  by (simp add: le_Suc_eq not_less rb_valid_ptr_def upt_rec)
+
+lemma rb_invalid_entries_full2:
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> rb_invalid_entries rb = [head rb]"
+  unfolding rb_invalid_entries_def rb_full_def 
+  by (metis rb_full_def rb_invalid_entries_def rb_invalid_entries_full)
+
+lemma rb_valid_entries_full2:
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> set (rb_valid_entries rb) = {0..< size rb} - {head rb}"
+  apply(subst rb_valid_invalid_entries_diff1, simp)
+  apply(subst rb_invalid_entries_full2, auto)
+  done
 
 lemma rb_valid_entries_full:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> set (rb_valid_entries rb) = {0..< size rb} - {head rb}"
-proof 
-  assume p1: "rb_valid_ptr rb "
-  assume p2:" rb_full rb" 
-
-  have X1:
-    "Suc (head rb) = tail rb \<Longrightarrow> {tail rb..<CleanQ_RB.size rb} \<union> {0..<head rb} 
-                                  = {Suc (head rb)..<CleanQ_RB.size rb} \<union> {0..<head rb}"
-    by(auto)
-
-  show " set (rb_valid_entries rb) = {0..<CleanQ_RB.size rb} - {head rb}"
-    using p1 p2
-    apply(cases "tail rb \<le> head rb")
-     apply(simp_all add: rb_valid_ptr_def rb_full_def rb_valid_entries_def)
-     apply (metis Diff_insert_absorb Suc_lessI le_imp_less_Suc lessThan_Suc 
-                  lessThan_atLeast0 lessThan_iff less_irrefl_nat mod_if mod_self)
-     apply(subst X1)
-    by(auto)
-next 
+  apply(rule iffI, simp add:rb_valid_entries_full2)
+proof -
   assume p1: "rb_valid_ptr rb"
   assume p2: "set (rb_valid_entries rb) = {0..<CleanQ_RB.size rb} - {head rb}"
 
@@ -352,21 +378,12 @@ next
     using eq by(simp add:rb_full_def)
 qed
 
-lemma rb_invalid_entries_full:
-  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> rb_invalid_entries rb = [head rb]"
-  unfolding rb_invalid_entries_def rb_full_def 
-  by (simp add: le_Suc_eq not_less rb_valid_ptr_def upt_rec)
 
 
 text \<open>
   Last we show that the number of valid entries is less than the size of the ring and
   the total number of valid and invalid entries is the size of the ring.
 \<close>
-
-lemma rb_valid_invalid_entries_size:
-  "rb_valid_ptr rb \<Longrightarrow> length (rb_valid_entries rb) + length (rb_invalid_entries rb) = size rb"
-  unfolding rb_valid_ptr_def rb_valid_entries_def rb_invalid_entries_def by(auto)
-
 
 lemma rb_valid_entries_less_size:
   "rb_valid_ptr rb \<Longrightarrow> length (rb_valid_entries rb) < size rb"
@@ -387,7 +404,7 @@ lemma rb_valid_entries_full_num:
 
 lemma rb_valid_entries_empty_num:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> length (rb_valid_entries rb) = 0"
-  using rb_valid_entries_empty_list rb_valid_invalid_entries_size
+  using rb_valid_entries_empty_list rb_valid_invalid_entries_lengths
         rb_valid_entries_empty_list_length
   by auto
 
@@ -415,7 +432,7 @@ lemma rb_invalid_entries_full_num:
 
 lemma rb_invalid_entries_empty_num:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> length (rb_invalid_entries rb) = size rb"
-  using rb_valid_entries_empty_list rb_valid_invalid_entries_size 
+  using rb_valid_entries_empty_list rb_valid_invalid_entries_lengths 
   using rb_valid_entries_empty_list_length by fastforce
 
 lemma rb_invalid_entries_not_full_num:
@@ -427,7 +444,7 @@ lemma rb_invalid_entries_not_full_num:
 
 lemma rb_invalid_entries_not_empty_num:
   "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> length (rb_invalid_entries rb) < size rb"
-  using less_le rb_valid_entries_empty_list_length rb_valid_invalid_entries_size by fastforce
+  using less_le rb_valid_entries_empty_list_length rb_valid_invalid_entries_lengths by fastforce
 
 text \<open>
   We can express this as subset relations
@@ -525,6 +542,7 @@ lemma rb_invalid_entries_tail_not_empty2:
 lemma rb_invalid_entries_tail_not_empty3:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> (tail rb) \<notin> set (rb_invalid_entries rb)"
   using rb_full_not_empty rb_invalid_entries_tail_not_empty1 by(auto)
+
 
 text \<open>
   Moreover, we can show that if there are valid elements in the ring buffer, 
@@ -1548,19 +1566,6 @@ lemma rb_incr_tail_n_delta_invalid_entries:
 
 
 (* some more lemmas follow, needs sorting *)
-
-
-lemma rb_incr_tail_n_lt_max_not_empty:
-  assumes valid: "rb_valid rb"  and  incrtail: "rb_can_incr_tail_n N rb" 
-     and leq: "n \<le> N"
-  shows "rb_can_incr_tail_n (N-n) (rb_incr_tail_n n rb)"
-  using leq incrtail valid unfolding rb_can_incr_tail_n_def rb_incr_tail_n_def rb_valid_entries_def rb_valid_def
-  apply(auto)
-  oops
-
-
-
-
 
 
 lemma rb_inct_tail_n_drop_first_n:
