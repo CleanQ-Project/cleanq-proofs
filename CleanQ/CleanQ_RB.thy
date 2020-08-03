@@ -1637,7 +1637,8 @@ lemma rb_incr_head_n_ind_invalid:
           incr: "rb_can_incr_head_n 1 rb"
   shows "rb_invalid_entries rb = [head rb] @ rb_invalid_entries (rb_incr_head_n 1 rb)"
   by (metis append_Cons append_Nil incr list.exhaust_sel rb_can_incr_head_1 rb_incr_head_1 
-      rb_incr_head_invalid_entries rb_invalid_entries_head2 rb_invalid_entries_never_empty_list valid)
+      rb_incr_head_invalid_entries rb_invalid_entries_head2 rb_invalid_entries_never_empty_list 
+      rb_valid_def valid)
 
 (*
 lemma rb_incr_head_n_ind_invalid2:
@@ -2179,8 +2180,7 @@ lemma rb_delta_head_inv_helper:
   assumes valid: "rb_valid rb" and
           head: "rb_can_incr_head_n 1 rb"
   shows "take 1 (rb_invalid_entries rb) = [head rb]"
-  by (simp add: rb_invalid_entries_head2 rb_invalid_entries_never_empty_list 
-      take_Suc valid)
+  by (metis head rb_can_incr_head_1 rb_incr_head_n_delta_1 rb_incr_head_n_delta_def rb_valid_def valid)
 
 lemma rb_delta_head_inv_helper2:
   assumes valid: "rb_valid rb" and
@@ -2248,14 +2248,12 @@ lemma rb_delta_head_inv_helper3:
           head: "head st = head (rb_incr_head_n n st')" and
           enq: "rb_can_incr_head_n n st'"
   shows "rb_delta_head_inv (Suc n) st' = [head st'] @ rb_delta_head_inv n (rb_incr_head_n 1 st')" 
-  by (metis (no_types, lifting) One_nat_def Suc_eq_plus1 append_Cons append_Nil diff_Suc_1 enq frame 
-      frame_rb_weak_right_def le_neq_implies_less less_eq_Suc_le list.size(3) list.size(4) not_add_less1 
-      plus_1_eq_Suc rb_can_incr_head_n_def rb_delta_head_inv_def rb_incr_head_1 rb_incr_head_invalid_entries 
-      rb_invalid_entries_full rb_invalid_entries_head2 rb_invalid_entries_never_empty_list take_Suc take_eq_Nil)
+  by (metis (no_types, lifting) One_nat_def Suc_eq_plus1 append_Cons assms(1) assms(3) frame_rb_weak_right_def 
+      le_add1 less_eq_Suc_le list.size(3) list.size(4) nat_neq_iff not_less plus_1_eq_Suc rb_can_incr_head_n_def rb_delta_head_inv_def rb_incr_head_1 rb_incr_head_invalid_entries rb_invalid_entries_full rb_invalid_entries_head2 rb_valid_def self_append_conv2 take_Suc take_eq_Nil)
 
 
 text \<open>
-  This next lemma shows properties about the definition of rb_delta_head
+  This next lemma shows properties about the definition of rb delta head
 \<close>
 
 lemma rb_delta_head_size_nonzero:
@@ -2284,7 +2282,8 @@ proof -
 
   from rb_delta have rb_delta_empty: "rb_delta_head \<delta>hd st' = []"
     unfolding rb_delta_head_def
-    by (metis frame frame_rb_weak_right_def less_irrefl rb_valid_def hd hd_asm upt_rec)
+    by (metis frame frame_rb_weak_right_def hd hd_asm less_not_refl rb_valid_def 
+        rb_valid_ptr_def upt_rec)
 
   from rb_delta_empty have "rb_valid_entries st' = rb_valid_entries st"
     unfolding rb_valid_entries_def
@@ -2299,7 +2298,11 @@ lemma rb_incr_head_wrap:
   assumes "rb_valid rb"
   shows "head rb = (size rb -1) \<Longrightarrow> head (rb_incr_head_n 1 rb) = 0" 
   unfolding rb_incr_head_n_def
-  by (metis assms ext_inject le_add_diff_inverse2 less_imp_le_nat mod_self rb_valid_def surjective update_convs(2))
+  by (metis (no_types, lifting) One_nat_def Suc_leI append_Nil2 assms diff_is_0_eq' 
+      diff_zero ext_inject le_add_diff_inverse2 less_imp_le_nat mod_self not_le_imp_less 
+      rb_incr_tail_valid_entries rb_invalid_entries_def rb_invalid_entries_never_empty_list 
+      rb_valid_def rb_valid_entries_def rb_valid_entries_tail_empty2 rb_valid_entries_tail_not_empty1 
+      surjective update_convs(2) upt_0 upt_eq_Cons_conv)
 
 text \<open>
   Similarly we show the influence of the tail moving on the valid entries in the ring buffer
@@ -2313,7 +2316,7 @@ lemma rb_delta_head_one:
   unfolding rb_delta_head_def rb_valid_def
 proof auto
   show "\<not> Suc (head st') < CleanQ_RB.size st' \<Longrightarrow> [head st'..<CleanQ_RB.size st'] @ [0..<Suc (head st') mod CleanQ_RB.size st'] = [head st']"
-    by (metis Suc_lessI append.right_neutral mod_self rb_valid_def upt_0 upt_rec valid)
+    by (metis Suc_lessI less_not_refl mod_self rb_valid_def rb_valid_ptr_def self_append_conv upt_rec valid)
 qed
 
 lemma rb_delta_head_one_rec:
@@ -2349,7 +2352,8 @@ lemma rb_weak_list_delta_head_one:
           enq: "rb_can_enq st'"
   shows  "rb_valid_entries st' @ rb_delta_head 1 st' = (rb_valid_entries st)"
   using enq
-  by (metis frame frame_rb_weak_left_def rb_can_enq_def rb_incr_head_1 rb_incr_head_valid_entries_headin rb_valid_entries_head head)
+  by (metis frame frame_rb_weak_left_def head rb_can_enq_def rb_incr_head_1 
+      rb_incr_head_valid_entries_headin rb_valid_def rb_valid_entries_head)
 
   
 lemma rb_weak_list_delta_head_alt_one:
@@ -2359,8 +2363,8 @@ lemma rb_weak_list_delta_head_alt_one:
           enq: "rb_can_enq st'"
   shows  "rb_valid_entries st' @ rb_delta_head_alt 1 st' = (rb_valid_entries st)"
   using enq
-  by (metis frame frame_rb_weak_left_def rb_can_enq_def rb_incr_head_1 
-      rb_incr_head_valid_entries_headin rb_valid_entries_head head)
+  by (metis frame frame_rb_weak_left_def head rb_can_enq_def rb_incr_head_1 
+      rb_incr_head_valid_entries_headin rb_valid_def rb_valid_entries_head)
 
 
 lemma rb_weak_list_delta_head_one_rec:
@@ -2370,8 +2374,8 @@ lemma rb_weak_list_delta_head_one_rec:
           enq: "rb_can_enq st'"
   shows  "rb_valid_entries st' @ rb_delta_head_rec 1 st = (rb_valid_entries st)"
   using enq
-  by (metis frame frame_rb_weak_left_def rb_can_enq_def rb_incr_head_1 rb_incr_head_valid_entries_headin 
-      rb_valid_entries_head head)
+  by (metis frame frame_rb_weak_left_def head rb_can_enq_def rb_incr_head_1 
+      rb_incr_head_valid_entries_headin rb_valid_def rb_valid_entries_head)
 
 lemma rb_weak_list_delta_head_one_inv:
   fixes st' st 
@@ -2380,8 +2384,9 @@ lemma rb_weak_list_delta_head_one_inv:
           enq: "rb_can_enq st'"
   shows  "rb_valid_entries st' @ rb_delta_head_inv 1 st = (rb_valid_entries st)"
   using enq
-  by (metis frame frame_rb_weak_left_def rb_can_enq_def rb_incr_head_1 rb_incr_head_valid_entries_headin 
-      rb_valid_entries_head head)
+  by (metis frame frame_rb_weak_left_def head rb_can_enq_def 
+      rb_incr_head_1 rb_incr_head_valid_entries_headin rb_valid_def rb_valid_entries_head)
+
 
 text \<open>
   Similar proofs but for delta larger than 1: TODO
@@ -2394,9 +2399,8 @@ lemma rb_weak_list_delta_tail_n:
           deq: "rb_can_incr_tail_n n st'"
   shows  "rb_valid_entries st' = (rb_delta_tail n st') @ (rb_valid_entries st)"
   using assms unfolding rb_delta_tail_def frame_rb_weak_left_def
-  by (smt ext_inject rb_delta_helper2 rb_delta_tail_def rb_incr_tail_n_def rb_inct_tail_n_drop_first_n 
-      rb_valid_entries_def surjective update_convs(3))
-
+  using frame_rb_weak_left_def frame_rb_weak_left_state 
+        rb_inct_tail_n_drop_first_n rb_valid_implies_ptr_valid by fastforce
 (*
 lemma rb_weak_list_delta_head_invalid:
   fixes st' st 
