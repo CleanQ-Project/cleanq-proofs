@@ -628,6 +628,7 @@ assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"
   shows "rb_valid_entries (rb_incr_tail rb) = drop 1 (rb_valid_entries rb)"
   using valid notempty by (simp add:rb_incr_tail_valid_entries)
 
+
 text \<open>
   Likewise, the set of invalid entries is being extended by the previous tail pointer
 \<close>
@@ -638,7 +639,6 @@ assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"
   using notempty valid mod_Suc
   unfolding rb_incr_tail_def rb_invalid_entries_def rb_empty_def rb_valid_ptr_def
   by (auto, metis less_Suc_eq_le upt_Suc)
-
 
 
 text\<open>
@@ -684,6 +684,12 @@ shows "length (rb_valid_entries (rb_incr_tail rb)) = length (rb_valid_entries rb
 lemma rb_incr_tail_invalid_entries_length:
 assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
 shows "length (rb_invalid_entries (rb_incr_tail rb)) = length (rb_invalid_entries rb) + 1"
+  apply(subst rb_incr_tail_invalid_entries)
+  by(auto simp:notempty valid)
+
+lemma rb_incr_tail_invalid_entries_length2:
+assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
+shows "length (rb_invalid_entries (rb_incr_tail rb)) - 1 = length (rb_invalid_entries rb)"
   apply(subst rb_incr_tail_invalid_entries)
   by(auto simp:notempty valid)
 
@@ -767,13 +773,19 @@ text \<open>
   remainder is the tail of the original list.
 \<close>
 
-lemma rb_incr_head_invalid_entries:
+lemma rb_incr_head_invalid_entries_tail:
 assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
   shows "rb_invalid_entries (rb_incr_head rb) = tl (rb_invalid_entries rb)"
   using notfull valid mod_Suc
   unfolding rb_invalid_entries_def rb_incr_head_def rb_full_def rb_valid_ptr_def
   by auto
- 
+
+lemma rb_incr_head_invalid_entries_drop:
+assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
+  shows "rb_invalid_entries (rb_incr_head rb) = drop 1 (rb_invalid_entries rb)"
+  using notfull valid rb_incr_head_invalid_entries_tail
+  by (simp add: rb_incr_head_invalid_entries_tail drop_Suc)
+
 
 text \<open>
   By taking everything but the last element, we get the original list back. 
@@ -799,7 +811,7 @@ assumes notempty: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"
 lemma rb_incr_head_invalid_entries_superset:
 assumes notempty: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
 shows "set (rb_invalid_entries (rb_incr_head rb)) \<subset> set (rb_invalid_entries rb)"
-  apply(subst rb_incr_head_invalid_entries)
+  apply(subst rb_incr_head_invalid_entries_tail)
   apply(simp_all add:notempty valid)
   using notempty valid rb_invalid_entries_distinct rb_invalid_entries_never_empty_list
   by (metis distinct.simps(2) list.exhaust_sel list.set_sel(1) psubsetI set_subset_Cons)
@@ -826,13 +838,13 @@ assumes notempty: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"
 lemma rb_incr_head_invalid_entries_length1:
 assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
   shows "length (rb_invalid_entries rb) = length (rb_invalid_entries (rb_incr_head rb)) + 1"
-  using notfull valid rb_incr_head_invalid_entries 
+  using notfull valid rb_incr_head_invalid_entries_tail
   using rb_invalid_entries_never_empty_list by force
 
 lemma rb_incr_head_invalid_entries_length2:
 assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
   shows "length (rb_invalid_entries (rb_incr_head rb)) = length (rb_invalid_entries rb) - 1"
-  apply(subst rb_incr_head_invalid_entries)
+  apply(subst rb_incr_head_invalid_entries_tail)
   by(simp_all add: notfull valid)
 
 
@@ -857,6 +869,7 @@ assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid_ptr rb"
   shows "head rb \<in> set (rb_valid_entries (rb_incr_head rb))"
   using notfull valid apply(subst rb_incr_head_valid_entries)
   by(auto)
+
 
 text \<open>
   Incrementing the head pointer preserves the validity invariant of the ring buffer.
