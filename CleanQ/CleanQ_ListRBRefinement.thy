@@ -119,64 +119,68 @@ lemma
   refine_hd_list_tl_ring_tyx:
   fixes buf sc
   assumes precond: "Semantic.xstate.Normal sc \<in> CleanQ_RB_deq_x_pre K buf"
-  shows "buf = ring (rTYX sc) (tail (rTYX sc)) \<Longrightarrow> buf = hd (lTYX (CleanQ_RB2List sc))"
-  unfolding CleanQ_RB2List_def using precond 
+  shows "buf = the (ring (rTYX sc) (tail (rTYX sc))) \<Longrightarrow> buf = hd (lTYX (CleanQ_RB2List sc))"
+  using precond unfolding CleanQ_RB2List_def 
   apply auto
-  by (metis (mono_tags, lifting) CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def CleanQ_RB_deq_x_pre_def 
-      CollectD I4_rb_valid.elims(2) imageE prod.sel(1) rb_deq_def rb_deq_list_was_head state_simps(1))   
+  by (metis (mono_tags, lifting) CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def 
+      CleanQ_RB_deq_x_pre_def CollectD I4_rb_valid.elims(2) imageE prod.sel(1) rb_deq_def 
+      rb_deq_list_was_head rb_valid_def state_simps(1))
+  
+  
 
 lemma 
   refine_hd_list_tl_ring_txy:
   fixes buf sc
   assumes precond: "Semantic.xstate.Normal sc \<in> CleanQ_RB_deq_y_pre K buf"
-  shows "buf = ring (rTXY sc) (tail (rTXY sc)) \<Longrightarrow> buf = hd (lTXY (CleanQ_RB2List sc))"
-  unfolding CleanQ_RB2List_def using precond 
+  shows "buf = the (ring (rTXY sc) (tail (rTXY sc))) \<Longrightarrow> buf = hd (lTXY (CleanQ_RB2List sc))"
+  using precond unfolding CleanQ_RB2List_def CleanQ_RB_deq_y_pre_def
   apply auto
-  by (metis (mono_tags, lifting) CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_y_possible_def CleanQ_RB_deq_y_pre_def 
-      CollectD I4_rb_valid.elims(2) imageE prod.sel(1) rb_deq_def rb_deq_list_was_head state_simps(1))  
+  by (metis CleanQ_RB_deq_y_possible_def prod.sel(1) rb_deq_def rb_deq_list_was_head rb_valid_def)
+  
 
 
 lemma 
   deq_x_rb_pre_implies_list_pre:
   assumes precond: "Semantic.xstate.Normal sc \<in> CleanQ_RB_deq_x_pre K buf"
-  shows "CleanQ_RB_Invariants K sc \<and> buf = ring (rTYX sc) (tail (rTYX sc)) \<and> \<not> rb_empty (rTYX sc) 
+  shows "CleanQ_RB_Invariants K sc \<and> buf = the (ring (rTYX sc) (tail (rTYX sc))) \<and> \<not> rb_empty (rTYX sc)
          \<Longrightarrow> CleanQ_List_Invariants K (CleanQ_RB2List sc) \<and> buf = hd (lTYX (CleanQ_RB2List sc)) \<and> lTYX (CleanQ_RB2List sc) \<noteq> []"
 proof -
-   have precond_buf: " buf = hd (lTYX (CleanQ_RB2List sc)) \<longleftrightarrow> buf = ring (rTYX sc) (tail (rTYX sc))"
+   have precond_buf: " buf = hd (lTYX (CleanQ_RB2List sc)) \<longleftrightarrow> buf = the (ring (rTYX sc) (tail (rTYX sc)))"
        using refine_hd_list_tl_ring_tyx precond
-       by (smt CleanQ_RB_deq_x_pre_def CollectD image_def state_simps(1))
+       by (smt CleanQ_RB_deq_x_pre_def CollectD Semantic.xstate.inject(1) imageE rb_read_tail_def)
+        
    have non_empty: "CleanQ_RB_deq_x_possible sc \<Longrightarrow> lTYX (CleanQ_RB2List sc) \<noteq> []" 
-     using precond unfolding CleanQ_RB_deq_x_possible_def
-     by (metis (no_types, lifting) CleanQ_List_State.select_convs(4) CleanQ_RB2List_def 
-         CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_pre_def CollectD I3_rb_img.elims(2) 
-         I4_rb_valid.elims(2) imageE list.sel(2) rb_deq_list_not_in rb_deq_list_tail rb_deq_list_was_in state_simps(1))
-
+     using precond unfolding CleanQ_RB_deq_x_possible_def CleanQ_RB2List_def CleanQ_RB_deq_x_pre_def
+     using I4_rb_valid.elims(2) rb_deq_not_empty by auto
+     
+      
    show ?thesis  using non_empty precond_buf CleanQ_RB_Invariants_List_Invariants      
      using precond non_empty refine_hd_list_tl_ring_tyx precond_buf 
      unfolding CleanQ_RB2List_def CleanQ_RB_deq_x_pre_def CleanQ_List_deq_x_pre_def
-     by blast
+     by (smt CollectD imageE rb_read_tail_def state_simps(1))
  qed
 
 
 lemma 
   deq_y_rb_pre_implies_list_pre:
   assumes precond: "Semantic.xstate.Normal sc \<in> CleanQ_RB_deq_y_pre K buf"
-  shows "CleanQ_RB_Invariants K sc \<and> buf = ring (rTXY sc) (tail (rTXY sc)) \<and> \<not> rb_empty (rTXY sc) 
+  shows "CleanQ_RB_Invariants K sc \<and> buf = the (ring (rTXY sc) (tail (rTXY sc))) \<and> \<not> rb_empty (rTXY sc) 
          \<Longrightarrow> CleanQ_List_Invariants K (CleanQ_RB2List sc) \<and> buf = hd (lTXY (CleanQ_RB2List sc)) \<and> lTXY (CleanQ_RB2List sc) \<noteq> []"
 proof -
-   have precond_buf: " buf = hd (lTXY (CleanQ_RB2List sc)) \<longleftrightarrow> buf = ring (rTXY sc) (tail (rTXY sc))"
-       using refine_hd_list_tl_ring_txy precond
-       by (smt CleanQ_RB_deq_y_pre_def CollectD image_def state_simps(1))
+   have precond_buf: " buf = hd (lTXY (CleanQ_RB2List sc)) \<longleftrightarrow> buf = the (ring (rTXY sc) (tail (rTXY sc)))"
+     using refine_hd_list_tl_ring_txy precond unfolding CleanQ_RB_deq_y_pre_def
+     by (smt CollectD imageE precond rb_read_tail_def refine_hd_list_tl_ring_txy state_simps(1)) 
+     
    have non_empty: "CleanQ_RB_deq_y_possible sc \<Longrightarrow> lTXY (CleanQ_RB2List sc) \<noteq> []" 
      using precond unfolding CleanQ_RB_deq_y_possible_def
      by (smt CleanQ_List_State.select_convs(3) CleanQ_RB2List_def CleanQ_RB_Invariants.simps 
-         CleanQ_RB_deq_y_pre_def CleanQ_RB_list_def CollectD I4_rb_valid.simps Semantic.xstate.inject(1) 
-         imageE list.distinct(1) list.simps(9) rb_incr_tail_valid_entries)
-
+         CleanQ_RB_deq_y_pre_def CollectD I4_rb_valid.simps Semantic.xstate.inject(1) image_def 
+         rb_deq_not_empty)
+      
    show ?thesis  using non_empty precond_buf CleanQ_RB_Invariants_List_Invariants      
      using precond non_empty refine_hd_list_tl_ring_txy precond_buf 
      unfolding CleanQ_RB2List_def CleanQ_RB_deq_y_pre_def CleanQ_List_deq_y_pre_def
-     by blast
+     by (smt CollectD imageE rb_read_tail_def state_simps(1))   
  qed
 
 text \<open>
@@ -201,8 +205,9 @@ next
          \<in> CleanQ_List_deq_x_pre K buf"
        using deq_x_rb_pre_implies_list_pre precond CleanQ_RB_Invariants_List_Invariants 
        unfolding CleanQ_RB_deq_x_pre_def CleanQ_List_deq_x_pre_def CleanQ_RB_deq_x_possible_def
-       by fast
-
+                 rb_can_deq_def rb_read_tail_def
+       by (smt CleanQ_RB_deq_x_pre_def CollectD CollectI imageE image_eqI rb_can_deq_def rb_read_tail_def state_simps(1))
+       
    show "\<And>xa. xa \<in> CleanQ_RB_deq_x_pre K buf \<Longrightarrow>
           (case xa of Semantic.xstate.Normal sc \<Rightarrow> Semantic.xstate.Normal (CleanQ_RB2List sc) | Abrupt sc \<Rightarrow> Abrupt (CleanQ_RB2List sc) | Semantic.xstate.Fault fc \<Rightarrow> Semantic.xstate.Fault (CleanQ_RB2List fc)
            | Semantic.xstate.Stuck \<Rightarrow> Semantic.xstate.Stuck)
@@ -232,7 +237,9 @@ next
          \<in> CleanQ_List_deq_y_pre K buf"
        using deq_y_rb_pre_implies_list_pre precond CleanQ_RB_Invariants_List_Invariants 
        unfolding CleanQ_RB_deq_y_pre_def CleanQ_List_deq_y_pre_def CleanQ_RB_deq_y_possible_def
-       by fast
+                 rb_can_deq_def rb_read_tail_def
+       by (smt CleanQ_RB_deq_y_pre_def CollectD CollectI imageE image_eqI rb_can_deq_def rb_read_tail_def state_simps(1))
+       
 
    show "\<And>xa. xa \<in> CleanQ_RB_deq_y_pre K buf \<Longrightarrow>
           (case xa of Semantic.xstate.Normal sc \<Rightarrow> Semantic.xstate.Normal (CleanQ_RB2List sc) | Abrupt sc \<Rightarrow> Abrupt (CleanQ_RB2List sc) | Semantic.xstate.Fault fc \<Rightarrow> Semantic.xstate.Fault (CleanQ_RB2List fc)
