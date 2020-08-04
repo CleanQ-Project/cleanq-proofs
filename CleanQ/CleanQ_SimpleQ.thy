@@ -217,10 +217,10 @@ autocorres [
 
   (* word abstraction options *)
 
-  unsigned_word_abs =   rb_can_deq rb_can_enq rb_enq rb_deq,
+  unsigned_word_abs =   rb_can_deq rb_can_enq rb_enq rb_deq rb_deq_unfolded rb_enq_unfolded ,
   (* Use _word abstraction_  on unsigned integers in the given functions. *)
 
-  no_signed_word_abs = rb_can_enq rb_can_deq rb_enq rb_deq, 
+  no_signed_word_abs =   rb_can_deq rb_can_enq rb_enq rb_deq rb_deq_unfolded rb_enq_unfolded,
   (* Disable signed  _word abstraction_ on the given list of functions. *)
 
   (* skip_word_abs, *)
@@ -231,7 +231,7 @@ autocorres [
   ts_rules =  pure option nondet, 
   (* Enable _type strengthening_ to the  following types. pure, option, gets nondet *)
 
-  ts_force nondet =  rb_can_deq rb_can_enq  rb_enq rb_deq,
+  ts_force nondet =   rb_can_deq rb_can_enq rb_enq rb_deq rb_deq_unfolded rb_enq_unfolded,
   (* Force the given functions to be type-strengthened to the given type *)
 
 
@@ -768,8 +768,8 @@ proof -
 qed
 
  
-
-
+thm rb_enq_c_fun_def
+thm rb_can_enq_c_fun_def
 
 
 (* ==================================================================================== *)
@@ -1031,25 +1031,38 @@ proof-
      "unat (head_C (heap_rb_C s0 rb)) < unat (size_C (heap_rb_C s0 rb))"
     using valid unfolding c_rb_valid_def
     using unat_word_lt by blast
-   
+
+  from head_leq_size unatsizelimit have headlim:
+     "unat (head_C (heap_rb_C s0 rb)) \<le> 0xffffffff"
+    by linarith
+
+  have clim:
+    "\<And>(c::64 word). c \<le> 0x40 \<Longrightarrow> unat c \<le> 0x40"
+    using unat_word_leq by fastforce
+
+  have xlim:
+    "x \<le> 0xffffffff"
+    using neq unatsizelimit by linarith
+
   have inrangex: 
-    "x * unat(0x40::64 word) \<le> unat addrlimit"
-    using neq unatsizelimit by(auto)
+    "\<And>(c::64 word). (c::64 word)\<le> 0x40 \<Longrightarrow> x * unat(c::64 word) \<le> unat addrlimit"
+    using xlim clim mult_le_mono  by fastforce  
 
   have inrangey: 
-    "unat (head_C (heap_rb_C s0 rb)) * unat (0x40::64 word) \<le> unat  addrlimit"
-     using  unatsizelimit head_leq_size by(auto)
-
+    "\<And>(c::64 word). c \<le> 0x40 \<Longrightarrow> unat (head_C (heap_rb_C s0 rb)) * unat (c) \<le> unat addrlimit"
+     using headlim clim unat_word_leq  mult_le_mono 
+     by fastforce
+     
   have ineq:
-    "of_nat x * (0x40::ulong_t) \<noteq> of_int (uint (head_C (heap_rb_C s0 rb))) * (0x40::ulong_t)"
+    "\<And>c. 0 < c \<Longrightarrow>  c \<le> 0x40 \<Longrightarrow> of_nat x * (c::ulong_t) \<noteq> of_int (uint (head_C (heap_rb_C s0 rb))) * (c::ulong_t)"
     proof -
       have f1: "\<forall>w n. of_int (int n) * (w::64 word) = of_int (int (n * unat w))"
         by simp
-      have "unat (head_C (heap_rb_C s0 rb)) * unat (0x40::64 word) \<noteq> x * unat (0x40::64 word)"
-    using neq by auto
-    then have "(of_int (int x)::64 word) * 0x40 \<noteq> of_int (int (unat (head_C (heap_rb_C s0 rb)))) * 0x40"
+      have "\<And>c. 0 < c \<Longrightarrow> unat (head_C (heap_rb_C s0 rb)) * unat (c::64 word) \<noteq> x * unat (c::64 word)"
+      using neq clim headlim unat_word_lt by fastforce 
+    then have "\<And>c.  0 < c \<Longrightarrow> c \<le> 0x40 \<Longrightarrow> (of_int (int x)::64 word) * c \<noteq> of_int (int (unat (head_C (heap_rb_C s0 rb)))) * c"
     using f1 by (metis (no_types) inrangex inrangey le_unat_uoi of_int_of_nat_eq)
-    then show ?thesis
+    then show "\<And>c. 0 < c \<Longrightarrow> c \<le> 0x40 \<Longrightarrow> of_nat x * (c::ulong_t) \<noteq> of_int (uint (head_C (heap_rb_C s0 rb))) * (c::ulong_t)"
     by (simp add: int_unat)
     qed
 
@@ -1285,6 +1298,62 @@ lemma c_rb_enq_correct:
 
   
 (* ####################################################### *)
+
+
+lemma "rb_enq_c_fun rb b = rb_enq_unfolded_c_fun rb b"
+  unfolding  rb_enq_c_fun_def  rb_enq_unfolded_c_fun_def rb_can_enq_c_fun_def
+  apply(monad_eq)
+  apply(auto simp add: int_unat)
+  done
+
+
+
+
+lemma "rb_deq_c_fun rb b = rb_deq_unfolded_c_fun rb b"
+  unfolding rb_deq_c_fun_def rb_deq_unfolded_c_fun_def rb_can_deq_c_fun_def
+  apply(monad_eq)  (* seems to take a while... *)
+  apply(auto simp add: int_unat)
+  done
+
+
+thm rb_enq_unfolded_c_fun_def
+
+
+
+
+lemma "(a::nat) \<le> 64 \<Longrightarrow> (b::nat) < 2^32 \<Longrightarrow> a * b < 2^64"
+proof -
+  assume p1 :"(a::nat) \<le> 64"
+  assume p2: "(b::nat) < 2^32"
+
+  have x1: "(64::nat) * 2^32  \<le> 2^64"
+    by(simp)
+
+  have x2: "(a::nat) \<le> 64 \<Longrightarrow> (b::nat) < 2^32 \<Longrightarrow>  a * b < 64 * 2^32" 
+    by (meson le_less_trans mult_less_cancel1 mult_right_mono zero_le zero_less_numeral)
+
+  show ?thesis using order_trans x2 x1 p1 p2 
+    by linarith
+qed
+  
+
+lemma "(a::nat) < 2^32 \<Longrightarrow> (b::nat) < 2^32 \<Longrightarrow> a * b < 2^64"
+proof -
+  assume p1 :"(a::nat) < 2^32"
+  assume p2: "(b::nat) < 2^32"
+  
+  have X1: "(0xffffffff::nat) * 0xffffffff \<le> 0xffffffffffffffff"
+    by(auto)
+
+  have X2: "(a::nat) \<le> 0xffffffff \<Longrightarrow> (b::nat) \<le> 0xffffffff \<Longrightarrow> a * b \<le> 0xffffffffffffffff"
+    using X1 mult_le_mono order_trans by blast
+
+  have X3: "(a::nat) <  2^32 \<Longrightarrow> (b::nat) < 2^32 \<Longrightarrow>  a * b < (2^32 * 2^32)"
+    using X2  by simp
+
+  show ?thesis
+    using p1 p2 X3 by auto
+qed
 
 
 (* SimpleQ C parser output. *)

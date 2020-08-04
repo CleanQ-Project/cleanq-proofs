@@ -158,30 +158,6 @@ static int rb_enq(struct rb *rb, struct buffer slot)
     return ERR_OK;
 }
 
-///< enqueue function
-static int rb_enq_inlined(struct rb *rb, struct buffer slot)
-{
-    u32_t head = rb->head;
-    u32_t tail = rb->tail;
-    u32_t size = rb->size;
-    if (!(((head + 1) % size) != tail)) {
-        return ERR_QUEUE_FULL;
-    }
-    
-    struct buffer *ring = rb->ring;
-    ring[head].region = slot.region;
-    ring[head].offset = slot.offset;
-    ring[head].length = slot.length;
-    ring[head].valid_offset = slot.valid_offset;
-    ring[head].valid_length = slot.valid_length;
-    ring[head].flags = slot.flags;
-    
-    rb->head = head + 1 % size;
-
-    return ERR_OK;
-}
-
-
 
 static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
 {
@@ -191,20 +167,22 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
     if (!(((head + 1) % size) != tail)) {
         return ERR_QUEUE_FULL;
     }
-    
-    struct buffer *ring = rb->ring;
-    u32_t head1 = rb->head;
-    ring[head1].region = slot.region;
-    ring[head1].offset = slot.offset;
-    ring[head1].length = slot.length;
-    ring[head1].valid_offset = slot.valid_offset;
-    ring[head1].valid_length = slot.valid_length;
-    ring[head1].flags = slot.flags;
-    
 
     u32_t head2 = rb->head;
-    u32_t size2 = rb->size;
-    rb->head = head2 + 1 % size2;
+    struct buffer *ring = rb->ring;
+    
+    ring[head2].region = slot.region;
+    ring[head2].offset = slot.offset;
+    ring[head2].length = slot.length;
+    ring[head2].valid_offset = slot.valid_offset;
+    ring[head2].valid_length = slot.valid_length;
+    ring[head2].flags = slot.flags;
+    
+
+    u32_t head3 = rb->head;
+    u32_t size3 = rb->size;
+
+    rb->head = (head3 + 1) % size3;
 
     return ERR_OK;
 }
@@ -235,29 +213,7 @@ static int rb_deq(struct rb *rb, struct buffer *ret)
     return ERR_OK;
 }
 
-static int rb_deq_inlined(struct rb *rb, struct buffer *ret)
-{
 
-    u32_t head = rb->head;
-    u32_t tail = rb->tail;
-    if (!(head != tail)) {
-        return ERR_QUEUE_EMTPY;
-    }
-
-
-    struct buffer *ring = rb->ring;
-    ret->region = ring[tail].region;
-    ret->offset = ring[tail].offset;
-    ret->length = ring[tail].length;
-    ret->valid_offset = ring[tail].valid_offset;
-    ret->valid_length = ring[tail].valid_length;
-    ret->flags = ring[tail].flags;
-
-    u32_t size = rb->size;
-    rb->tail = (tail + 1) % size;
-
-    return ERR_OK;
-}
 
 static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
 {
@@ -268,9 +224,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
         return ERR_QUEUE_EMTPY;
     }
 
-
-    struct buffer *ring = rb->ring;
     u32_t tail1 = rb->tail;
+    struct buffer *ring = rb->ring;
     ret->region = ring[tail1].region;
     ret->offset = ring[tail1].offset;
     ret->length = ring[tail1].length;
@@ -345,15 +300,17 @@ static int simpleq_enq_x(void)
     }
 
     struct buffer *buf = sqx.owned;
-    sqx.owned = buf->nextfree;
+    
 #ifdef COMPILE
+    buf->nextfree = sqx.owned;
     printf("%s - sending [%lx..%lx]\n", sqx.name, buf->offset, buf->offset + buf->length - 1);
 #endif
     if (simpleq_enq(&sqx, *buf) != ERR_OK) {
 #ifdef COMPILE
         printf("%s - enqueue failed\n", sqx.name);
-#endif
         buf->nextfree = sqx.owned;
+#endif
+        
         sqx.owned = buf;
         return ERR_QUEUE_FULL;
     }
@@ -370,17 +327,18 @@ static int simpleq_enq_y(void)
     }
 
     struct buffer *buf = sqy.owned;
-    sqy.owned = buf->nextfree;
+    
 
 #ifdef COMPILE
+    sqy.owned = buf->nextfree;
     printf("%s - sending [%lx..%lx]\n", sqy.name, buf->offset, buf->offset + buf->length - 1);
 #endif
 
     if (simpleq_enq(&sqy, *buf) != ERR_OK) {
 #ifdef COMPILE
         printf("%s - enqueue failed\n", sqy.name);
-#endif
         buf->nextfree = sqy.owned;
+#endif
         sqy.owned = buf;
         return ERR_QUEUE_FULL;
     }
@@ -400,10 +358,10 @@ static int simpleq_deq_x(void)
 
 #ifdef COMPILE
     printf("%s - received [%lx..%lx]\n", sqx.name, deq_x_buf.offset, deq_x_buf.offset + deq_x_buf.length - 1);
-#endif
     deq_x_buf.self->nextfree = sqx.owned;
     sqx.owned = deq_x_buf.self;
-
+#endif
+    
     return ERR_OK;
 }
 
@@ -420,11 +378,9 @@ static int simpleq_deq_y(void)
 
 #ifdef COMPILE
     printf("%s - received [%lx..%lx]\n", sqy.name, deq_y_buf.offset, deq_y_buf.offset + deq_y_buf.length - 1);
-#endif
-
     deq_y_buf.self->nextfree = sqy.owned;
     sqy.owned = deq_y_buf.self;
-
+#endif
     return ERR_OK;
 }
 
@@ -479,8 +435,10 @@ static int init_queue(struct buffer *txy, u64_t txy_size,
     for (u64_t i = 0; i < nbufs; i++) {
         K_bufs[i].offset = (i+1) * CONFIG_DEFAULT_BUFFER_SIZE;
         K_bufs[i].length = CONFIG_DEFAULT_BUFFER_SIZE;
+#ifdef COMPILE
         K_bufs[i].self = &K_bufs[i];
         K_bufs[i].nextfree = sqx.owned;
+#endif
         sqx.owned = &K_bufs[i];
     }
 
