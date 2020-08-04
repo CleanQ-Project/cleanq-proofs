@@ -1247,7 +1247,7 @@ subsubsection \<open>N-Fold Functional Composition\<close>
 
 
 text \<open>
-  We can show that this is just the functional composition of the \texttt+rb_incr_tail+.
+  We can show that this is just the functional composition of the \verb+rb_incr_tail+.
 \<close>
 
 lemma rb_incr_tail_n_rec_compow :
@@ -2057,7 +2057,7 @@ lemma rb_delta_helper2:
   
 
 text \<open>
-  This next lemma shows properties about the definition of rb_delta_tail
+  This next lemma shows properties about the definition of \verb+ rb_delta_tail+
 \<close>
 lemma rb_delta_tail_size_nonzero:
   fixes st' st 
