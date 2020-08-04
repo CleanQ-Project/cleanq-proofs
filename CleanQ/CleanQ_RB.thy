@@ -2132,7 +2132,7 @@ definition frame_rb_weak_right :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rig
     tail st' = tail st \<and>
     ring st' = ring st \<and>
     rb_valid st' \<and> rb_valid st \<and>
-   (\<exists> \<delta>hd. \<delta>hd \<le> rb_can_incr_tail_n_max st' \<and>
+   (\<exists> \<delta>hd. \<delta>hd \<le> rb_can_incr_head_n_max st' \<and>
     (if (head st') + \<delta>hd < (size st') then head st' + \<delta>hd
      else ((head st') + \<delta>hd) mod (size st')) = head st
   )" 
@@ -2324,7 +2324,7 @@ lemma rb_weak_delta_tail_n:
             rb_incr_tail_n_valid_drop rb_valid_def)
 
 
-lemma rb_weak_delta_head_n:
+lemma rb_weak_delta_head_invalid_n:
   fixes st' st 
   assumes frame: "frame_rb_weak_right st' st" and
           head: "head st = head (rb_incr_head_n n st')" and
@@ -2333,4 +2333,13 @@ lemma rb_weak_delta_head_n:
   by (metis enq frame frame_rb_weak_right_def frame_rb_weak_right_state head not_less 
       rb_can_incr_head_n_exceeds rb_incr_head_n_delta_invalid_entries rb_valid_def)
 
+lemma rb_weak_delta_head_n: 
+  fixes st' st 
+  assumes frame: "frame_rb_weak_right st' st" and
+          head: "head st = head (rb_incr_head_n n st')" and
+          enq: "rb_can_incr_head_n n st'"
+        shows  "rb_valid_entries st =  rb_valid_entries st' @ (rb_incr_head_n_delta n st')"
+  using rb_incr_head_n_delta_valid_entries
+  using enq frame frame_rb_weak_right_def frame_rb_weak_right_state head rb_can_incr_head_n_lt_max 
+        rb_valid_def by blast 
 end

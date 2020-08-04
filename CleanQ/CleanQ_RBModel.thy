@@ -220,27 +220,27 @@ text \<open>
 definition frame_rb_weak_x :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
   where "frame_rb_weak_x st' st \<longleftrightarrow> rSX st = rSX st' \<and> frame_rb_weak_left (rTXY st') (rTXY st) 
                                     \<and> frame_rb_weak_right (rTYX st') (rTYX st) \<and>
-                                    (\<exists>\<delta>txy \<delta>tyx. rSY st' = \<delta>txy \<union> rSY st - (set \<delta>tyx))" 
+                                    (\<exists>\<delta>txy \<delta>tyx. rSY st' = set (\<delta>txy) \<union> rSY st - (set \<delta>tyx))" 
 
 definition frame_rb_weak_y :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
   where "frame_rb_weak_y st' st \<longleftrightarrow> rSY st = rSY st' \<and> frame_rb_weak_left (rTYX st') (rTYX st) \<and>
                                     frame_rb_weak_right (rTXY st') (rTXY st) \<and>
-                                    (\<exists>\<delta>txy \<delta>tyx. rSX st' = \<delta>tyx \<union> rSX st - (set \<delta>txy))"
+                                    (\<exists>\<delta>txy \<delta>tyx. rSX st' = set (\<delta>tyx) \<union> rSX st - (set \<delta>txy))"
 
 lemma frame_rb_s_w_x:
  "frame_rb_strong st' st \<Longrightarrow> frame_rb_weak_x st' st"
   unfolding frame_rb_weak_x_def frame_rb_strong_def frame_rb_weak_left_def
   frame_rb_weak_right_def
-  by (metis Diff_empty I4_rb_valid.elims(2) Un_absorb add.commute add.left_neutral list.set(1) 
-      rb_valid_def rb_valid_ptr_def)
- 
+  by (metis Diff_empty I4_rb_valid.elims(2) add.right_neutral list.set(1) rb_valid_def 
+      rb_valid_ptr_def sup_bot.left_neutral zero_le)
+
 
 lemma frame_rb_s_w_y:
   "frame_rb_strong dev' dev \<Longrightarrow> frame_rb_weak_y dev' dev"
   unfolding frame_rb_weak_y_def frame_rb_strong_def frame_rb_weak_left_def
   frame_rb_weak_right_def
-  by (metis Diff_empty I4_rb_valid.elims(2) Un_absorb add.commute add.left_neutral list.set(1) 
-      rb_valid_def rb_valid_ptr_def)
+  by (metis Diff_empty I4_rb_valid.elims(2) add.right_neutral list.set(1) 
+      rb_valid_def rb_valid_ptr_def sup_bot.left_neutral zero_le)
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>All CleanQ RB Invariants\<close>
@@ -255,7 +255,6 @@ fun CleanQ_RB_Invariants :: "'a set \<Rightarrow> 'a CleanQ_RB_State \<Rightarro
   where "CleanQ_RB_Invariants K rb \<longleftrightarrow> I1_rb_img rb K \<and> I2_rb_img rb \<and> I3_rb_img rb
                                        \<and> I4_rb_valid rb"
 
-
 text \<open>
   Finally, we can show that when the CleanQ RB invariants are satisfied, this also
   satisfies the set invariants.
@@ -265,9 +264,84 @@ lemma CleanQ_RB_Invariants_List_Invariants:
   "CleanQ_RB_Invariants K L \<Longrightarrow> CleanQ_List_Invariants K (CleanQ_RB2List L)"
   unfolding CleanQ_RB2List_def by simp
 
+text \<open>In order to show that the RB weak frame condition refines the List weak frame condition we need some
+      helper lemmas.\<close>
+
+lemma frame_weak_x_exists_tl_delta: 
+  assumes Inv: "CleanQ_RB_Invariants K rb'" and
+          frame: "frame_rb_weak_x rb' rb"
+  shows"\<exists>\<delta>aB. map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) =
+          \<delta>aB @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
+  using Inv frame rb_weak_delta_tail_n 
+proof -
+    from frame obtain \<delta>tl 
+      where tl: "\<delta>tl \<le> rb_can_incr_tail_n_max (rTXY rb') \<and> 
+           (if tail (rTXY rb') + \<delta>tl < size (rTXY rb') then tail (rTXY rb') + \<delta>tl
+           else (tail (rTXY rb') + \<delta>tl) mod size (rTXY rb')) = tail (rTXY rb)"
+    unfolding frame_rb_weak_x_def frame_rb_weak_left_def frame_rb_weak_right_def
+    by blast
+
+  from frame have incr: "rb_can_incr_tail_n \<delta>tl (rTXY rb')"
+    by (simp add: rb_can_incr_tail_max_implies_can_incr tl) 
+
+  from assms have delta: "rb_valid_entries (rTXY rb') = (rb_incr_tail_n_delta \<delta>tl (rTXY rb')) @ (rb_valid_entries (rTXY rb))"
+      using tl incr using rb_weak_delta_tail_n
+      using frame_rb_weak_x_def
+      by (metis (no_types, lifting) CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(3) 
+          mod_less rb_incr_tail_n_def) 
+
+  show ?thesis using incr tl delta
+    by (metis (no_types, hide_lams) frame frame_rb_weak_left_def frame_rb_weak_x_def map_append) 
+qed
+
+lemma frame_weak_x_exists_hd_delta:
+  assumes Inv: "CleanQ_RB_Invariants K rb'" and
+          frame: "frame_rb_weak_x rb' rb"
+  shows"\<exists>\<delta>Bc. map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>Bc =
+                 map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb))"
+  using Inv frame rb_weak_delta_head_n
+proof -
+    from frame obtain \<delta>hd
+    where hd: "\<delta>hd \<le> rb_can_incr_head_n_max (rTYX rb') \<and>
+           (if head (rTYX rb') + \<delta>hd < size (rTYX rb') then head (rTYX rb') + \<delta>hd
+           else (head (rTYX rb') + \<delta>hd) mod size (rTYX rb')) = head (rTYX rb)"
+    unfolding frame_rb_weak_x_def frame_rb_weak_left_def frame_rb_weak_right_def
+    by blast
+
+  from frame have valid: "rb_valid_ptr (rTYX rb')"
+    unfolding frame_rb_weak_x_def frame_rb_weak_right_def rb_valid_def
+    by blast
+
+  from hd have incr: "rb_can_incr_head_n \<delta>hd (rTYX rb')"
+    using valid rb_can_incr_head_max_implies_can_incr
+    by blast
+
+  from frame hd incr have hd2: "head (rTYX rb) = head (rb_incr_head_n \<delta>hd (rTYX rb'))"
+    unfolding frame_rb_weak_x_def 
+    by (metis CleanQ_RB.cases_scheme CleanQ_RB.select_convs(2) CleanQ_RB.update_convs(2) 
+        mod_less rb_incr_head_n_def)
+
+  from frame have delta: "rb_valid_entries (rTYX rb') @ (rb_incr_head_n_delta \<delta>hd (rTYX rb')) = rb_valid_entries (rTYX rb)"
+    using hd incr rb_weak_delta_head_n unfolding frame_rb_weak_x_def
+    using \<open>head (rTYX rb) = head (rb_incr_head_n \<delta>hd (rTYX rb'))\<close> by fastforce
+
+  show ?thesis using delta
+    by (metis (no_types, hide_lams) frame frame_rb_weak_right_def frame_rb_weak_x_def map_append) 
+   
+qed
+
+lemma frame_weak_x_exists_txy_delta:
+  assumes Inv: "CleanQ_RB_Invariants K rb'" and
+          frame: "frame_rb_weak_x rb' rb"
+  shows "\<exists>\<delta>aB. (\<exists>\<delta>Bc. rSY rb' \<union> set \<delta>aB = set \<delta>Bc \<union> rSY rb \<and>
+                 rSY rb \<inter> set \<delta>Bc = {} \<and> distinct \<delta>Bc)"
+  using assms unfolding frame_rb_weak_x_def
+  by (metis Diff_disjoint Un_Diff_Int Un_Diff_cancel2 finite_Diff finite_Int 
+      finite_distinct_list finite_set)
+
+text \<open>Finally we show that the RB weak frame condition refines the List weak frame condition.\<close>
 
 (*
-text \<open>The list weak frame condition implies the ring buffer weak frame condition.\<close>
 lemma frame_rb_weak_x_list_weak:
   fixes rb rb' K
   assumes I1: "CleanQ_RB_Invariants K rb'"
@@ -282,12 +356,24 @@ proof -
   show " \<And>x. x \<in> rSX rb \<Longrightarrow> x \<in> rSX rb'"
     by (metis frame frame_rb_weak_x_def)
 
-  have "rb_valid_entries (rTXY rb') = (rb_delta_tail n (rTXY rb)) @ (rb_valid_entries (rTXY rb))"
-    using rb_weak_delta_tail_n
+  from frame obtain \<delta>hd \<delta>tl
+    where hd: "\<delta>hd \<le> rb_can_incr_head_n_max (rTYX rb') \<and>
+           (if head (rTYX rb') + \<delta>hd < size (rTYX rb') then head (rTYX rb') + \<delta>hd
+           else (head (rTYX rb') + \<delta>hd) mod size (rTYX rb')) = head (rTYX rb)"
+      and tl: "\<delta>tl \<le> rb_can_incr_tail_n_max (rTXY rb') \<and> 
+           (if tail (rTXY rb') + \<delta>tl < size (rTXY rb') then tail (rTXY rb') + \<delta>tl
+           else (tail (rTXY rb') + \<delta>tl) mod size (rTXY rb')) = tail (rTXY rb)"
+    unfolding frame_rb_weak_x_def frame_rb_weak_left_def frame_rb_weak_right_def
+    by blast
+  
+  define \<delta>xy where "\<delta>xy = map (the \<circ> ring (rTYX rb)) (rb_incr_tail_n_delta \<delta>tl (rTXY rb'))"
+  define \<delta>yx where "\<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_incr_head_n_delta \<delta>hd (rTXY rb'))"
 
+  from frame_weak_x_exists_tl_delta have core1: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) =
+        \<delta>xy @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) "
 
 qed
-*)
+*) 
 (* ==================================================================================== *)
 subsection \<open>State Transition Operations\<close>
 (* ==================================================================================== *)
