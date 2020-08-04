@@ -1294,6 +1294,7 @@ lemma rb_can_incr_head_n_lt:
   unfolding rb_can_incr_head_n_def by(auto)
 
 
+
 text \<open>
   Attempting to increase it by more than the size of the ring always results in False.
   The same with increasing it larger than the maximum possible number.
@@ -1335,7 +1336,15 @@ lemma rb_can_incr_head_n_lt_max:
   unfolding rb_can_incr_head_n_def rb_can_incr_head_n_max_def
   using order_trans rb_invalid_entries_gt_zero by fastforce
 
+lemma rb_can_incr_tail_max_implies_can_incr: 
+  "n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow> rb_can_incr_tail_n n rb"
+  by (simp add: rb_can_incr_tail_n_lt_max)
 
+lemma rb_can_incr_head_max_implies_can_incr: 
+  assumes "rb_valid_ptr rb"
+  shows"n \<le> rb_can_incr_head_n_max rb \<Longrightarrow> rb_can_incr_head_n n rb"
+  by (simp add: assms rb_can_incr_head_n_lt_max)
+  
 text \<open>
   If we increment the tail or head pointer to the maximum possible, the resulting
   state is either empty or full.
@@ -1563,8 +1572,7 @@ lemma rb_incr_tail_n_delta_invalid_entries:
       rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_n_valid_drop 
       rb_incr_tail_n_valid_ptr take_add)
 
-
-
+ 
 text \<open>
   Incrementing the tail by N increases the maximum possible head increases by N,
   and vice versa
@@ -1995,8 +2003,8 @@ definition frame_rb_weak_left :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Righ
     size st' = size st \<and>
     head st' = head st \<and>
     ring st' = ring st \<and>
-    rb_valid st' \<and> rb_valid st \<and>
-   (\<exists> \<delta>tl.
+    rb_valid st' \<and> rb_valid st \<and> 
+   (\<exists> \<delta>tl.  \<delta>tl \<le> rb_can_incr_tail_n_max st' \<and>
     (if (tail st') + \<delta>tl < (size st') then tail st' + \<delta>tl
      else ((tail st') + \<delta>tl) mod (size st')) = tail st
   )" 
@@ -2012,9 +2020,6 @@ lemma frame_rb_weak_left_state:
 text \<open>
   To talk about the previously introduced delta, we need some lemmas  
 \<close>
-
-definition rb_delta_tail :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
-  where "rb_delta_tail n rb = take n (rb_valid_entries rb)" 
 
 lemma rb_take_tail:
   assumes tail: "rb_can_incr_tail_n 1 st' \<and> tail st' \<le> head st'" and
@@ -2046,8 +2051,8 @@ lemma rb_delta_helper :
 lemma rb_delta_helper2:
   assumes valid: "rb_valid rb" and
           n_valid: "rb_can_incr_tail_n n rb"
-  shows "rb_valid_entries rb = rb_delta_tail n rb @ drop n (rb_valid_entries rb)"
-  unfolding rb_delta_tail_def
+  shows "rb_valid_entries rb = rb_incr_tail_n_delta n rb @ drop n (rb_valid_entries rb)"
+  unfolding rb_incr_tail_n_delta_def
   by simp
   
 
@@ -2058,26 +2063,26 @@ lemma rb_delta_tail_size_nonzero:
   fixes st' st 
   assumes frame: "frame_rb_weak_left st' st" and
           deq: "rb_can_incr_tail_n delta st'"
-  shows "delta > 0 \<Longrightarrow> (rb_delta_tail delta st') \<noteq> []"
+  shows "delta > 0 \<Longrightarrow> (rb_incr_tail_n_delta delta st') \<noteq> []"
   using assms
-  unfolding rb_delta_tail_def rb_valid_entries_def
+  unfolding rb_incr_tail_n_delta_def rb_valid_entries_def
   by (smt length_upt not_gr_zero not_le rb_can_incr_tail_n_def rb_valid_entries_def 
       take_eq_Nil upt_0 zero_less_diff) 
   
 lemma rb_delta_tail_empty:
   fixes st' st 
   assumes frame: "frame_rb_weak_left st' st"
-  shows "delta = 0 \<Longrightarrow> (rb_delta_tail delta st) = []"
+  shows "delta = 0 \<Longrightarrow> (rb_incr_tail_n_delta delta st) = []"
   using assms
-  unfolding rb_delta_tail_def
+  unfolding rb_incr_tail_n_delta_def
 by (simp add: frame_rb_weak_left_def rb_valid_def)
 
 lemma rb_weak_list_delta_tail_empty:
   fixes st' st 
   assumes frame: "frame_rb_weak_left st' st" and
           tl_asm:  "(tail st') + \<delta>tl = (tail st) \<and> \<delta>tl = 0"
-  shows "tail st' = tail st \<Longrightarrow> rb_valid_entries st' = (rb_delta_tail \<delta>tl st') @ (rb_valid_entries st)"
-  by (metis (no_types, hide_lams) append_Nil frame frame_rb_weak_left_def rb_delta_tail_def 
+  shows "tail st' = tail st \<Longrightarrow> rb_valid_entries st' = (rb_incr_tail_n_delta \<delta>tl st') @ (rb_valid_entries st)"
+  by (metis (no_types, hide_lams) append_Nil frame frame_rb_weak_left_def rb_incr_tail_n_delta_def 
       rb_valid_entries_def take0 tl_asm)
 
 
@@ -2096,9 +2101,9 @@ lemma rb_delta_tail_one:
   assumes tail: "tail st = tail (rb_incr_tail_n 1 st') \<and> (rb_can_incr_tail_n 1 st')"
   assumes head: "head st = head st'"
   assumes valid: "rb_valid st'"
-  shows "(rb_delta_tail 1 st') = [tail st']"
+  shows "(rb_incr_tail_n_delta 1 st') = [tail st']"
   using tail
-  unfolding rb_delta_tail_def rb_valid_def
+  unfolding rb_incr_tail_n_delta_def rb_valid_def
   by (metis One_nat_def list.size(3) not_less_eq_eq order_refl rb_can_incr_tail_1 
       rb_can_incr_tail_n_def rb_valid_entries_tail_first1 take0 take_Suc valid rb_valid_def)
 
@@ -2109,14 +2114,12 @@ lemma rb_weak_list_delta_tail_one:
           tail: "tail st = tail (rb_incr_tail_n 1 st')" and
           deq: "rb_can_incr_tail_n 1 st'" and
           valid : " rb_valid st'"
-  shows  "rb_valid_entries st' = (rb_delta_tail 1 st') @ (rb_valid_entries st)"
+  shows  "rb_valid_entries st' = (rb_incr_tail_n_delta 1 st') @ (rb_valid_entries st)"
   using assms 
-  apply auto unfolding rb_incr_tail_n_def frame_rb_weak_left_def rb_delta_tail_def
-  by (metis (no_types, lifting) One_nat_def append_Cons ext_inject rb_can_incr_tail_1 
-      rb_incr_tail_1 rb_incr_tail_n_def rb_incr_tail_valid_entries rb_valid_entries_def 
-      rb_valid_entries_not_empty_list rb_valid_entries_tail_first1 self_append_conv2 surjective 
-      take_Suc take_eq_Nil update_convs(3) rb_valid_def)
-
+  apply auto unfolding rb_incr_tail_n_def frame_rb_weak_left_def rb_incr_tail_n_delta_def
+  by (metis One_nat_def append_take_drop_id frame frame_rb_weak_left_state 
+      rb_can_incr_tail_n_lt_max rb_incr_tail_n_valid_drop rb_valid_implies_ptr_valid tail)
+  
 
 text \<open>
   Now, similar the left side, we also need the frame condition for the right side i.e. tail is fixed
@@ -2129,9 +2132,9 @@ definition frame_rb_weak_right :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rig
     tail st' = tail st \<and>
     ring st' = ring st \<and>
     rb_valid st' \<and> rb_valid st \<and>
-   (\<exists> \<delta>tl.
-    (if (head st') + \<delta>tl < (size st') then head st' + \<delta>tl
-     else ((head st') + \<delta>tl) mod (size st')) = head st
+   (\<exists> \<delta>hd. \<delta>hd \<le> rb_can_incr_tail_n_max st' \<and>
+    (if (head st') + \<delta>hd < (size st') then head st' + \<delta>hd
+     else ((head st') + \<delta>hd) mod (size st')) = head st
   )" 
 
 lemma frame_rb_weak_right_state:
@@ -2315,8 +2318,8 @@ lemma rb_weak_delta_tail_n:
   assumes frame: "frame_rb_weak_left st' st" and
           tail: "tail st = tail (rb_incr_tail_n n st')" and
           deq: "rb_can_incr_tail_n n st'"
-  shows  "rb_valid_entries st' = (rb_delta_tail n st') @ (rb_valid_entries st)"
-  using assms unfolding rb_delta_tail_def frame_rb_weak_left_def
+  shows  "rb_valid_entries st' = (rb_incr_tail_n_delta n st') @ (rb_valid_entries st)"
+  using assms unfolding rb_incr_tail_n_delta_def frame_rb_weak_left_def
   by (metis append_take_drop_id frame frame_rb_weak_left_state rb_can_incr_tail_n_lt_max 
             rb_incr_tail_n_valid_drop rb_valid_def)
 
