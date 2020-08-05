@@ -101,7 +101,7 @@ struct buffer
 struct rb
 {
     ///< this is the head pointer of the ring buffer
-    u32_t head; 
+    u32_t head;
 
     ///< this is the tail pointer of the ring buffer
     u32_t tail;
@@ -114,7 +114,7 @@ struct rb
 };
 
 
-/* 
+/*
  * --------------------------------------------------------------------------------------
  * Initialization
  * --------------------------------------------------------------------------------------
@@ -132,7 +132,7 @@ static void rb_init(struct rb *rb, struct buffer *ring, u64_t size)
 }
 
 
-/* 
+/*
  * --------------------------------------------------------------------------------------
  * Enqueue Operation
  * --------------------------------------------------------------------------------------
@@ -159,35 +159,261 @@ static int rb_enq(struct rb *rb, struct buffer slot)
 }
 
 
+/*
+ * E0:
+ *
+ * I_size: rb->size == size0
+ * tail0 = rb->tail
+ * head0 = rb->head
+ */
 static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
 {
+/*
+ * E1:
+ *
+ * rb->tail == tail0 + delta mod size0
+ *
+ * I_size: rb->size == size0
+ */
     u32_t head = rb->head;
+
+/*
+ * E2:
+ *
+ * rb->tail == tail0 + delta mod size0
+ *
+ * head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     u32_t tail = rb->tail;
+/*
+ * E3:
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ *
+ * head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     u32_t size = rb->size;
-    if (!(((head + 1) % size) != tail)) {
+/*
+ * E4:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ *
+ * head == head0 == rb->head;
+ *
+ *
+ * I_size: rb->size == size0
+ */
+    if ((((head + 1) % size) == tail)) {
+/*
+ * E5:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail == (head+1) mod size0   <--> (rb->tail - delta2) mod size2 == (rb->head + 1) mod size0
+ *
+ * head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
         return ERR_QUEUE_FULL;
     }
 
+/*
+ * E6:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     u32_t head2 = rb->head;
+
+/*
+ * E7:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ *
+ * I_size: rb->size == size0
+ */
     struct buffer *ring = rb->ring;
-    
+/*
+ * E8:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     ring[head2].region = slot.region;
+/*
+ * E9:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     ring[head2].offset = slot.offset;
+/*
+ * E10:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     ring[head2].length = slot.length;
+/*
+ * E11:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     ring[head2].valid_offset = slot.valid_offset;
+/*
+ * E12:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     ring[head2].valid_length = slot.valid_length;
+/*
+ * E13:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     ring[head2].flags = slot.flags;
-    
 
+/*
+ * E14:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     u32_t head3 = rb->head;
+/*
+ * E15:
+ *
+ * size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head3 == head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     u32_t size3 = rb->size;
-
+/*
+ * E16:
+ *
+ * size3 == size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
+ *
+ * head3 == head2 == head == head0 == rb->head;
+ *
+ * I_size: rb->size == size0
+ */
     rb->head = (head3 + 1) % size3;
 
+/*
+ * E17:
+ *
+ * I_size: rb->size == size0
+ *
+ * size3 == size == rb->size == size0
+ *
+ * rb->tail == tail0 + delta mod size0
+ * tail == (rb->tail - delta2) mod size0
+ * tail != (rb->head) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head) mod size0
+ *
+ *
+ * head3 == head2 == head == head0;
+ * rb->head == head3 + 1 mod size3
+ *
+ *
+ * rb->tail == tail0 + delta mod size
+ * rb->head == head0 + 1 mod size
+ */
     return ERR_OK;
 }
 
-/* 
+
+
+
+
+
+/*
  * --------------------------------------------------------------------------------------
  * Dequeue Operation
  * --------------------------------------------------------------------------------------
@@ -214,29 +440,219 @@ static int rb_deq(struct rb *rb, struct buffer *ret)
 }
 
 
-
+/*
+ * D0:
+ *
+ * size0 = rb->size
+ * tail0 = rb->tail
+ * head0 = rb->head
+ */
 static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
 {
-
+/*
+ * D1:
+ *
+ * I_size: rb->size == size0
+ */
     u32_t head = rb->head;
+/*
+ * D2:
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * I_size: rb->size == size0
+ */
     u32_t tail = rb->tail;
-    if (!(head != tail)) {
+/*
+ * D3:
+ *
+ * tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * I_size: rb->size == size0
+ */
+    if ((head == tail)) {
+/*
+ * D4:
+ *
+ * tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail == head <--> (rb->head - delta2) mod size0 == tail
+ *
+ * I_size: rb->size == size0
+ */
         return ERR_QUEUE_EMTPY;
     }
 
+/*
+ * D5:
+ *
+ * tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     u32_t tail1 = rb->tail;
+/*
+ * D6:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     struct buffer *ring = rb->ring;
+/*
+ * D7:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     ret->region = ring[tail1].region;
+/*
+ * D8:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     ret->offset = ring[tail1].offset;
+/*
+ * D9:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     ret->length = ring[tail1].length;
+/*
+ * D10:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     ret->valid_offset = ring[tail1].valid_offset;
+/*
+ * D11:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     ret->valid_length = ring[tail1].valid_length;
+/*
+ * D12:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     ret->flags = ring[tail1].flags;
-
+/*
+ * D13:
+ *
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     u32_t size = rb->size;
+/*
+ * D14:
+ *
+ * size == size0 == rb->size
+ * tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ */
     u32_t tail2 = rb->tail;
+/*
+ * D15:
+ *
+ * size == size0 == rb->size
+ * tail2 == tail1 == tail == tail0 == rb->tail
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ *
+ * I_size: rb->size == size0
+ */
     rb->tail = (tail2 + 1) % size;
-
+/*
+ * D16:
+ *
+ * size == size0 == rb->size
+ * tail2 == tail1 == tail == tail0
+ * rb->tail == tail2 + 1 mod size
+ *
+ * rb->head = (head0 + delta) mod size0
+ * head = (rb->head - delta2) mod size0
+ *
+ * tail != head <--> (rb->head - delta2) mod size0 != tail
+ *
+ * I_size: rb->size == size0
+ *
+ * tail0 == rb->tail + 1 mod size
+ * head0 == rb->head + delta mod size
+ */
     return ERR_OK;
 }
 
@@ -266,7 +682,7 @@ struct simpleq
 
 
 
-static int simpleq_enq(struct simpleq *sq, struct buffer buf) 
+static int simpleq_enq(struct simpleq *sq, struct buffer buf)
 {
 #ifdef COMPILE
     printf("%s - enqueue to [%u..%u / %u]\n", sq->name, sq->tx->tail, sq->tx->head, sq->tx->size);
@@ -300,7 +716,7 @@ static int simpleq_enq_x(void)
     }
 
     struct buffer *buf = sqx.owned;
-    
+
 #ifdef COMPILE
     buf->nextfree = sqx.owned;
     printf("%s - sending [%lx..%lx]\n", sqx.name, buf->offset, buf->offset + buf->length - 1);
@@ -310,7 +726,7 @@ static int simpleq_enq_x(void)
         printf("%s - enqueue failed\n", sqx.name);
         buf->nextfree = sqx.owned;
 #endif
-        
+
         sqx.owned = buf;
         return ERR_QUEUE_FULL;
     }
@@ -327,7 +743,7 @@ static int simpleq_enq_y(void)
     }
 
     struct buffer *buf = sqy.owned;
-    
+
 
 #ifdef COMPILE
     sqy.owned = buf->nextfree;
@@ -350,7 +766,7 @@ static  struct buffer deq_x_buf;
 static int simpleq_deq_x(void)
 {
     if (simpleq_deq(&sqx, &deq_x_buf) != ERR_OK) {
-#ifdef COMPILE       
+#ifdef COMPILE
         printf("%s - dequeue failed\n", sqx.name);
 #endif
         return ERR_QUEUE_EMTPY;
@@ -361,14 +777,14 @@ static int simpleq_deq_x(void)
     deq_x_buf.self->nextfree = sqx.owned;
     sqx.owned = deq_x_buf.self;
 #endif
-    
+
     return ERR_OK;
 }
 
 static  struct buffer deq_y_buf;
 static int simpleq_deq_y(void)
 {
- 
+
     if (simpleq_deq(&sqy, &deq_y_buf) != ERR_OK) {
 #ifdef COMPILE
         printf("%s - dequeue failed\n", sqy.name);
@@ -393,7 +809,7 @@ static int simpleq_deq_y(void)
  */
 
 
-static void init_x(struct rb *rxy, struct buffer *txy, u64_t txy_size, 
+static void init_x(struct rb *rxy, struct buffer *txy, u64_t txy_size,
                    struct rb *ryx, struct buffer *tyx, u64_t tyx_size)
 {
     sqx.tx = rxy;
@@ -405,7 +821,7 @@ static void init_x(struct rb *rxy, struct buffer *txy, u64_t txy_size,
 #endif
 }
 
-static void init_y(struct rb *rxy, struct buffer *txy, u64_t txy_size, 
+static void init_y(struct rb *rxy, struct buffer *txy, u64_t txy_size,
                    struct rb *ryx, struct buffer *tyx, u64_t tyx_size)
 {
     sqy.tx = ryx;
@@ -417,7 +833,7 @@ static void init_y(struct rb *rxy, struct buffer *txy, u64_t txy_size,
 #endif
 }
 
-static int init_queue(struct buffer *txy, u64_t txy_size, 
+static int init_queue(struct buffer *txy, u64_t txy_size,
                       struct buffer *tyx, u64_t tyx_size, u64_t nbufs)
 {
 #ifdef COMPILE
@@ -534,7 +950,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    ret = init_queue(txy, CONFIG_DEFAULT_QUEUE_SIZE, tyx, CONFIG_DEFAULT_QUEUE_SIZE, 
+    ret = init_queue(txy, CONFIG_DEFAULT_QUEUE_SIZE, tyx, CONFIG_DEFAULT_QUEUE_SIZE,
                      CONFIG_DEFAULT_NUM_BUFS);
     if (ret != ERR_OK) {
         printf("FAILED TO INITALIZE THE QUEUE\n");
@@ -546,7 +962,7 @@ int main(int argc, char** argv)
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     CPU_SET(1, &cpuset);
-    
+
     pthread_t threads[2];
 
     pthread_attr_t attr;
@@ -557,10 +973,10 @@ int main(int argc, char** argv)
     if (ret != 0) {
         printf("FAILED TO START THE AGENT X %i\n", ret);
     }
-    
+
     CPU_ZERO(&cpuset);
     CPU_SET(2, &cpuset);
-    
+
     pthread_attr_init(&attr);
     pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
 
