@@ -1572,7 +1572,30 @@ lemma rb_incr_tail_n_delta_invalid_entries:
       rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_n_valid_drop 
       rb_incr_tail_n_valid_ptr take_add)
 
- 
+lemma rb_incr_tail_n_delta_subset:
+  "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
+  set (rb_incr_tail_n_delta n rb) \<subseteq> set (rb_valid_entries rb)"
+  unfolding rb_incr_tail_n_delta_def
+  by (simp add: set_take_subset)  
+
+lemma rb_incr_tail_n_delta_intersect:
+  "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
+  set (rb_incr_tail_n_delta n rb) \<inter> set (rb_invalid_entries rb) = {}"
+  unfolding rb_incr_tail_n_delta_def
+  by (meson Int_emptyI in_set_takeD rb_inalid_entries_notin_valid)
+
+lemma rb_incr_head_n_delta_intersect:
+  "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
+  set (rb_incr_head_n_delta n rb) \<inter> set (rb_valid_entries rb) = {}"
+  unfolding rb_incr_head_n_delta_def
+  by (meson Int_emptyI in_set_takeD rb_inalid_entries_notin_valid)
+  
+lemma rb_incr_head_n_delta_subset:
+  "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
+  set (rb_incr_head_n_delta n rb) \<subseteq> set (rb_invalid_entries rb)"
+  unfolding rb_incr_head_n_delta_def
+  by (meson set_take_subset)
+
 text \<open>
   Incrementing the tail by N increases the maximum possible head increases by N,
   and vice versa
@@ -2342,4 +2365,113 @@ lemma rb_weak_delta_head_n:
   using rb_incr_head_n_delta_valid_entries
   using enq frame frame_rb_weak_right_def frame_rb_weak_right_state head rb_can_incr_head_n_lt_max 
         rb_valid_def by blast 
+
+text \<open>
+  And at last proofs regarding the equivalence of the entries to actually mapping it on the ring and
+  some other useful lemmas in that direction
+\<close>
+
+lemma rb_ring_map_drop_eq:
+  assumes valid: "rb_valid rb \<and> rb_valid rb'"
+  assumes valid_entr:"rb_valid_entries rb = drop \<delta>tl (rb_valid_entries rb')"
+  assumes tl: "rb = rb_incr_tail_n \<delta>tl rb'"
+  assumes can: "rb_can_incr_tail_n \<delta>tl rb'"
+  shows "map (the \<circ> ring rb') (drop \<delta>tl (rb_valid_entries rb')) = map (the \<circ> ring rb) (rb_valid_entries rb)"
+  unfolding rb_valid_entries_def 
+  apply auto 
+proof - 
+  from tl have tl2: "tail rb' \<le> head rb' \<Longrightarrow> tail rb \<le> head rb \<Longrightarrow> tail rb = (tail rb' + \<delta>tl) mod size rb'"
+    by (simp add: rb_incr_tail_n_def)
+
+  show "tail rb' \<le> head rb' \<Longrightarrow> tail rb \<le> head rb \<Longrightarrow> map (the \<circ> ring rb') [tail rb' + \<delta>tl..<head rb'] = 
+        map (the \<circ> ring rb) [tail rb..<head rb]"
+    using tl2
+    by (metis drop_upt rb_incr_tail_n_ring rb_valid_entries_def tl valid_entr) 
+next
+  show "tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> map (the \<circ> ring rb') [tail rb' + \<delta>tl..<head rb'] = 
+        map (the \<circ> ring rb) [tail rb..<size rb] @ map (the \<circ> ring rb) [0..<head rb]"
+    by (metis drop_upt map_append rb_incr_tail_n_ring rb_valid_entries_def tl valid_entr)
+next
+  show "\<not> tail rb' \<le> head rb' \<Longrightarrow>
+    tail rb \<le> head rb \<Longrightarrow> map (the \<circ> ring rb') [tail rb' + \<delta>tl..<size rb'] @ map (the \<circ> ring rb') [\<delta>tl - (size rb' - tail rb')..<head rb'] = 
+    map (the \<circ> ring rb) [tail rb..<head rb]"
+  proof -
+    from tl have tl2: "\<not> tail rb' \<le> head rb' \<Longrightarrow> head rb' \<le> tail rb' \<and> tail rb' < size rb'"
+      by (meson nat_le_linear rb_valid_def rb_valid_ptr_def valid)
+
+    from assms have tl3: "\<not> tail rb' \<le> head rb' \<Longrightarrow> tail rb \<le> head rb \<Longrightarrow> (tail rb' + \<delta>tl) mod (size rb') \<le> head rb"
+      by (simp add: rb_incr_tail_n_def)
+
+    from assms tl3 have tl4: "\<not> tail rb' \<le> head rb' \<Longrightarrow> tail rb \<le> head rb \<Longrightarrow> [tail rb' + \<delta>tl..<size rb'] = []"
+      by (metis add_leE mod_less rb_incr_tail_n_head upt_rec)
+
+    from assms tl3 have tl4: "\<not> tail rb' \<le> head rb' \<Longrightarrow> tail rb \<le> head rb \<Longrightarrow> \<delta>tl - (size rb' - tail rb') = tail rb"
+      by (smt add.commute diff_diff_cancel diff_diff_left diff_diff_right diff_zero length_append length_drop length_upt 
+          less_imp_le ordered_cancel_comm_monoid_diff_class.diff_add rb_can_incr_tail_n_def rb_incr_tail_n_head rb_valid_entries_def tl2)
+    
+    show "\<not> tail rb' \<le> head rb' \<Longrightarrow>
+           tail rb \<le> head rb \<Longrightarrow> map (the \<circ> ring rb') [tail rb' + \<delta>tl..<size rb'] @ map (the \<circ> ring rb') [\<delta>tl - (size rb' - tail rb')..<head rb'] = 
+            map (the \<circ> ring rb) [tail rb..<head rb]" using assms tl2 tl3 tl4
+      by (metis add_leE map_append mod_less rb_incr_tail_n_head rb_incr_tail_n_ring self_append_conv2 upt_rec) 
+  qed
+next
+  show "\<not> tail rb' \<le> head rb'\<Longrightarrow>
+    \<not> tail rb \<le> head rb \<Longrightarrow>
+    map (the \<circ> ring rb') [tail rb' + \<delta>tl..<size rb'] @ map (the \<circ> ring rb') [\<delta>tl - (size rb' - tail rb')..<head rb'] =
+    map (the \<circ> ring rb) [tail rb..<size rb] @ map (the \<circ> ring rb) [0..<head rb] " 
+  proof -
+    from assms have tl2: "\<not> tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> tail rb' + \<delta>tl = tail rb"
+      by (smt add_diff_cancel_right' add_diff_inverse_nat can diff_diff_cancel length_append length_drop 
+          length_upt less_imp_le rb_can_incr_tail_n_def rb_can_incr_tail_n_lt_max rb_delta_helper2 
+          rb_incr_tail_n_delta_invalid_entries rb_incr_tail_n_head rb_invalid_entries_def 
+           rb_valid_implies_ptr_valid semiring_normalization_rules(25) tl valid) 
+    from assms have tl3: "\<not> tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> \<delta>tl - (size rb' - tail rb') = 0"
+      by (metis diff_is_0_eq' less_diff_conv less_imp_le rb_incr_tail_n_size rb_valid_implies_ptr_valid 
+          rb_valid_ptr_def semiring_normalization_rules(24) tl2) 
+
+    from assms tl2 have core1: "\<not> tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> 
+                                map (the \<circ> ring rb') [tail rb' + \<delta>tl..<size rb'] = map (the \<circ> ring rb) [tail rb..<size rb]"
+      by (simp add: rb_incr_tail_n_ring rb_incr_tail_n_size)
+
+    from tl have hd: "head rb' = head rb"       
+      by (simp add: rb_incr_tail_n_head) 
+
+    from assms hd tl3 have core2: "\<not> tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> 
+              map (the \<circ> ring rb') [\<delta>tl - (size rb' - tail rb')..<head rb'] = map (the \<circ> ring rb) [0..<head rb]"
+      by (simp add: rb_incr_tail_n_ring)
+
+    show  "\<not> tail rb' \<le> head rb' \<Longrightarrow>
+          \<not> tail rb \<le> head rb \<Longrightarrow> 
+          map (the \<circ> ring rb') [tail rb' + \<delta>tl..<size rb'] @ map (the \<circ> ring rb') [\<delta>tl - (size rb' - tail rb')..<head rb'] =
+          map (the \<circ> ring rb) [tail rb..<size rb] @ map (the \<circ> ring rb) [0..<head rb]" using core1 core2
+      by simp 
+  qed
+qed
+
+lemma rb_ring_map_take_eq: 
+  fixes st' st 
+  assumes frame: "frame_rb_weak_right st' st" and
+          head: "head st = head (rb_incr_head_n n st')" and
+          enq: "rb_can_incr_head_n n st'"
+  shows  "map (the \<circ> ring st') (rb_valid_entries st') @ map (the \<circ> ring st) (rb_incr_head_n_delta n st') = map (the \<circ> ring st) (rb_valid_entries st)"
+  using enq frame head rb_weak_delta_head_n
+  by (metis frame_rb_weak_right_state map_append rb_incr_head_n_ring)
+
+lemma rb_valid_tl_delta_take_drop:
+  assumes "rb_valid_entries rb' = drop \<delta>tl (rb_valid_entries rb)"
+  shows "map (the \<circ> ring rb) (rb_valid_entries rb) =  map (the \<circ> ring rb) (take \<delta>tl (rb_valid_entries rb)) @ map (the \<circ> ring rb) (drop \<delta>tl (rb_valid_entries rb))"
+  by (metis append_take_drop_id map_append)
+
+
+lemma rb_equal_implies_map:
+ "ring rb' = ring rb \<and> (rb_valid_entries rb') = (rb_valid_entries rb) \<Longrightarrow> 
+  map (the \<circ> ring rb') (rb_valid_entries rb') = map (the \<circ> ring rb) (rb_valid_entries rb)"
+  by presburger
+
+lemma rb_equal_ring_equal:
+ "(rTXY rb) = rb_incr_tail_n \<delta>tl (rTXY rb') \<Longrightarrow> ring (rTXY rb) = ring (rTXY rb')"
+  by (simp add: rb_incr_tail_n_ring)
+
 end
+
+

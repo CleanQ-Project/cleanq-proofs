@@ -294,6 +294,49 @@ proof -
     by (metis (no_types, hide_lams) frame frame_rb_weak_left_def frame_rb_weak_x_def map_append) 
 qed
 
+lemma frame_weak_x_tl_delta: 
+  assumes Inv: "CleanQ_RB_Invariants K rb'" and
+          frame: "frame_rb_weak_x rb' rb" and
+          incr: "rTXY rb = rb_incr_tail_n n (rTXY rb')" and
+          can_incr: "rb_can_incr_tail_n n (rTXY rb')" 
+  shows"map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) =
+        map (the \<circ> ring (rTXY rb')) (rb_incr_tail_n_delta n (rTXY rb')) @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
+  using Inv frame rb_weak_delta_tail_n 
+proof -
+  from frame have st: "rTXY rb = rb_incr_tail_n n (rTXY rb')" 
+    unfolding frame_rb_weak_x_def frame_rb_weak_left_def
+    using incr by blast 
+
+  from assms have delta: "rb_valid_entries (rTXY rb') = (rb_incr_tail_n_delta n (rTXY rb')) @ (rb_valid_entries (rTXY rb))"
+      using can_incr st using rb_weak_delta_tail_n
+      using frame_rb_weak_x_def
+      by (simp add: frame_rb_weak_x_def rb_weak_delta_tail_n)
+      
+  from assms delta have drop:"rb_valid_entries (rTXY rb) = drop n (rb_valid_entries (rTXY rb'))"
+    by (metis append_take_drop_id rb_incr_tail_n_delta_def same_append_eq) 
+     
+  from frame have valid: "rb_valid (rTXY rb) \<and> rb_valid (rTXY rb')"
+     by (simp add: frame_rb_weak_left_def frame_rb_weak_x_def)
+
+  from drop valid can_incr st rb_ring_map_drop_eq
+  have core: "map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) = (map (the \<circ> ring (rTXY rb')) (drop n (rb_valid_entries (rTXY rb'))))"
+    by (simp add: rb_ring_map_drop_eq valid) 
+
+  from assms have eq: "map (the \<circ> ring (rTXY rb')) (drop n (rb_valid_entries (rTXY rb'))) = map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
+    using core by auto
+
+  from assms have eq2: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) =
+                       map (the \<circ> ring (rTXY rb')) (take n (rb_valid_entries (rTXY rb'))) @ map (the \<circ> ring (rTXY rb')) (drop n (rb_valid_entries (rTXY rb')))"
+    using drop rb_valid_tl_delta_take_drop by blast
+
+  from assms have eq3: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb)) = map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
+    using drop eq by auto
+   
+  show ?thesis
+    by (simp add: delta eq3) 
+qed
+
+
 lemma frame_weak_x_exists_hd_delta:
   assumes Inv: "CleanQ_RB_Invariants K rb'" and
           frame: "frame_rb_weak_x rb' rb"
@@ -330,6 +373,25 @@ proof -
    
 qed
 
+
+lemma frame_weak_x_hd_delta:
+  assumes Inv: "CleanQ_RB_Invariants K rb'" and
+          frame: "frame_rb_weak_x rb' rb" and
+          incr: "rTYX rb = rb_incr_head_n n (rTYX rb')" and
+          can_incr: "rb_can_incr_head_n n (rTYX rb')" 
+  shows"map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ map (the \<circ> ring (rTYX rb)) (rb_incr_head_n_delta n (rTYX rb')) =
+        map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb))"
+  using assms rb_weak_delta_head_n 
+  unfolding frame_rb_weak_x_def
+proof -
+  assume a1: "rSX rb = rSX rb' \<and> frame_rb_weak_left (rTXY rb') (rTXY rb) \<and> frame_rb_weak_right (rTYX rb') (rTYX rb) \<and> (\<exists>\<delta>txy \<delta>tyx. rSY rb' = set \<delta>txy \<union> rSY rb - set \<delta>tyx)"
+  have "ring (rTYX rb) = ring (rTYX rb')"
+    by (simp add: incr rb_incr_head_n_ring)
+  then show ?thesis
+    using a1 can_incr incr rb_weak_delta_head_n by fastforce
+qed
+
+(*
 lemma frame_weak_x_exists_txy_delta:
   assumes Inv: "CleanQ_RB_Invariants K rb'" and
           frame: "frame_rb_weak_x rb' rb"
@@ -339,11 +401,28 @@ lemma frame_weak_x_exists_txy_delta:
   by (metis Diff_disjoint Un_Diff_Int Un_Diff_cancel2 finite_Diff finite_Int 
       finite_distinct_list finite_set)
 
+lemma frame_weak_x_txy_delta:
+  assumes Inv: "CleanQ_RB_Invariants K rb'" and
+          xy: "\<delta>xy = map (the \<circ> ring (rTYX rb')) (rb_incr_tail_n_delta \<delta>tl (rTXY rb'))" and
+          yx: "\<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_incr_head_n_delta \<delta>hd (rTXY rb'))" and
+          frame: "frame_rb_weak_x rb' rb" 
+  shows "rSY rb' \<union> set \<delta>xy = set \<delta>yx \<union> rSY rb \<and> rSY rb \<inter> set \<delta>yx = {} \<and> distinct \<delta>xy"
+proof -
+  from Inv xy have "set \<delta>xy \<subseteq> rSX rb" 
+    apply simp unfolding CleanQ_RB_list_def 
+
+  from Inv xy have "distinct \<delta>xy"
+    apply simp 
+
+
+qed
+*)
+
 text \<open>Finally we show that the RB weak frame condition refines the List weak frame condition.\<close>
 
 (*
 lemma frame_rb_weak_x_list_weak:
-  fixes rb rb' K
+  fixes rb rb' K \<delta>hd \<delta>tl
   assumes I1: "CleanQ_RB_Invariants K rb'"
       and frame: "frame_rb_weak_x rb' rb"
     shows "frame_list_weak (lTXY (CleanQ_RB2List rb'), lSY (CleanQ_RB2List rb'), lTYX (CleanQ_RB2List rb'), lSX (CleanQ_RB2List rb')) 
@@ -365,12 +444,50 @@ proof -
            else (tail (rTXY rb') + \<delta>tl) mod size (rTXY rb')) = tail (rTXY rb)"
     unfolding frame_rb_weak_x_def frame_rb_weak_left_def frame_rb_weak_right_def
     by blast
-  
-  define \<delta>xy where "\<delta>xy = map (the \<circ> ring (rTYX rb)) (rb_incr_tail_n_delta \<delta>tl (rTXY rb'))"
-  define \<delta>yx where "\<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_incr_head_n_delta \<delta>hd (rTXY rb'))"
 
-  from frame_weak_x_exists_tl_delta have core1: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) =
-        \<delta>xy @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) "
+  from assms have rb: "rTXY rb = rb_incr_tail_n \<delta>tl (rTXY rb')"
+    by (metis (no_types, lifting) CleanQ_RB.select_convs(3) CleanQ_RB.surjective CleanQ_RB.update_convs(3) 
+        frame_rb_weak_left_state frame_rb_weak_x_def mod_less rb_can_incr_tail_max_implies_can_incr rb_incr_tail_n_def tl)
+
+  from rb have incr_tl: "rb_can_incr_tail_n \<delta>tl (rTXY rb')"
+    using rb_can_incr_tail_n_lt_max tl by blast
+
+  from assms incr_tl have rb_tl: "rTXY rb = rb_incr_tail_n \<delta>tl (rTXY rb')"
+    using rb by blast
+   
+  from rb have incr_hd: "rb_can_incr_head_n \<delta>hd (rTYX rb')"
+    by (meson CleanQ_RB_Invariants.elims(2) I1 I4_rb_valid.elims(2) hd rb_can_incr_head_max_implies_can_incr
+        rb_valid_def)
+
+  from assms incr_hd have rb_hd: "rTYX rb = rb_incr_head_n \<delta>hd (rTYX rb')"
+  proof -
+    have "(head (rTYX rb') + \<delta>hd) mod size (rTYX rb') = head (rTYX rb)"
+      by (metis (no_types) hd mod_less)
+    then show ?thesis
+      by (metis (no_types) CleanQ_RB.simps(2) CleanQ_RB.surjective CleanQ_RB.update_convs(2) frame frame_rb_weak_right_state frame_rb_weak_x_def incr_hd rb_incr_head_n_def)
+  qed
+
+  from assms incr_hd rb_hd incr_tl rb_tl frame_weak_x_hd_delta 
+  show "\<exists>\<delta>aB. map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) = \<delta>aB @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) \<and>
+          (\<exists>\<delta>Bc. rSY rb' \<union> set \<delta>aB = set \<delta>Bc \<union> rSY rb \<and>
+                 map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>Bc = map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb)) \<and> rSY rb \<inter> set \<delta>Bc = {} \<and> distinct \<delta>Bc)"
+  proof -
+    obtain \<delta>xy where xy: "\<delta>xy = map (the \<circ> ring (rTYX rb')) (rb_incr_tail_n_delta \<delta>tl (rTXY rb'))"
+      by blast
+    obtain \<delta>yx where yx: "\<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_incr_head_n_delta \<delta>hd (rTXY rb'))"
+      by blast 
+
+    from assms incr_tl rb_tl frame_weak_x_tl_delta 
+    have core1: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) = \<delta>xy @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))" unfolding xy 
+      sorry
+    from assms incr_hd rb_hd frame_weak_x_hd_delta 
+    have core2: "map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb))" unfolding yx
+      sorry
+
+  qed
+
+
+
 
 qed
 *) 
