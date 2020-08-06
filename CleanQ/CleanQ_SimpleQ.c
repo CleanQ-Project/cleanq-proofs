@@ -160,9 +160,11 @@ static int rb_enq(struct rb *rb, struct buffer slot)
 
 
 /*
- * E0:
+ * PRE:
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
+ *
  * tail0 = rb->tail
  * head0 = rb->head
  */
@@ -173,7 +175,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * rb->tail == tail0 + delta mod size0
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t head = rb->head;
 
@@ -184,7 +187,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t tail = rb->tail;
 /*
@@ -195,7 +199,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t size = rb->size;
 /*
@@ -209,22 +214,24 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  * head == head0 == rb->head;
  *
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     if ((((head + 1) % size) == tail)) {
-/*
- * E5:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail == (head+1) mod size0   <--> (rb->tail - delta2) mod size2 == (rb->head + 1) mod size0
- *
- * head == head0 == rb->head;
- *
- * I_size: rb->size == size0
- */
+    /*
+    * E5:
+    *
+    * size == rb->size == size0
+    *
+    * rb->tail == tail0 + delta mod size0
+    * tail == (rb->tail - delta2) mod size0
+    * tail == (head+1) mod size0   <--> (rb->tail - delta2) mod size2 == (rb->head + 1) mod size0
+    *
+    * head == head0 == rb->head;
+    *
+    * I_size: size0 == rb->size
+    * I_ring: ring0 == rb->ring
+    */
         return ERR_QUEUE_FULL;
     }
 
@@ -239,7 +246,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t head2 = rb->head;
 
@@ -255,7 +263,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  * head2 == head == head0 == rb->head;
  *
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     struct buffer *ring = rb->ring;
 /*
@@ -269,7 +278,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ring[head2].region = slot.region;
 /*
@@ -283,7 +293,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ring[head2].offset = slot.offset;
 /*
@@ -297,7 +308,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ring[head2].length = slot.length;
 /*
@@ -311,7 +323,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ring[head2].valid_offset = slot.valid_offset;
 /*
@@ -325,7 +338,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ring[head2].valid_length = slot.valid_length;
 /*
@@ -339,7 +353,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ring[head2].flags = slot.flags;
 
@@ -354,7 +369,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t head3 = rb->head;
 /*
@@ -368,7 +384,8 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head3 == head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t size3 = rb->size;
 /*
@@ -382,14 +399,13 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * head3 == head2 == head == head0 == rb->head;
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     rb->head = (head3 + 1) % size3;
 
 /*
  * E17:
- *
- * I_size: rb->size == size0
  *
  * size3 == size == rb->size == size0
  *
@@ -404,12 +420,23 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  *
  * rb->tail == tail0 + delta mod size
  * rb->head == head0 + 1 mod size
+ *
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     return ERR_OK;
 }
 
 
-
+/*
+ * POST
+ *
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
+ *
+ * r == ERR_OK --> rb->head = head0 + 1 mod rb->size
+ * r != ERR_OK --> rb->head = head0
+ */
 
 
 
@@ -441,9 +468,11 @@ static int rb_deq(struct rb *rb, struct buffer *ret)
 
 
 /*
- * D0:
+ * PRE:
  *
- * size0 = rb->size
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
+ *
  * tail0 = rb->tail
  * head0 = rb->head
  */
@@ -452,7 +481,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
 /*
  * D1:
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t head = rb->head;
 /*
@@ -461,7 +491,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * rb->head = (head0 + delta) mod size0
  * head = (rb->head - delta2) mod size0
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t tail = rb->tail;
 /*
@@ -472,21 +503,23 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * rb->head = (head0 + delta) mod size0
  * head = (rb->head - delta2) mod size0
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     if ((head == tail)) {
-/*
- * D4:
- *
- * tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail == head <--> (rb->head - delta2) mod size0 == tail
- *
- * I_size: rb->size == size0
- */
+    /*
+    * D4:
+    *
+    * tail == tail0 == rb->tail
+    *
+    * rb->head = (head0 + delta) mod size0
+    * head = (rb->head - delta2) mod size0
+    *
+    * tail == head <--> (rb->head - delta2) mod size0 == tail
+    *
+    * I_size: size0 == rb->size
+    * I_ring: ring0 == rb->ring
+    */
         return ERR_QUEUE_EMTPY;
     }
 
@@ -500,7 +533,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t tail1 = rb->tail;
 /*
@@ -513,7 +547,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     struct buffer *ring = rb->ring;
 /*
@@ -526,7 +561,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ret->region = ring[tail1].region;
 /*
@@ -539,7 +575,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ret->offset = ring[tail1].offset;
 /*
@@ -552,7 +589,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ret->length = ring[tail1].length;
 /*
@@ -565,7 +603,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ret->valid_offset = ring[tail1].valid_offset;
 /*
@@ -578,7 +617,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ret->valid_length = ring[tail1].valid_length;
 /*
@@ -591,7 +631,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     ret->flags = ring[tail1].flags;
 /*
@@ -604,7 +645,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t size = rb->size;
 /*
@@ -618,7 +660,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     u32_t tail2 = rb->tail;
 /*
@@ -633,7 +676,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
  *
- * I_size: rb->size == size0
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     rb->tail = (tail2 + 1) % size;
 /*
@@ -648,13 +692,23 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  *
  * tail != head <--> (rb->head - delta2) mod size0 != tail
  *
- * I_size: rb->size == size0
  *
  * tail0 == rb->tail + 1 mod size
  * head0 == rb->head + delta mod size
+ *
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
  */
     return ERR_OK;
 }
+
+/*
+ * POST
+ *
+ * I_size: size0 == rb->size
+ * I_ring: ring0 == rb->ring
+ */
+
 
 
 /*
