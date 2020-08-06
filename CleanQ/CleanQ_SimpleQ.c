@@ -25,15 +25,14 @@
 
 #ifdef COMPILE
 #define _GNU_SOURCE
-#include <stdlib.h>
+#include <assert.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <pthread.h>
-#include <assert.h>
+#include <stdlib.h>
 #else
-#define NULL ((void *)0)
+#define NULL ((void*)0)
 #endif
-
 
 ///< this is the architecture cache line size in bytes
 #define ARCH_CACHELINE_SIZE_BYTES 64
@@ -53,12 +52,11 @@
 ///< this is the total number of buffers (K)
 #define CONFIG_DEFAULT_NUM_BUFS 128
 
-
 /* a few basic type definitions */
-typedef unsigned long  u64_t;
-typedef unsigned int   u32_t;
+typedef unsigned long u64_t;
+typedef unsigned int u32_t;
 typedef unsigned short u16_t;
-typedef unsigned char  u8_t;
+typedef unsigned char u8_t;
 
 /* error types */
 
@@ -74,7 +72,6 @@ typedef unsigned char  u8_t;
 ///< no owned buffers
 #define ERR_NO_BUFFERS -3
 
-
 /*
  * ======================================================================================
  * Ring Buffer Implementation
@@ -82,8 +79,7 @@ typedef unsigned char  u8_t;
  */
 
 ///< this defines an element in the descriptor ring.
-struct buffer
-{
+struct buffer {
     u64_t region;
     u64_t offset;
     u64_t length;
@@ -91,15 +87,13 @@ struct buffer
     u64_t valid_length;
     u64_t flags;
 #ifdef COMPILE
-    struct buffer *nextfree;
-    struct buffer *self;
+    struct buffer* nextfree;
+    struct buffer* self;
 #endif
 };
 
-
 ///< this defines a ring buffer
-struct rb
-{
+struct rb {
     ///< this is the head pointer of the ring buffer
     u32_t head;
 
@@ -110,9 +104,8 @@ struct rb
     u32_t size;
 
     ///< this is the memory holding the ring buffer
-    struct buffer *ring;
+    struct buffer* ring;
 };
-
 
 /*
  * --------------------------------------------------------------------------------------
@@ -120,7 +113,7 @@ struct rb
  * --------------------------------------------------------------------------------------
  */
 
-static void rb_init(struct rb *rb, struct buffer *ring, u64_t size)
+static void rb_init(struct rb* rb, struct buffer* ring, u64_t size)
 {
 #ifdef COMPILE
     printf("RB init [%p | %lu ]\n", ring, size);
@@ -131,22 +124,20 @@ static void rb_init(struct rb *rb, struct buffer *ring, u64_t size)
     rb->tail = 0;
 }
 
-
 /*
  * --------------------------------------------------------------------------------------
  * Enqueue Operation
  * --------------------------------------------------------------------------------------
  */
 
-
 ///< function to check if there is space to enqueue a new element
-static int rb_can_enq(struct rb *rb)
+static int rb_can_enq(struct rb* rb)
 {
     return (((rb->head + 1) % rb->size) != rb->tail);
 }
 
 ///< enqueue function
-static int rb_enq(struct rb *rb, struct buffer slot)
+static int rb_enq(struct rb* rb, struct buffer slot)
 {
     if (!rb_can_enq(rb)) {
         return ERR_QUEUE_FULL;
@@ -158,275 +149,337 @@ static int rb_enq(struct rb *rb, struct buffer slot)
     return ERR_OK;
 }
 
-
 /*
  * PRE:
  *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
+ * I_size: size0 == rb->size             # size is invariant
+ * I_ring: ring0 == rb->ring             # ring pointer is invariant
  *
  * tail0 = rb->tail
  * head0 = rb->head
  */
-static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
+static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
 {
-/*
- * E1:
- *
- * rb->tail == tail0 + delta mod size0
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
+    /*
+    * E1:
+    *
+    * I_size: size0 == rb->size             # size is invariant
+    * I_ring: ring0 == rb->ring             # ring pointer is invariant
+    */
     u32_t head = rb->head;
 
-/*
- * E2:
- *
- * rb->tail == tail0 + delta mod size0
- *
- * head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t tail = rb->tail;
-/*
- * E3:
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- *
- * head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t size = rb->size;
-/*
- * E4:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- *
- * head == head0 == rb->head;
- *
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    if ((((head + 1) % size) == tail)) {
     /*
-    * E5:
-    *
-    * size == rb->size == size0
-    *
-    * rb->tail == tail0 + delta mod size0
-    * tail == (rb->tail - delta2) mod size0
-    * tail == (head+1) mod size0   <--> (rb->tail - delta2) mod size2 == (rb->head + 1) mod size0
-    *
-    * head == head0 == rb->head;
-    *
-    * I_size: size0 == rb->size
-    * I_ring: ring0 == rb->ring
-    */
+     * E2:
+     *
+     * head == head0 == rb->head;            # the other side does not modify head, we haven't changed
+     *
+     * I_size: size0 == rb->size             # size is invariant
+     * I_ring: ring0 == rb->ring             # ring pointer is invariant
+     */
+    u32_t tail = rb->tail;
+
+    /*
+     * E3:
+     *
+     * head == head0 == rb->head;            # the other side does not modify head, we haven't changed
+     *
+     * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already
+     *
+     * I_size: size0 == rb->size             # size is invariant
+     * I_ring: ring0 == rb->ring             # ring pointer is invariant
+     */
+    u32_t size = rb->size;
+
+    /*
+     * E4:
+     *
+     * head == head0 == rb->head;            # the other side does not modify head, we haven't changed
+     *
+     * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+     *
+     * size = rb->size                       # size is invariant
+     *
+     * I_size: size0 == rb->size
+     * I_ring: ring0 == rb->ring
+     */
+    if ((((head + 1) % size) == tail)) {
+        /*
+         * E5:
+         *
+         * head == head0 == rb->head;            # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size == tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased by delta
+         * ((head + 1) mod size == (tail + delta) mod size
+         *
+         * # so the equaly only holds if delta is zero.  should not be a problem here...,
+         * delta > 0 --> (head + 1 mod size) != rb->tail
+         *
+         */
         return ERR_QUEUE_FULL;
+
+    } else {
+
+        /*
+         * E6:
+         *
+         * head == head0 == rb->head;            # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         *
+         * # there must be no delta, which makes this true!   its tail <= head  (mod size)
+         * delta < (head - tail) mod size
+         *
+         */
+        u32_t head2 = rb->head;
+
+        /*
+         * E7:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        struct buffer* ring = rb->ring;
+        /*
+         * E8:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        ring[head2].region = slot.region;
+        /*
+         * E9:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        ring[head2].offset = slot.offset;
+        /*
+         * E10:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        ring[head2].length = slot.length;
+        /*
+         * E11:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        ring[head2].valid_offset = slot.valid_offset;
+        /*
+         * E12:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        ring[head2].valid_length = slot.valid_length;
+        /*
+         * E13:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        ring[head2].flags = slot.flags;
+
+        /*
+         * E14:
+         *
+         * head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        u32_t head3 = rb->head;
+        /*
+         * E15:
+         *
+         * head3 == head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        u32_t size3 = rb->size;
+        /*
+         * E16:
+         *
+         * head3 == head2 == head == head0 == rb->head;   # the other side does not modify head, we haven't changed
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size3 == size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         */
+        rb->head = (head3 + 1) % size3;
+
+        /*
+         * E17:
+         *
+         * head3 == head2 == head == head0   ;   # the other side does not modify head, we haven't changed
+         * rb->head = (head3 + 1) mod size       # we increased the head pointer
+         *
+         * (tail + delta) mod size = rb->tail    # rb->tail could have advanced already (other thread)
+         *
+         * size = rb->size                       # size is invariant
+         * ring = rb->ring                       # the ring is invariant
+         *
+         * I_size: size0 == rb->size
+         * I_ring: ring0 == rb->ring
+         *
+         *
+         * ((head + 1) mod size != tail)        # with the local variables, this holds
+         * ((head3 + 1) mod size != tail)       # with local variables this holds
+         * (rb->head != tail)                   # we bumped rb->head, so filling that in.
+         *
+         * # using the value of tail wrt rb->tail, which may have increased, this must still hold
+         * ((head + 1) mod size != (tail + delta) mod size
+         * rb->head != (tail + delta) mod size
+         */
+        return ERR_OK;
     }
-
-/*
- * E6:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t head2 = rb->head;
-
-/*
- * E7:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    struct buffer *ring = rb->ring;
-/*
- * E8:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ring[head2].region = slot.region;
-/*
- * E9:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ring[head2].offset = slot.offset;
-/*
- * E10:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ring[head2].length = slot.length;
-/*
- * E11:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ring[head2].valid_offset = slot.valid_offset;
-/*
- * E12:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ring[head2].valid_length = slot.valid_length;
-/*
- * E13:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ring[head2].flags = slot.flags;
-
-/*
- * E14:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t head3 = rb->head;
-/*
- * E15:
- *
- * size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head3 == head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t size3 = rb->size;
-/*
- * E16:
- *
- * size3 == size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (head+1) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head + 1) mod size0
- *
- * head3 == head2 == head == head0 == rb->head;
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    rb->head = (head3 + 1) % size3;
-
-/*
- * E17:
- *
- * size3 == size == rb->size == size0
- *
- * rb->tail == tail0 + delta mod size0
- * tail == (rb->tail - delta2) mod size0
- * tail != (rb->head) mod size0   <--> (rb->tail - delta2) mod size2 != (rb->head) mod size0
- *
- *
- * head3 == head2 == head == head0;
- * rb->head == head3 + 1 mod size3
- *
- *
- * rb->tail == tail0 + delta mod size
- * rb->head == head0 + 1 mod size
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    return ERR_OK;
 }
-
 
 /*
  * POST
@@ -438,23 +491,20 @@ static int rb_enq_unfolded(struct rb *rb, struct buffer slot)
  * r != ERR_OK --> rb->head = head0
  */
 
-
-
 /*
  * --------------------------------------------------------------------------------------
  * Dequeue Operation
  * --------------------------------------------------------------------------------------
  */
 
-
 ///< function to check if there is an element to dequeue
-static int rb_can_deq(struct rb *rb)
+static int rb_can_deq(struct rb* rb)
 {
     return (rb->head != rb->tail);
 }
 
 ///< the dequeue operation
-static int rb_deq(struct rb *rb, struct buffer *ret)
+static int rb_deq(struct rb* rb, struct buffer* ret)
 {
     if (!rb_can_deq(rb)) {
         return ERR_QUEUE_EMTPY;
@@ -466,7 +516,6 @@ static int rb_deq(struct rb *rb, struct buffer *ret)
     return ERR_OK;
 }
 
-
 /*
  * PRE:
  *
@@ -476,16 +525,16 @@ static int rb_deq(struct rb *rb, struct buffer *ret)
  * tail0 = rb->tail
  * head0 = rb->head
  */
-static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
+static int rb_deq_unfolded(struct rb* rb, struct buffer* ret)
 {
-/*
+    /*
  * D1:
  *
  * I_size: size0 == rb->size
  * I_ring: ring0 == rb->ring
  */
     u32_t head = rb->head;
-/*
+    /*
  * D2:
  *
  * rb->head = (head0 + delta) mod size0
@@ -495,7 +544,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     u32_t tail = rb->tail;
-/*
+    /*
  * D3:
  *
  * tail == tail0 == rb->tail
@@ -507,7 +556,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     if ((head == tail)) {
-    /*
+        /*
     * D4:
     *
     * tail == tail0 == rb->tail
@@ -523,7 +572,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
         return ERR_QUEUE_EMTPY;
     }
 
-/*
+    /*
  * D5:
  *
  * tail == tail0 == rb->tail
@@ -537,7 +586,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     u32_t tail1 = rb->tail;
-/*
+    /*
  * D6:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -550,8 +599,8 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_size: size0 == rb->size
  * I_ring: ring0 == rb->ring
  */
-    struct buffer *ring = rb->ring;
-/*
+    struct buffer* ring = rb->ring;
+    /*
  * D7:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -565,7 +614,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     ret->region = ring[tail1].region;
-/*
+    /*
  * D8:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -579,7 +628,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     ret->offset = ring[tail1].offset;
-/*
+    /*
  * D9:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -593,7 +642,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     ret->length = ring[tail1].length;
-/*
+    /*
  * D10:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -607,7 +656,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     ret->valid_offset = ring[tail1].valid_offset;
-/*
+    /*
  * D11:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -621,7 +670,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     ret->valid_length = ring[tail1].valid_length;
-/*
+    /*
  * D12:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -635,7 +684,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     ret->flags = ring[tail1].flags;
-/*
+    /*
  * D13:
  *
  * tail1 == tail == tail0 == rb->tail
@@ -649,7 +698,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     u32_t size = rb->size;
-/*
+    /*
  * D14:
  *
  * size == size0 == rb->size
@@ -664,7 +713,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     u32_t tail2 = rb->tail;
-/*
+    /*
  * D15:
  *
  * size == size0 == rb->size
@@ -680,7 +729,7 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
     rb->tail = (tail2 + 1) % size;
-/*
+    /*
  * D16:
  *
  * size == size0 == rb->size
@@ -709,34 +758,28 @@ static int rb_deq_unfolded(struct rb *rb, struct buffer *ret)
  * I_ring: ring0 == rb->ring
  */
 
-
-
 /*
  * ======================================================================================
  * The SimpleQ Queue System
  * ======================================================================================
  */
 
-
 ///< this is the simple queue model
-struct simpleq
-{
+struct simpleq {
     ///< this is the receiving side of the queue
-    struct rb *rx;
+    struct rb* rx;
 
     ///< this is the sending side of the queue
-    struct rb *tx;
+    struct rb* tx;
 
     ///< owned buffers by this endpoint
-    struct buffer *owned;
+    struct buffer* owned;
 
     ///< endpoint name
-    char *name;
+    char* name;
 };
 
-
-
-static int simpleq_enq(struct simpleq *sq, struct buffer buf)
+static int simpleq_enq(struct simpleq* sq, struct buffer buf)
 {
 #ifdef COMPILE
     printf("%s - enqueue to [%u..%u / %u]\n", sq->name, sq->tx->tail, sq->tx->head, sq->tx->size);
@@ -744,7 +787,7 @@ static int simpleq_enq(struct simpleq *sq, struct buffer buf)
     return rb_enq(sq->tx, buf);
 }
 
-static int simpleq_deq(struct simpleq *sq, struct buffer *buf)
+static int simpleq_deq(struct simpleq* sq, struct buffer* buf)
 {
 #ifdef COMPILE
     printf("%s - dequeue from [%u..%u / %u]\n", sq->name, sq->rx->tail, sq->rx->head, sq->rx->size);
@@ -752,13 +795,11 @@ static int simpleq_deq(struct simpleq *sq, struct buffer *buf)
     return rb_deq(sq->rx, buf);
 }
 
-
 static struct rb rxy;
 static struct rb ryx;
 static struct simpleq sqx;
 static struct simpleq sqy;
-static struct buffer *K_bufs;
-
+static struct buffer* K_bufs;
 
 static int simpleq_enq_x(void)
 {
@@ -769,7 +810,7 @@ static int simpleq_enq_x(void)
         return ERR_NO_BUFFERS;
     }
 
-    struct buffer *buf = sqx.owned;
+    struct buffer* buf = sqx.owned;
 
 #ifdef COMPILE
     buf->nextfree = sqx.owned;
@@ -796,8 +837,7 @@ static int simpleq_enq_y(void)
         return ERR_NO_BUFFERS;
     }
 
-    struct buffer *buf = sqy.owned;
-
+    struct buffer* buf = sqy.owned;
 
 #ifdef COMPILE
     sqy.owned = buf->nextfree;
@@ -816,7 +856,7 @@ static int simpleq_enq_y(void)
     return ERR_OK;
 }
 
-static  struct buffer deq_x_buf;
+static struct buffer deq_x_buf;
 static int simpleq_deq_x(void)
 {
     if (simpleq_deq(&sqx, &deq_x_buf) != ERR_OK) {
@@ -835,7 +875,7 @@ static int simpleq_deq_x(void)
     return ERR_OK;
 }
 
-static  struct buffer deq_y_buf;
+static struct buffer deq_y_buf;
 static int simpleq_deq_y(void)
 {
 
@@ -854,17 +894,14 @@ static int simpleq_deq_y(void)
     return ERR_OK;
 }
 
-
-
 /*
  * ======================================================================================
  * Initialization
  * ======================================================================================
  */
 
-
-static void init_x(struct rb *rxy, struct buffer *txy, u64_t txy_size,
-                   struct rb *ryx, struct buffer *tyx, u64_t tyx_size)
+static void init_x(struct rb* rxy, struct buffer* txy, u64_t txy_size,
+    struct rb* ryx, struct buffer* tyx, u64_t tyx_size)
 {
     sqx.tx = rxy;
     sqx.rx = ryx;
@@ -875,8 +912,8 @@ static void init_x(struct rb *rxy, struct buffer *txy, u64_t txy_size,
 #endif
 }
 
-static void init_y(struct rb *rxy, struct buffer *txy, u64_t txy_size,
-                   struct rb *ryx, struct buffer *tyx, u64_t tyx_size)
+static void init_y(struct rb* rxy, struct buffer* txy, u64_t txy_size,
+    struct rb* ryx, struct buffer* tyx, u64_t tyx_size)
 {
     sqy.tx = ryx;
     sqy.rx = rxy;
@@ -887,8 +924,8 @@ static void init_y(struct rb *rxy, struct buffer *txy, u64_t txy_size,
 #endif
 }
 
-static int init_queue(struct buffer *txy, u64_t txy_size,
-                      struct buffer *tyx, u64_t tyx_size, u64_t nbufs)
+static int init_queue(struct buffer* txy, u64_t txy_size,
+    struct buffer* tyx, u64_t tyx_size, u64_t nbufs)
 {
 #ifdef COMPILE
     printf("Initializing Queue...\n");
@@ -897,13 +934,12 @@ static int init_queue(struct buffer *txy, u64_t txy_size,
     init_x(&rxy, txy, txy_size, &ryx, tyx, tyx_size);
     init_y(&rxy, txy, txy_size, &ryx, tyx, tyx_size);
 
-
     if (K_bufs == NULL) {
         return ERR_NO_BUFFERS;
     }
 
     for (u64_t i = 0; i < nbufs; i++) {
-        K_bufs[i].offset = (i+1) * CONFIG_DEFAULT_BUFFER_SIZE;
+        K_bufs[i].offset = (i + 1) * CONFIG_DEFAULT_BUFFER_SIZE;
         K_bufs[i].length = CONFIG_DEFAULT_BUFFER_SIZE;
 #ifdef COMPILE
         K_bufs[i].self = &K_bufs[i];
@@ -915,7 +951,6 @@ static int init_queue(struct buffer *txy, u64_t txy_size,
     return ERR_OK;
 }
 
-
 /*
  * ======================================================================================
  * Runtime
@@ -924,7 +959,7 @@ static int init_queue(struct buffer *txy, u64_t txy_size,
 
 #ifdef COMPILE
 
-static void *agent_x(void *arg)
+static void* agent_x(void* arg)
 {
     for (u64_t i = 0; i < CONFIG_DEFAULT_ENQ_BUFS; i++) {
         simpleq_enq_x();
@@ -941,15 +976,18 @@ static void *agent_x(void *arg)
     }
 
     for (int i = 0; i < 20; i++) {
-        while(!simpleq_deq_x());
+        while (!simpleq_deq_x())
+            ;
         pthread_yield();
-        while(!simpleq_deq_x());
+        while (!simpleq_deq_x())
+            ;
         pthread_yield();
-        while(!simpleq_deq_x());
+        while (!simpleq_deq_x())
+            ;
     }
 
     u64_t count = 0;
-    struct buffer *buf = sqx.owned;
+    struct buffer* buf = sqx.owned;
     while (buf) {
         count++;
         buf = buf->nextfree;
@@ -960,7 +998,7 @@ static void *agent_x(void *arg)
     return arg;
 }
 
-static void *agent_y(void *arg)
+static void* agent_y(void* arg)
 {
     //while(true) {
     for (int i = 0; i < 20; i++) {
@@ -969,13 +1007,13 @@ static void *agent_y(void *arg)
     }
 
     while (sqy.owned != NULL) {
-        while(!simpleq_deq_y());
+        while (!simpleq_deq_y())
+            ;
         simpleq_enq_y();
     }
 
     return arg;
 }
-
 
 int main(int argc, char** argv)
 {
@@ -986,26 +1024,25 @@ int main(int argc, char** argv)
     }
     printf("\n");
 
-
     K_bufs = calloc(CONFIG_DEFAULT_NUM_BUFS, sizeof(struct buffer));
     if (K_bufs == NULL) {
         printf("Failed to allocate memory. exiting...\n");
         return -1;
     }
-    struct buffer *txy = calloc(CONFIG_DEFAULT_QUEUE_SIZE, sizeof(struct buffer));
+    struct buffer* txy = calloc(CONFIG_DEFAULT_QUEUE_SIZE, sizeof(struct buffer));
     if (txy == NULL) {
         printf("Failed to allocate memory. exiting...\n");
         return -1;
     }
 
-    struct buffer *tyx = calloc(CONFIG_DEFAULT_QUEUE_SIZE, sizeof(struct buffer));
+    struct buffer* tyx = calloc(CONFIG_DEFAULT_QUEUE_SIZE, sizeof(struct buffer));
     if (tyx == NULL) {
         printf("Failed to allocate memory. exiting...\n");
         return -1;
     }
 
     ret = init_queue(txy, CONFIG_DEFAULT_QUEUE_SIZE, tyx, CONFIG_DEFAULT_QUEUE_SIZE,
-                     CONFIG_DEFAULT_NUM_BUFS);
+        CONFIG_DEFAULT_NUM_BUFS);
     if (ret != ERR_OK) {
         printf("FAILED TO INITALIZE THE QUEUE\n");
         return -1;
@@ -1038,7 +1075,6 @@ int main(int argc, char** argv)
     if (ret != 0) {
         printf("FAILED TO START THE AGENT Y %i\n", ret);
     }
-
 
     for (int i = 0; i < 2; i++) {
         pthread_join(threads[i], NULL);
