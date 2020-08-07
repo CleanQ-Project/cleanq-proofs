@@ -217,37 +217,40 @@ text \<open>
   Assuming a two concurrently acting agents, we can not assume that all of the RB state
   stays the same. In order to model this, we have to weaken the frame condition which
   we up to now implicitly used. \<close>
+(*
 definition frame_rb_weak_x :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
   where "frame_rb_weak_x st' st \<longleftrightarrow> rSX st = rSX st' \<and> frame_rb_weak_left (rTXY st') (rTXY st) 
                                     \<and> frame_rb_weak_right (rTYX st') (rTYX st) \<and> 
-                                    (rSY st' = set (rb_delta_tail_st (rTXY st') (rTXY st)) \<union> 
-                                     rSY st - set (rb_delta_head_st (rTYX st') (rTYX st)))" 
+                                    (rSY st' = (set (rb_delta_head_st (rTYX st') (rTYX st)) \<union> 
+                                     rSY st - set (rb_delta_tail_st (rTXY st') (rTXY st))))" 
+*)
+definition frame_rb_weak_x :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "frame_rb_weak_x st' st \<longleftrightarrow> rSX st = rSX st' \<and> frame_rb_weak_left (rTXY st') (rTXY st) 
+                                    \<and> frame_rb_weak_right (rTYX st') (rTYX st) \<and> 
+                                    (rSY st' \<union> set (rb_delta_tail_st (rTXY st') (rTXY st)) = (set (rb_delta_head_st (rTYX st') (rTYX st)) \<union> 
+                                     rSY st) \<and> distinct (rb_delta_head_st (rTYX st') (rTYX st)))" 
+
 
 definition frame_rb_weak_y :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
   where "frame_rb_weak_y st' st \<longleftrightarrow> rSY st = rSY st' \<and> frame_rb_weak_left (rTYX st') (rTYX st) \<and>
                                     frame_rb_weak_right (rTXY st') (rTXY st) \<and>
-                                    (rSX st' = set (rb_delta_tail_st (rTYX st') (rTYX st)) \<union> 
-                                     rSX st - set (rb_delta_head_st (rTXY st') (rTXY st)))"
+                                    (rSX st' = (set (rb_delta_tail_st (rTYX st') (rTYX st)) \<union> 
+                                     rSX st - set (rb_delta_head_st (rTXY st') (rTXY st))))"
 
 lemma frame_rb_s_w_x:
  "frame_rb_strong st' st \<Longrightarrow> frame_rb_weak_x st' st"
   unfolding frame_rb_weak_x_def frame_rb_strong_def frame_rb_weak_left_def
   frame_rb_weak_right_def rb_delta_tail_st_def rb_delta_head_st_def
-  by (metis Diff_empty I4_rb_valid.elims(2) Nat.add_0_right Un_empty_left diff_self_eq_0 le0 
-      le_refl list.map(1) list.set(1) rb_delta_head_def rb_delta_tail_def rb_incr_head_n_delta_def 
-      rb_incr_head_n_delta_map_def rb_incr_tail_n_delta_def rb_incr_tail_n_delta_map_def rb_valid_def 
-      rb_valid_ptr_def take0) 
-
-
+  by (simp add: rb_delta_head_def rb_delta_tail_def rb_incr_head_n_delta_def 
+      rb_incr_head_n_delta_map_def rb_incr_tail_n_delta_def rb_incr_tail_n_delta_map_def)
 
 lemma frame_rb_s_w_y:
   "frame_rb_strong dev' dev \<Longrightarrow> frame_rb_weak_y dev' dev"
   unfolding frame_rb_weak_y_def frame_rb_strong_def frame_rb_weak_left_def
   frame_rb_weak_right_def rb_delta_tail_st_def rb_delta_head_st_def
-  by (metis Diff_empty I4_rb_valid.elims(2) add.commute add.left_neutral diff_self_eq_0 
-      le_refl list.map(1) list.set(1) rb_delta_head_def rb_delta_tail_def rb_incr_head_n_delta_def 
-      rb_incr_head_n_delta_map_def rb_incr_tail_n_delta_def rb_incr_tail_n_delta_map_def rb_valid_def 
-      rb_valid_ptr_def sup_bot.left_neutral take0 zero_le)
+  by (simp add: rb_delta_head_def rb_delta_tail_def rb_incr_head_n_delta_def 
+      rb_incr_head_n_delta_map_def rb_incr_tail_n_delta_def rb_incr_tail_n_delta_map_def)
+  
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -292,8 +295,14 @@ lemma frame_weak_x_hd_delta:
   unfolding rb_delta_head_st_def rb_incr_head_n_delta_map_def rb_incr_head_n_delta_def
   using frame rb_delta_head_incr unfolding frame_rb_weak_x_def
   by (metis rb_delta_head_st_def rb_incr_head_n_delta_def rb_incr_head_n_delta_map_def) 
-  
-(*
+
+lemma frame_weak_x_sy_delta:
+  assumes Inv: "CleanQ_RB_Invariants K rb'" and
+          frame: "frame_rb_weak_x rb' rb"
+        shows "rSY rb' \<union> set (rb_delta_tail_st (rTXY rb') (rTXY rb)) = set (rb_delta_head_st (rTYX rb') (rTYX rb)) \<union> rSY rb"
+  using frame unfolding frame_rb_weak_x_def
+  by linarith
+
 text \<open>Finally we show that the RB weak frame condition refines the List weak frame condition.\<close>
 lemma frame_rb_weak_x_list_weak:
   fixes rb rb' K
@@ -319,17 +328,33 @@ proof
   define \<delta>xy where "\<delta>xy = rb_delta_tail_st (rTXY rb') (rTXY rb)"
   define \<delta>yx where "\<delta>yx = rb_delta_head_st (rTYX rb') (rTYX rb)"
 
-  have "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) = \<delta>xy @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
+  have c1: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) = \<delta>xy @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
     using I1 \<delta>xy_def frame frame_weak_x_tl_delta by blast
 
-  have "map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb))"
+  have c2: "map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb))"
     using I1 \<delta>yx_def frame frame_weak_x_hd_delta by blast
   
-  have "rSY rb' \<union> set \<delta>xy = set \<delta>yx \<union> rSY rb "
-    
+  have c3: "rSY rb' \<union> set \<delta>xy = set \<delta>yx \<union> rSY rb "
+    using I1 \<delta>xy_def \<delta>yx_def frame frame_weak_x_sy_delta by blast 
 
+  from \<delta>xy_def have s1: "set \<delta>xy \<subseteq> set (CleanQ_RB_list(rTXY rb'))"
+    apply simp unfolding rb_delta_tail_st_def rb_incr_tail_n_delta_map_def
+    by (simp add: CleanQ_RB_list_def c1)
+  
+  from \<delta>yx_def have s2: "set \<delta>yx \<subseteq> set (CleanQ_RB_list(rTYX rb))"
+    apply simp unfolding rb_delta_head_st_def rb_incr_head_n_delta_map_def
+    by (metis CleanQ_RB_list_def Un_upper2 c2 set_append)
+     
+  have c4: "rSY rb \<inter> set \<delta>yx = {}"
+    sorry
+  
+  from I1 have c5: "distinct \<delta>yx"
+    using \<delta>yx_def frame frame_rb_weak_x_def by blast 
+    
+  show ?thesis using c1 c2 c3 c4 c5
+    by blast
 qed
-*) 
+
 (* ==================================================================================== *)
 subsection \<open>State Transition Operations\<close>
 (* ==================================================================================== *)
