@@ -2021,16 +2021,33 @@ text \<open>
   according how the model permits it.  
 \<close>
 
+definition rb_delta_tail :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat"
+  where "rb_delta_tail st' st = (if (tail st' \<le> tail st) then (tail st) - (tail st') 
+                                 else (size st' - tail st') + tail st)"
+
+definition rb_incr_tail_n_delta_map :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a list"
+  where "rb_incr_tail_n_delta_map n rb = map (the \<circ> ring rb) (rb_incr_tail_n_delta n rb)"
+
+definition rb_delta_head :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat"
+  where "rb_delta_head st' st = (if (head st' \<le> head st) then (head st) - (head st') 
+                                 else (size st' - head st') + head st)"
+
+definition rb_incr_head_n_delta_map :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a list"
+  where "rb_incr_head_n_delta_map n rb' rb = map (the \<circ> ring rb) (rb_incr_head_n_delta n rb')"
+
+definition rb_delta_head_st :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a list"
+  where "rb_delta_head_st st' st = rb_incr_head_n_delta_map (rb_delta_head st' st) st' st"
+
+definition rb_delta_tail_st :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> 'a list"
+  where "rb_delta_tail_st st' st = rb_incr_tail_n_delta_map (rb_delta_tail st' st) st'"
+
 definition frame_rb_weak_left :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rightarrow> bool"
   where "frame_rb_weak_left st' st \<longleftrightarrow>
     size st' = size st \<and>
     head st' = head st \<and>
     ring st' = ring st \<and>
     rb_valid st' \<and> rb_valid st \<and> 
-   (\<exists> \<delta>tl.  \<delta>tl \<le> rb_can_incr_tail_n_max st' \<and>
-    (if (tail st') + \<delta>tl < (size st') then tail st' + \<delta>tl
-     else ((tail st') + \<delta>tl) mod (size st')) = tail st
-  )" 
+   (rb_delta_tail st' st \<le> rb_can_incr_tail_n_max st')" 
 
 lemma frame_rb_weak_left_state:
   assumes frame: "frame_rb_weak_left st' st" and
@@ -2039,6 +2056,25 @@ lemma frame_rb_weak_left_state:
   shows "st = rb_incr_tail_n n st'"
   using assms unfolding frame_rb_weak_left_def rb_incr_tail_n_def
   by simp
+
+
+lemma rb_delta_tail_st_incr_tail :
+  fixes st st'
+  assumes valid: "rb_valid st \<and> rb_valid st'" and
+          size: "size st = size st'" and
+          incr: "rb_can_incr_tail_n n st'"
+  shows "rb_delta_tail st' st = n \<Longrightarrow> tail st = (tail st' + n) mod (size st')" 
+  unfolding rb_incr_tail_n_def rb_delta_tail_def
+  by (smt ab_semigroup_add_class.add_ac(1) le_add_diff_inverse less_imp_le_nat mod_add_self1 
+      mod_less rb_valid_implies_ptr_valid rb_valid_ptr_def size valid)  
+
+lemma rb_delta_tail_st_incr_tail_n :
+  fixes st st'
+  assumes frame: "frame_rb_weak_left st' st"
+  shows "rb_delta_tail st' st = n \<Longrightarrow> st = rb_incr_tail_n n st'" 
+  using frame unfolding frame_rb_weak_left_def
+  by (metis frame frame_rb_weak_left_state rb_can_incr_tail_n_lt_max rb_delta_tail_st_incr_tail 
+      rb_incr_tail_n_def select_convs(3) surjective update_convs(3))
 
 text \<open>
   To talk about the previously introduced delta, we need some lemmas  
@@ -2154,11 +2190,8 @@ definition frame_rb_weak_right :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rig
     size st' = size st \<and>
     tail st' = tail st \<and>
     ring st' = ring st \<and>
-    rb_valid st' \<and> rb_valid st \<and>
-   (\<exists> \<delta>hd. \<delta>hd \<le> rb_can_incr_head_n_max st' \<and>
-    (if (head st') + \<delta>hd < (size st') then head st' + \<delta>hd
-     else ((head st') + \<delta>hd) mod (size st')) = head st
-  )" 
+    rb_valid st' \<and> rb_valid st \<and> 
+   (rb_delta_head st' st \<le> rb_can_incr_head_n_max st')" 
 
 lemma frame_rb_weak_right_state:
   assumes frame: "frame_rb_weak_right st' st" and
@@ -2167,6 +2200,25 @@ lemma frame_rb_weak_right_state:
   shows "st = rb_incr_head_n n st'"
   using assms unfolding frame_rb_weak_right_def rb_incr_head_n_def
   by simp
+
+  
+lemma rb_delta_head_st_incr_head:
+  fixes st st'
+  assumes valid: "rb_valid st \<and> rb_valid st'" and
+          size: "size st = size st'" and
+          incr: "rb_can_incr_head_n n st'"
+  shows "rb_delta_head st' st = n \<Longrightarrow> head st = (head st' + n) mod (size st')" 
+  unfolding rb_incr_head_n_def rb_delta_head_def
+  by (smt ab_semigroup_add_class.add_ac(1) le_add_diff_inverse le_less mod_add_self1 mod_less 
+      rb_valid_implies_ptr_valid rb_valid_ptr_def size valid)
+
+lemma rb_delta_head_st_incr_head_n :
+  fixes st st'
+  assumes frame: "frame_rb_weak_right st' st"
+  shows "rb_delta_head st' st = n \<Longrightarrow> st = rb_incr_head_n n st'" 
+  using frame unfolding frame_rb_weak_right_def
+  by (metis frame frame_rb_weak_right_state rb_can_incr_head_n_lt_max rb_delta_head_st_incr_head 
+      rb_incr_head_n_def rb_valid_implies_ptr_valid select_convs(2) surjective update_convs(2))
 
 lemma rb_delta_head_inv_helper:
   assumes valid: "rb_valid rb" and
@@ -2471,6 +2523,19 @@ lemma rb_equal_implies_map:
 lemma rb_equal_ring_equal:
  "(rTXY rb) = rb_incr_tail_n \<delta>tl (rTXY rb') \<Longrightarrow> ring (rTXY rb) = ring (rTXY rb')"
   by (simp add: rb_incr_tail_n_ring)
+
+lemma rb_delta_tail_incr:
+  assumes frame: "frame_rb_weak_left st' st"
+  shows  "map (the \<circ> ring st') (rb_valid_entries st') = (rb_delta_tail_st st' st) @ map (the \<circ> ring st) (rb_valid_entries st)"
+  by (metis frame frame_rb_weak_left_def map_append rb_delta_tail_st_def rb_delta_tail_st_incr_tail_n 
+      rb_incr_tail_n_delta_map_def rb_incr_tail_n_delta_valid_entries rb_valid_implies_ptr_valid)
+
+lemma rb_delta_head_incr:
+  assumes frame: "frame_rb_weak_right st' st"
+  shows  "map (the \<circ> ring st') (rb_valid_entries st') @ (rb_delta_head_st st' st) = map (the \<circ> ring st) (rb_valid_entries st)"
+  unfolding rb_delta_head_st_def
+  by (metis (no_types, lifting) frame frame_rb_weak_right_def rb_can_incr_head_max_implies_can_incr 
+      rb_delta_head_st_incr_head_n rb_incr_head_n_delta_map_def rb_ring_map_take_eq rb_valid_implies_ptr_valid) 
 
 end
 
