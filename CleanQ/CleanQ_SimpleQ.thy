@@ -12,15 +12,7 @@
 
 
 
-(*
- * Copyright 2014, NICTA
- *
- * This software may be distributed and modified according to the terms of
- * the BSD 2-Clause license. Note that NO WARRANTY is provided.
- * See "LICENSE_BSD2.txt" for details.
- *
- * @TAG(NICTA_BSD)
- *)
+
 
 theory CleanQ_SimpleQ
   imports 
@@ -1307,19 +1299,271 @@ lemma "rb_enq_c_fun rb b = rb_enq_unfolded_c_fun rb b"
   done
 
 
-
-
 lemma "rb_deq_c_fun rb b = rb_deq_unfolded_c_fun rb b"
   unfolding rb_deq_c_fun_def rb_deq_unfolded_c_fun_def rb_can_deq_c_fun_def
   apply(monad_eq)  (* seems to take a while... *)
-  apply(auto simp add: int_unat)
+  apply(auto simp add: int_unat)   (* seems to take a while... *)
   done
 
 
+
+abbreviation "rbhead s rb \<equiv> unat (head_C (heap_rb_C s rb))"
+abbreviation "rbtail s rb \<equiv> unat (tail_C (heap_rb_C s rb))"
+abbreviation "rbsize s rb \<equiv> unat (size_C (heap_rb_C s rb))"
+abbreviation "rbring s rb \<equiv> (ring_C (heap_rb_C s rb))"
+
+
+lemma c_rb_enq_unfolded_ring_size_invariant:
+"\<lbrace> \<lambda>s. c_rb_valid s rb  \<and>  sz = rbsize s rb  \<and>  rg = rbring s rb   \<rbrace>
+ rb_enq_unfolded_c_fun rb b
+\<lbrace> \<lambda>r s. sz = rbsize s rb  \<and> rg = rbring s rb   \<rbrace>!"
+  unfolding rb_enq_unfolded_c_fun_def
+  apply(wp_once)+
+  by(auto simp:c_rb_valid_def unat_gt_0 Suc_le_eq unat_32word_leq_lt_lt 
+               int_unat word_less_def)
+
+lemma c_rb_deq_unfolded_ring_size_invariant:
+"\<lbrace> \<lambda>s. c_rb_valid s rb  \<and>  sz = rbsize s rb  \<and>  rg = rbring s rb  \<and>  is_valid_buffer_C s b  \<rbrace>
+ rb_deq_unfolded_c_fun rb b
+\<lbrace> \<lambda>r s. sz = rbsize s rb  \<and> rg = rbring s rb \<rbrace>!"
+  unfolding rb_deq_unfolded_c_fun_def
+  apply(wp_once)+
+  by(auto simp:c_rb_valid_def unat_gt_0 Suc_le_eq unat_32word_leq_lt_lt 
+               int_unat word_less_def)
+
+
+
+
+
+
+
+lemma c_rb_enq_unfolded_pre_post:
+"\<lbrace> \<lambda>s. c_rb_valid s rb    
+      \<and> h = rbhead s rb   
+      \<and> t = rbtail s rb   
+      \<and> sz = rbsize s rb  
+      \<and> rg = rbring s rb   \<rbrace>
+ rb_enq_unfolded_c_fun rb b
+\<lbrace> \<lambda>r s. (r = ERR_OK \<longrightarrow> (h + 1) mod sz = rbhead s rb) 
+        \<and>  (\<exists>\<delta>. (t + \<delta>) mod sz = rbtail s rb)
+        \<and> (r \<noteq> ERR_OK \<longrightarrow> h = rbhead s rb)
+        \<and> sz = rbsize s rb 
+        \<and> rg = rbring s rb   \<rbrace>!"
+  unfolding rb_enq_unfolded_c_fun_def
+  apply(wp_once)+
+  apply(auto simp:c_rb_valid_def unat_gt_0 unat_32word_leq_lt_lt int_unat 
+                  Suc_leI  word_less_def)
+  apply (metis mod_div_mult_eq)
+  prefer 2 
+  apply (metis Euclidean_Division.mod_less int_unat mod_add_self2 of_nat_less_iff)
+  by (metis (no_types, hide_lams) int_unat of_nat_less_iff uint_1 unat_1 unat_32word_succ_mod word_less_def)
+
+
+text \<open>
+  The following two proofs show, using guard annotations, that the size, the ring, 
+  and the head/tail pointers are invariant after every step in the programm.
+  The only thing that is changed by the program is the tail/head pointer. 
+  -> the other size can do the change!
+\<close>
+
+definition rb_enq_unfolded_c_fun_size_ring_anotate  :: "nat \<Rightarrow> nat \<Rightarrow> buffer_C ptr \<Rightarrow> rb_C ptr \<Rightarrow> buffer_C \<Rightarrow> (lifted_globals, 32 signed word) nondet_monad"
+  where "rb_enq_unfolded_c_fun_size_ring_anotate sz t rg rb c = 
+ do guard (\<lambda>s::lifted_globals. is_valid_rb_C s rb);
+    guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+    head::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+    guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb);
+    tail::nat <- gets (\<lambda>s::lifted_globals. unat (tail_C (heap_rb_C s rb)));
+    guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+    size::nat <- gets (\<lambda>s::lifted_globals. unat (size_C (heap_rb_C s rb)));
+    guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+    guard (\<lambda>s::lifted_globals. (0::nat) < size);
+    guard (\<lambda>s::lifted_globals. Suc head \<le> UINT_MAX);
+    condition (\<lambda>s::lifted_globals. Suc head mod size = tail)
+      (do guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb  \<and>  t = rbtail s rb ); 
+         return (-1::32 signed word)
+      od)
+      (do guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          head2::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          ring::buffer_C ptr <- gets (\<lambda>s::lifted_globals. ring_C (heap_rb_C s rb));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          guard (\<lambda>s::lifted_globals. is_valid_buffer_C s (ring +\<^sub>p int head2));
+          modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := region_C_update (\<lambda>a::64 word. region_C c) (a (ring +\<^sub>p int head2)))));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := offset_C_update (\<lambda>a::64 word. offset_C c) (a (ring +\<^sub>p int head2)))));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := length_C_update (\<lambda>a::64 word. length_C c) (a (ring +\<^sub>p int head2)))));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := valid_offset_C_update (\<lambda>a::64 word. valid_offset_C c) (a (ring +\<^sub>p int head2)))));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := valid_length_C_update (\<lambda>a::64 word. valid_length_C c) (a (ring +\<^sub>p int head2)))));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := flags_C_update (\<lambda>a::64 word. flags_C c) (a (ring +\<^sub>p int head2)))));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          head3::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          size3::nat <- gets (\<lambda>s::lifted_globals. unat (size_C (heap_rb_C s rb)));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          modify (heap_rb_C_update (\<lambda>a::rb_C ptr \<Rightarrow> rb_C. a(rb := head_C_update (\<lambda>a::32 word. (of_nat head3 + (1::32 word)) mod of_nat size3) (a rb))));
+          guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  t = rbtail s rb );
+          return (0::32 signed word)
+       od)
+ od
+"
+
+lemma c_rb_enq_unfolded_ring_size_invariant2:
+"\<lbrace> \<lambda>s. c_rb_valid s rb  \<and>  sz = rbsize s rb  \<and>  rg = rbring s rb \<and> t = rbtail s rb  \<rbrace>
+ rb_enq_unfolded_c_fun_size_ring_anotate sz t rg rb b
+\<lbrace> \<lambda>r s. sz = rbsize s rb  \<and> rg = rbring s rb   \<rbrace>!"
+  unfolding rb_enq_unfolded_c_fun_size_ring_anotate_def
+  apply(wp_once)+
+  apply(auto simp:c_rb_valid_def unat_gt_0 Suc_le_eq unat_32word_leq_lt_lt 
+               int_unat word_less_def)
+  done
+
+
+definition rb_deq_unfolded_c_fun_size_ring_anotate  :: "nat \<Rightarrow> nat \<Rightarrow> buffer_C ptr \<Rightarrow> rb_C ptr \<Rightarrow> buffer_C ptr \<Rightarrow> (lifted_globals, 32 signed word) nondet_monad"
+  where "rb_deq_unfolded_c_fun_size_ring_anotate sz h rg rb ret = 
+do guard (\<lambda>s::lifted_globals. is_valid_rb_C s rb);
+   guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+   head::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+   guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+   tail::nat <- gets (\<lambda>s::lifted_globals. unat (tail_C (heap_rb_C s rb)));
+   guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+   condition (\<lambda>s::lifted_globals. head = tail)
+     (do guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb ); 
+         return (0xFFFFFFFE::32 signed word)
+      od)
+     (do guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         tail1::nat <- gets (\<lambda>s::lifted_globals. unat (tail_C (heap_rb_C s rb)));
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb  \<and>  h = rbhead s rb);
+         ring::buffer_C ptr <- gets (\<lambda>s::lifted_globals. ring_C (heap_rb_C s rb));
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         guard (\<lambda>s::lifted_globals. is_valid_buffer_C s ret);
+         guard (\<lambda>s::lifted_globals. is_valid_buffer_C s (ring +\<^sub>p int tail1));
+         modify (\<lambda>s::lifted_globals. heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ret := region_C_update (\<lambda>a::64 word. region_C (heap_buffer_C s (ring +\<^sub>p int tail1))) (a ret))) s);
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         modify (\<lambda>s::lifted_globals. heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ret := offset_C_update (\<lambda>a::64 word. offset_C (heap_buffer_C s (ring +\<^sub>p int tail1))) (a ret))) s);
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         modify (\<lambda>s::lifted_globals. heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ret := length_C_update (\<lambda>a::64 word. length_C (heap_buffer_C s (ring +\<^sub>p int tail1))) (a ret))) s);
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         modify (\<lambda>s::lifted_globals. heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ret := valid_offset_C_update (\<lambda>a::64 word. valid_offset_C (heap_buffer_C s (ring +\<^sub>p int tail1))) (a ret))) s);
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         modify (\<lambda>s::lifted_globals. heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ret := valid_length_C_update (\<lambda>a::64 word. valid_length_C (heap_buffer_C s (ring +\<^sub>p int tail1))) (a ret))) s);
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         modify (\<lambda>s::lifted_globals. heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ret := flags_C_update (\<lambda>a::64 word. flags_C (heap_buffer_C s (ring +\<^sub>p int tail1))) (a ret))) s);
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         size::nat <- gets (\<lambda>s::lifted_globals. unat (size_C (heap_rb_C s rb)));
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         tail2::nat <- gets (\<lambda>s::lifted_globals. unat (tail_C (heap_rb_C s rb)));
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         guard (\<lambda>s::lifted_globals. (0::nat) < size);
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb \<and>  h = rbhead s rb );
+         modify (heap_rb_C_update (\<lambda>a::rb_C ptr \<Rightarrow> rb_C. a(rb := tail_C_update (\<lambda>a::32 word. (of_nat tail2 + (1::32 word)) mod of_nat size) (a rb))));
+         guard (\<lambda>s::lifted_globals. sz = rbsize s rb \<and> rg = rbring s rb  \<and>  h = rbhead s rb );
+         return (0::32 signed word)
+      od)
+od"
+
+
+lemma c_rb_deq_unfolded_ring_size_invariant2:
+"\<lbrace> \<lambda>s. c_rb_valid s rb  \<and>  sz = rbsize s rb  \<and>  rg = rbring s rb  \<and>  h = rbhead s rb \<and>
+       is_valid_buffer_C s b
+  \<rbrace>
+ rb_deq_unfolded_c_fun_size_ring_anotate sz h rg rb b
+\<lbrace> \<lambda>r s. sz = rbsize s rb  \<and> rg = rbring s rb \<and>  h = rbhead s rb \<rbrace>!"
+  unfolding rb_deq_unfolded_c_fun_size_ring_anotate_def
+  apply(wp_once)+
+  by(auto simp:c_rb_valid_def unat_gt_0 Suc_le_eq unat_32word_leq_lt_lt 
+               int_unat word_less_def)
+
+
+
+
+
 thm rb_enq_unfolded_c_fun_def
+term rb_enq_unfolded_c_fun
+thm rb_deq_unfolded_c_fun_def
 
 
+definition rb_enq_test :: "rb_C ptr \<Rightarrow> buffer_C \<Rightarrow> (lifted_globals, 32 signed word) nondet_monad"
+  where 
+"rb_enq_test rb slot \<equiv>
+ do guard (\<lambda>s::lifted_globals. is_valid_rb_C s rb);
+  head::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+  guard (\<lambda>s::lifted_globals. head \<le> UINT_MAX);
+  tail::nat <- gets (\<lambda>s::lifted_globals. unat (tail_C (heap_rb_C s rb)));
+  size::nat <- gets (\<lambda>s::lifted_globals. unat (size_C (heap_rb_C s rb)));
+  guard (\<lambda>s::lifted_globals. (0::nat) < size);
+  guard (\<lambda>s::lifted_globals. Suc head \<le> UINT_MAX);
+  condition (\<lambda>s::lifted_globals. Suc head mod size = tail)
+  (return (- (1::32 signed word)))
+  (do head2::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+      ring::buffer_C ptr <- gets (\<lambda>s::lifted_globals. ring_C (heap_rb_C s rb));
+      guard (\<lambda>s::lifted_globals. is_valid_buffer_C s (ring +\<^sub>p int head2));
+      modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := region_C_update (\<lambda>a::64 word. region_C slot) (a (ring +\<^sub>p int head2)))));
+      modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := offset_C_update (\<lambda>a::64 word. offset_C slot) (a (ring +\<^sub>p int head2)))));
+      modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := length_C_update (\<lambda>a::64 word. length_C slot) (a (ring +\<^sub>p int head2)))));
+      modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := valid_offset_C_update (\<lambda>a::64 word. valid_offset_C slot) (a (ring +\<^sub>p int head2)))));
+      modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := valid_length_C_update (\<lambda>a::64 word. valid_length_C slot) (a (ring +\<^sub>p int head2)))));
+      modify (heap_buffer_C_update (\<lambda>a::buffer_C ptr \<Rightarrow> buffer_C. a(ring +\<^sub>p int head2 := flags_C_update (\<lambda>a::64 word. flags_C slot) (a (ring +\<^sub>p int head2)))));
+      head3::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+      size3::nat <- gets (\<lambda>s::lifted_globals. unat (size_C (heap_rb_C s rb)));
+      modify (heap_rb_C_update (\<lambda>a::rb_C ptr \<Rightarrow> rb_C. a(rb := head_C_update (\<lambda>a::32 word. (of_nat head3 + (1::32 word)) mod of_nat size3) (a rb))));
+      guard (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)) = ( head3 + 1) mod size3);
+      return (0::32 signed word)
+   od)
+  od"
 
+
+definition rb_enq_e1 :: "rb_C ptr \<Rightarrow> buffer_C \<Rightarrow> (lifted_globals, 32 signed word) nondet_monad"
+  where 
+"rb_enq_e1 rb slot \<equiv>
+ do guard (\<lambda>s::lifted_globals. is_valid_rb_C s rb);
+  head::nat <- gets (\<lambda>s::lifted_globals. unat (head_C (heap_rb_C s rb)));
+  return (0::32 signed word)
+  od"
+
+
+abbreviation "rbhead s rb \<equiv> unat (head_C (heap_rb_C s rb))"
+abbreviation "rbtail s rb \<equiv> unat (tail_C (heap_rb_C s rb))"
+abbreviation "rbsize s rb \<equiv> unat (size_C (heap_rb_C s rb))"
+abbreviation "rbring s rb \<equiv> (ring_C (heap_rb_C s rb))"
+
+lemma test:
+"\<lbrace> \<lambda>s. c_rb_valid s rb \<and>  h = rbhead s rb  \<rbrace>
+     do 
+       head::nat <- gets (\<lambda>s. rbhead s rb); return (0)
+     od
+ \<lbrace> \<lambda>r s. h = rbhead s rb \<rbrace>!"
+  unfolding rb_enq_e1_def
+  apply(wp_once)+
+  by(auto simp:c_rb_valid_def)
+
+
+lemma "rb_enq_test rb slot = rb_enq_unfolded_c_fun rb slot"
+  unfolding rb_enq_test_def rb_enq_unfolded_c_fun_def
+  apply(monad_eq)  (* seems to take a while... *)
+  apply(auto)
+  sledgehammer
+   apply (simp add: unat_mod)
+  
+  apply (simp add: unat_mod)
+  done
+
+
+lemma test:
+   "\<lbrace> \<lambda>s. c_rb_valid s rb \<and>  h = unat (head_C (heap_rb_C s rb)) \<and>  is_valid_buffer_C s b  \<rbrace>
+           rb_deq_c_fun rb b
+    \<lbrace> \<lambda>r s. h = unat (head_C (heap_rb_C s rb)) \<rbrace>!"
+  unfolding rb_deq_c_fun_def  rb_can_deq_c_fun_def
+  apply(wp_once)+
+  apply(auto)
+  using c_rb_valid_def apply blast
+  using c_rb_valid_def unat_gt_0 apply fastforce
+  using c_rb_valid_def word_le_def word_le_less_eq apply blast 
+  using c_rb_valid_def apply blast
+  done
 
 lemma "(a::nat) \<le> 64 \<Longrightarrow> (b::nat) < 2^32 \<Longrightarrow> a * b < 2^64"
 proof -
