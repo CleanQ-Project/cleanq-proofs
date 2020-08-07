@@ -912,6 +912,322 @@ lemma CleanQ_Set_deq_y_result :
                 CleanQ_Set_deq_y_ndst3)
 
 
+
+(* ==================================================================================== *)
+subsection \<open>Multistep State Transition Operations\<close>
+(* ==================================================================================== *)
+
+text \<open>
+  We now define the semantics of enqueuing and dequing multiple buffers. 
+\<close>
+
+
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Enqueue-N Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+
+definition CleanQ_Set_enq_n_x :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
+  where "CleanQ_Set_enq_n_x B rb = rb \<lparr> SX := (SX rb) - B, TXY := (TXY rb) \<union> B \<rparr>"
+
+definition CleanQ_Set_enq_n_y :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
+  where "CleanQ_Set_enq_n_y B rb = rb \<lparr> SY := (SY rb) - B, TYX := (TYX rb) \<union> B \<rparr>"
+
+
+text \<open>
+  We can inductively describe the effects on the enqueue N operation:
+\<close>
+
+lemma CleanQ_Set_enq_n_x_ind:
+  "CleanQ_Set_enq_n_x ({b} \<union> B) rb = CleanQ_Set_enq_x b (CleanQ_Set_enq_n_x B rb)"
+  unfolding CleanQ_Set_enq_n_x_def CleanQ_Set_enq_x_def
+  by(simp, meson Diff_insert)
+
+lemma CleanQ_Set_enq_n_x_ind_list:
+  "CleanQ_Set_enq_n_x (set (b # B)) rb = CleanQ_Set_enq_x b (CleanQ_Set_enq_n_x (set B) rb)"
+  unfolding CleanQ_Set_enq_n_x_def CleanQ_Set_enq_x_def
+  by(simp, meson Diff_insert)
+
+lemma CleanQ_Set_enq_n_y_ind:
+  "CleanQ_Set_enq_n_y ({b} \<union> B) rb = CleanQ_Set_enq_y b (CleanQ_Set_enq_n_y B rb)"
+  unfolding CleanQ_Set_enq_n_y_def CleanQ_Set_enq_y_def
+  by(simp, meson Diff_insert)
+
+lemma CleanQ_Set_enq_n_y_ind_list:
+  "CleanQ_Set_enq_n_y (set (b # B)) rb = CleanQ_Set_enq_y b (CleanQ_Set_enq_n_y (set B) rb)"
+  unfolding CleanQ_Set_enq_n_y_def CleanQ_Set_enq_y_def
+  by(simp, meson Diff_insert)
+
+
+text \<open>
+  Like the single step enqueue operation, we can show that doing this multi-step, still
+  preserves all the invariants.
+\<close>
+
+lemma CleanQ_Set_enq_n_x_I1 :
+  assumes I1_holds: "I1 rb K"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+    shows "I1 (CleanQ_Set_enq_n_x B rb) K"
+  unfolding CleanQ_Set_enq_n_x_def 
+  using I1_holds X_owned by auto
+
+lemma CleanQ_Set_enq_n_y_I1 :
+  assumes I1_holds: "I1 rb K"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+    shows "I1 (CleanQ_Set_enq_n_y B rb) K"
+  unfolding CleanQ_Set_enq_n_y_def 
+  using I1_holds Y_owned by auto
+
+lemma CleanQ_Set_enq_n_x_I2 :
+  assumes I2_holds: "I2 rb"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+  shows "I2 (CleanQ_Set_enq_n_x B rb)"
+  unfolding CleanQ_Set_enq_n_x_def
+  using I2_holds X_owned by(auto)
+
+lemma CleanQ_Set_enq_n_y_I2 :
+  assumes I2_holds: "I2 rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+  shows "I2 (CleanQ_Set_enq_n_y B rb)"
+  unfolding CleanQ_Set_enq_n_y_def
+  using I2_holds Y_owned by(auto)
+
+text \<open>
+  Likewise, we can show that the \verb+CleanQ_Set_Invariants" are preserved
+\<close>
+
+lemma CleanQ_Set_enq_n_x_Invariants :
+assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+  shows "CleanQ_Set_Invariants K (CleanQ_Set_enq_n_x B rb)"  
+  using I_holds X_owned CleanQ_Set_enq_n_x_I1 CleanQ_Set_enq_n_x_I2
+        CleanQ_Set_Invariants.simps 
+  by blast
+
+lemma CleanQ_Set_enq_n_y_Invariants :
+assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+  shows "CleanQ_Set_Invariants K (CleanQ_Set_enq_n_y B rb)"  
+  using I_holds Y_owned CleanQ_Set_enq_n_y_I1 CleanQ_Set_enq_n_y_I2
+        CleanQ_Set_Invariants.simps 
+  by blast
+
+
+text \<open>
+  We can now show that all buffers in the set $B$ are ending up in the transfer sets.
+\<close>
+
+lemma CleanQ_Set_enq_n_x_dst :
+assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+  shows "\<forall> b \<in> B. b \<in> TXY (CleanQ_Set_enq_n_x B rb)"
+  by (simp add: CleanQ_Set_enq_n_x_def)
+
+lemma CleanQ_Set_enq_n_y_dst :
+assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+  shows "\<forall> b \<in> B. b \<in> TYX (CleanQ_Set_enq_n_y B rb)"
+  by (simp add: CleanQ_Set_enq_n_y_def)
+
+text \<open>
+  And further, all those buffers are not part of any other set. 
+\<close>
+
+lemma CleanQ_Set_enq_n_x_ndst1 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+  shows "\<forall>b \<in> B. b \<notin> SY (CleanQ_Set_enq_n_x B rb)"
+  unfolding CleanQ_Set_enq_n_x_def using I_holds X_owned I2.elims(2) by auto
+
+lemma CleanQ_Set_enq_n_x_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+  shows "\<forall>b \<in> B. b \<notin> SX (CleanQ_Set_enq_n_x B rb)"
+  unfolding CleanQ_Set_enq_n_x_def using I_holds X_owned I2.elims(2) by auto
+
+lemma CleanQ_Set_enq_n_x_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+  shows "\<forall>b \<in> B. b \<notin> TYX (CleanQ_Set_enq_n_x B rb)"
+  unfolding CleanQ_Set_enq_n_x_def using I_holds X_owned I2.elims(2) by auto
+
+lemma CleanQ_Set_enq_n_y_ndst1 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+  shows "\<forall>b \<in> B. b \<notin> SY (CleanQ_Set_enq_n_y B rb)"
+  unfolding CleanQ_Set_enq_n_y_def using I_holds Y_owned I2.elims(2) by auto
+
+lemma CleanQ_Set_enq_n_y_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+  shows "\<forall>b \<in> B. b \<notin> SX (CleanQ_Set_enq_n_y B rb)"
+  unfolding CleanQ_Set_enq_n_y_def using I_holds Y_owned I2.elims(2) by auto
+
+lemma CleanQ_Set_enq_n_y_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+  shows "\<forall>b \<in> B. b \<notin> TXY (CleanQ_Set_enq_n_y B rb)"
+  unfolding CleanQ_Set_enq_n_y_def using I_holds Y_owned I2.elims(2) by auto
+
+
+text \<open>
+  We can now combine the lemmas above to obtain the result of the multi-step enqueue
+  operation.
+\<close>
+
+lemma CleanQ_Set_enq_n_x_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> SX rb" 
+      and CQ: "rb' = CleanQ_Set_enq_n_x B rb"
+    shows "\<forall>b \<in> B. b \<in> TXY rb' \<and>  b \<notin> SX rb' \<and> b \<notin> SY rb' \<and> b \<notin> TYX rb'"
+  using assms
+  by (simp add: CleanQ_Set_enq_n_x_dst CleanQ_Set_enq_n_x_ndst1 CleanQ_Set_enq_n_x_ndst2 
+                CleanQ_Set_enq_n_x_ndst3)
+
+
+lemma CleanQ_Set_enq_n_y_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb" 
+      and CQ: "rb' = CleanQ_Set_enq_n_y B rb"
+    shows "\<forall>b \<in> B. b \<in> TYX rb' \<and>  b \<notin> SX rb' \<and> b \<notin> SY rb' \<and> b \<notin> TXY rb'"
+  using assms
+  by (simp add: CleanQ_Set_enq_n_y_dst CleanQ_Set_enq_n_y_ndst1 CleanQ_Set_enq_n_y_ndst2 
+                CleanQ_Set_enq_n_y_ndst3)
+
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Dequeue-N Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+
+text \<open>
+  We now define the the effects of dequenuing  multiple buffers at once from the 
+  transfer set. 
+\<close>
+
+definition CleanQ_Set_deq_n_x :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
+  where "CleanQ_Set_deq_n_x B rb = \<lparr> SX = (SX rb) \<union> B, SY = (SY rb), TXY = (TXY rb),  
+                                   TYX = (TYX rb) - B \<rparr>"
+
+definition CleanQ_Set_deq_n_y :: "'a set \<Rightarrow> 'a CleanQ_Set_State \<Rightarrow> 'a CleanQ_Set_State"
+  where "CleanQ_Set_deq_n_y B rb = \<lparr> SX = (SX rb), SY = (SY rb) \<union> B, 
+                                   TXY = (TXY rb) - B, TYX = (TYX rb) \<rparr>"
+
+
+lemma CleanQ_Set_deq_n_x_ind:
+  "CleanQ_Set_deq_n_x ({b} \<union> B) rb = CleanQ_Set_deq_x b (CleanQ_Set_deq_n_x B rb)"
+  unfolding CleanQ_Set_deq_n_x_def CleanQ_Set_deq_x_def  by auto
+
+lemma CleanQ_Set_deq_n_x_ind_list:
+  "CleanQ_Set_deq_n_x (set (b # B)) rb = CleanQ_Set_deq_x b (CleanQ_Set_deq_n_x (set B) rb)"
+  unfolding CleanQ_Set_deq_n_x_def CleanQ_Set_deq_x_def  by auto
+
+lemma CleanQ_Set_deq_n_y_ind:
+  "CleanQ_Set_deq_n_y ({b} \<union> B) rb = CleanQ_Set_deq_y b (CleanQ_Set_deq_n_y B rb)"
+  unfolding CleanQ_Set_deq_n_y_def CleanQ_Set_deq_y_def  by auto
+
+lemma CleanQ_Set_deq_n_y_ind_list:
+  "CleanQ_Set_deq_n_y (set (b # B)) rb = CleanQ_Set_deq_y b (CleanQ_Set_deq_n_y (set B) rb)"
+  unfolding CleanQ_Set_deq_n_y_def CleanQ_Set_deq_y_def  by auto
+
+
+text \<open>
+  We can now show that the multi-dequeue operation preserves the invariants 
+\<close>
+
+lemma CleanQ_Set_deq_n_x_I1 :
+assumes I1_holds : "I1 rb K"  and  TYX_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+  shows "I1 (CleanQ_Set_deq_n_x B rb) K"
+  unfolding CleanQ_Set_deq_n_x_def using I1_holds TYX_owned by auto
+
+lemma CleanQ_Set_deq_n_y_I1 :
+assumes I1_holds : "I1 rb K"  and  TXY_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+  shows "I1 (CleanQ_Set_deq_n_y B rb) K"
+  unfolding CleanQ_Set_deq_n_y_def using I1_holds TXY_owned by auto
+
+lemma CleanQ_Set_deq_n_x_I2 :
+assumes  I2_holds : "I2 rb"  and  TYX_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+  shows "I2 (CleanQ_Set_deq_n_x B rb)"
+  unfolding CleanQ_Set_deq_n_x_def
+  using I2_holds TYX_owned disjoint_iff_not_equal by fastforce
+
+lemma CleanQ_Set_deq_n_y_I2 :
+assumes  I2_holds : "I2 rb"  and  TYX_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+  shows "I2 (CleanQ_Set_deq_n_y B rb)"
+  unfolding CleanQ_Set_deq_n_y_def
+  using I2_holds TYX_owned disjoint_iff_not_equal by fastforce
+
+text \<open>
+  And we can combine the lemmas above to get show that the set invariant is preserved
+\<close>
+
+lemma CleanQ_Set_deq_n_x_Invariants :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  TYX_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_n_x B rb)" 
+  by (meson CleanQ_Set_Invariants.simps CleanQ_Set_deq_n_x_I1 CleanQ_Set_deq_n_x_I2 I_holds 
+            TYX_owned)
+
+lemma CleanQ_Set_deq_n_y_Invariants :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  TXY_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+    shows "CleanQ_Set_Invariants K (CleanQ_Set_deq_n_y B rb)" 
+  by (meson CleanQ_Set_Invariants.simps CleanQ_Set_deq_n_y_I1 CleanQ_Set_deq_n_y_I2 I_holds 
+            TXY_owned)
+
+
+text \<open>
+  We can now talk about where the buffers end up when doing a multi-dequeue operation
+\<close>
+
+lemma CleanQ_Set_deq_n_x_dst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+    shows "\<forall> b \<in> B. b \<in> SX (CleanQ_Set_deq_n_x B rb)"
+  unfolding CleanQ_Set_deq_n_x_def by(auto)
+
+lemma CleanQ_Set_deq_n_y_dst :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+    shows "\<forall> b \<in> B. b \<in> SY (CleanQ_Set_deq_n_y B rb)"
+  unfolding CleanQ_Set_deq_n_y_def by(auto)
+
+text \<open>
+  And moreover show that the buffers do not end up in any other sets. 
+\<close>
+
+lemma CleanQ_Set_deq_n_x_ndst1 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+    shows "\<forall> b \<in> B. b \<notin> SY (CleanQ_Set_deq_n_x B rb)"
+  unfolding CleanQ_Set_deq_n_x_def using I_holds X_owned by auto
+
+lemma CleanQ_Set_deq_n_x_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+    shows "\<forall> b \<in> B. b \<notin> TXY (CleanQ_Set_deq_n_x B rb)"
+  unfolding CleanQ_Set_deq_n_x_def using I_holds X_owned by auto
+
+lemma CleanQ_Set_deq_n_x_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  X_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+    shows "\<forall> b \<in> B. b \<notin> TYX (CleanQ_Set_deq_n_x B rb)"
+  unfolding CleanQ_Set_deq_n_x_def using I_holds X_owned by auto
+
+lemma CleanQ_Set_deq_n_y_ndst1 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+    shows "\<forall> b \<in> B. b \<notin> SX (CleanQ_Set_deq_n_y B rb)"
+  unfolding CleanQ_Set_deq_n_y_def using I_holds Y_owned by auto
+
+lemma CleanQ_Set_deq_n_y_ndst2 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+    shows "\<forall> b \<in> B. b \<notin> TXY (CleanQ_Set_deq_n_y B rb)"
+  unfolding CleanQ_Set_deq_n_y_def using I_holds Y_owned by auto
+
+lemma CleanQ_Set_deq_n_y_ndst3 :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+    shows "\<forall> b \<in> B. b \<notin> TYX (CleanQ_Set_deq_n_y B rb)"
+  unfolding CleanQ_Set_deq_n_y_def using I_holds Y_owned by auto
+
+text \<open>
+  Finally, combining the lemmas above to obtain the result lemma of the operation.
+\<close>
+
+lemma CleanQ_Set_deq_n_x_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  YX_owned: "\<forall>b \<in> B. b \<in> TYX rb"
+      and CQ: "rb' = CleanQ_Set_deq_n_x B rb"
+    shows "\<forall>b \<in> B. b \<in> SX rb' \<and>  b \<notin> SY rb' \<and> b \<notin> TXY rb' \<and> b \<notin> TYX rb'"
+  using assms
+  by (simp add: CleanQ_Set_deq_n_x_dst CleanQ_Set_deq_n_x_ndst1 CleanQ_Set_deq_n_x_ndst2 
+                CleanQ_Set_deq_n_x_ndst3)
+
+lemma CleanQ_Set_deq_n_y_result :
+  assumes I_holds : "CleanQ_Set_Invariants K rb"  and  XY_owned: "\<forall>b \<in> B. b \<in> TXY rb"
+      and CQ: "rb' = CleanQ_Set_deq_n_y B rb"
+    shows "\<forall>b \<in> B. b \<in> SY rb' \<and>  b \<notin> SX rb' \<and> b \<notin> TXY rb' \<and> b \<notin> TYX rb'"
+  using assms
+  by (simp add: CleanQ_Set_deq_n_y_dst CleanQ_Set_deq_n_y_ndst1 CleanQ_Set_deq_n_y_ndst2 
+                CleanQ_Set_deq_n_y_ndst3)
+
+
 (* ==================================================================================== *)
 subsection \<open>Integration in SIMPL\<close>
 (* ==================================================================================== *)
