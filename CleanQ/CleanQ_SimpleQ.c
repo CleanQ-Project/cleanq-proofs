@@ -161,11 +161,11 @@ static int rb_enq(struct rb* rb, struct buffer slot)
 static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
 {
     /*
-    * E1:
-    *
-    * I_size: size0 == rb->size             # size is invariant
-    * I_ring: ring0 == rb->ring             # ring pointer is invariant
-    */
+     * E1:
+     *
+     * I_size: size0 == rb->size             # size is invariant
+     * I_ring: ring0 == rb->ring             # ring pointer is invariant
+     */
     u32_t head = rb->head;
 
     /*
@@ -272,6 +272,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         struct buffer* ring = rb->ring;
+
         /*
          * E8:
          *
@@ -292,6 +293,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         ring[head2].region = slot.region;
+
         /*
          * E9:
          *
@@ -312,6 +314,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         ring[head2].offset = slot.offset;
+
         /*
          * E10:
          *
@@ -332,6 +335,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         ring[head2].length = slot.length;
+
         /*
          * E11:
          *
@@ -352,6 +356,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         ring[head2].valid_offset = slot.valid_offset;
+
         /*
          * E12:
          *
@@ -372,6 +377,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         ring[head2].valid_length = slot.valid_length;
+
         /*
          * E13:
          *
@@ -413,6 +419,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         u32_t head3 = rb->head;
+
         /*
          * E15:
          *
@@ -433,6 +440,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
          * ((head + 1) mod size != (tail + delta) mod size
          */
         u32_t size3 = rb->size;
+
         /*
          * E16:
          *
@@ -487,6 +495,7 @@ static int rb_enq_unfolded(struct rb* rb, struct buffer slot)
  * I_size: size0 == rb->size
  * I_ring: ring0 == rb->ring
  *
+ * rb->tail = tail0 + delta
  * r == ERR_OK --> rb->head = head0 + 1 mod rb->size
  * r != ERR_OK --> rb->head = head0
  */
@@ -519,8 +528,8 @@ static int rb_deq(struct rb* rb, struct buffer* ret)
 /*
  * PRE:
  *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
+ * I_size: size0 == rb->size             # size is invariant
+ * I_ring: ring0 == rb->ring             # ring pointer is invariant
  *
  * tail0 = rb->tail
  * head0 = rb->head
@@ -528,227 +537,298 @@ static int rb_deq(struct rb* rb, struct buffer* ret)
 static int rb_deq_unfolded(struct rb* rb, struct buffer* ret)
 {
     /*
- * D1:
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
+     * D1:
+     *
+     * I_size: size0 == rb->size             # size is invariant
+     * I_ring: ring0 == rb->ring             # ring pointer is invariant
+     */
     u32_t head = rb->head;
-    /*
- * D2:
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t tail = rb->tail;
-    /*
- * D3:
- *
- * tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    if ((head == tail)) {
-        /*
-    * D4:
-    *
-    * tail == tail0 == rb->tail
-    *
-    * rb->head = (head0 + delta) mod size0
-    * head = (rb->head - delta2) mod size0
-    *
-    * tail == head <--> (rb->head - delta2) mod size0 == tail
-    *
-    * I_size: size0 == rb->size
-    * I_ring: ring0 == rb->ring
-    */
-        return ERR_QUEUE_EMTPY;
-    }
 
     /*
- * D5:
- *
- * tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t tail1 = rb->tail;
+    * D2:
+    *
+    * (head + delta) mod size = rb->head     # rb->head could have advanced already
+    *
+    * I_size: size0 == rb->size              # size is invariant
+    * I_ring: ring0 == rb->ring              # ring pointer is invariant
+    */
+    u32_t tail = rb->tail;
+
     /*
- * D6:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    struct buffer* ring = rb->ring;
-    /*
- * D7:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ret->region = ring[tail1].region;
-    /*
- * D8:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ret->offset = ring[tail1].offset;
-    /*
- * D9:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ret->length = ring[tail1].length;
-    /*
- * D10:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ret->valid_offset = ring[tail1].valid_offset;
-    /*
- * D11:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ret->valid_length = ring[tail1].valid_length;
-    /*
- * D12:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    ret->flags = ring[tail1].flags;
-    /*
- * D13:
- *
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t size = rb->size;
-    /*
- * D14:
- *
- * size == size0 == rb->size
- * tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    u32_t tail2 = rb->tail;
-    /*
- * D15:
- *
- * size == size0 == rb->size
- * tail2 == tail1 == tail == tail0 == rb->tail
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    rb->tail = (tail2 + 1) % size;
-    /*
- * D16:
- *
- * size == size0 == rb->size
- * tail2 == tail1 == tail == tail0
- * rb->tail == tail2 + 1 mod size
- *
- * rb->head = (head0 + delta) mod size0
- * head = (rb->head - delta2) mod size0
- *
- * tail != head <--> (rb->head - delta2) mod size0 != tail
- *
- *
- * tail0 == rb->tail + 1 mod size
- * head0 == rb->head + delta mod size
- *
- * I_size: size0 == rb->size
- * I_ring: ring0 == rb->ring
- */
-    return ERR_OK;
+     * D3:
+     *
+     * tail == tail0 == rb->tail              # the other side does not modify tail
+     *
+     * (head + delta) mod size = rb->head     # rb->head could have advanced already
+     *
+     * I_size: size0 == rb->size              # size is invariant
+     * I_ring: ring0 == rb->ring              # ring pointer is invariant
+     */
+    if ((head == tail)) {
+
+        /*
+        * D4:
+        *
+        * tail == tail0 == rb->tail              # the other side does not modify tail
+        *
+        * (head + delta) mod size = rb->head     # rb->head could have advanced already
+        *
+        * head == tail                           # this is true for the local variables
+        *
+        * (head + delta) mod size == tail        # using head+delta for rb->head
+        *
+        * # so in fact, this could turn to be false, however it's not a problem here...
+        * delta > 0 --> (head + delta) mod size != tail
+        *
+        * I_size: size0 == rb->size              # size is invariant
+        * I_ring: ring0 == rb->ring              # ring pointer is invariant
+        */
+        return ERR_QUEUE_EMTPY;
+    } else {
+
+        /*
+         * D5:
+         *
+         * tail == tail0 == rb->tail              # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+
+        u32_t tail1 = rb->tail;
+
+        /*
+         * D6:
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        struct buffer* ring = rb->ring;
+
+        /*
+         * D7:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        ret->region = ring[tail1].region;
+
+        /*
+         * D8:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        ret->offset = ring[tail1].offset;
+
+        /*
+         * D9:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        ret->length = ring[tail1].length;
+
+        /*
+         * D10:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        ret->valid_offset = ring[tail1].valid_offset;
+
+        /*
+         * D11:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        ret->valid_length = ring[tail1].valid_length;
+
+        /*
+         * D12:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        ret->flags = ring[tail1].flags;
+
+        /*
+         * D13:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        u32_t size = rb->size;
+
+        /*
+         * D14:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         * size = rb->size                        # size is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        u32_t tail2 = rb->tail;
+
+        /*
+         * D15:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         * size = rb->size                        # size is invariant
+         *
+         * tail2 = tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        rb->tail = (tail2 + 1) % size;
+
+        /*
+         * D7:
+         *
+         * ring = rb->ring                        # the ring pointer is invariant
+         * size = rb->size                        # size is invariant
+         *
+         * tail1 = tail == tail0 == rb->tail      # the other side does not modify tail
+         *
+         * (head + delta) mod size = rb->head     # rb->head could have advanced already
+         *
+         * head != tail                           # this is true for the local variables
+         *
+         * (head + delta) mod size != tail        # this must always be true here.
+         *
+         * (head + delta) mod size != (tail + 1) mod size    # this must always be true here.
+         * (head + delta) mod size != rb->tail    # this must always be true here.
+         *
+         * delta < (head - tail) mod size
+         *
+         * I_size: size0 == rb->size              # size is invariant
+         * I_ring: ring0 == rb->ring              # ring pointer is invariant
+         */
+        return ERR_OK;
+    }
 }
 
 /*
@@ -756,6 +836,10 @@ static int rb_deq_unfolded(struct rb* rb, struct buffer* ret)
  *
  * I_size: size0 == rb->size
  * I_ring: ring0 == rb->ring
+ *
+ * rb->head = head0 + delta
+ * r == ERR_OK --> rb->tail = tail0 + 1 mod rb->size
+ * r != ERR_OK --> rb->tail = tail0
  */
 
 /*
