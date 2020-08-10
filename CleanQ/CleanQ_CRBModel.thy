@@ -22,10 +22,10 @@ text \<open>
 
 theory CleanQ_CRBModel 
 (*<*) 
-  imports Main "../Simpl/Vcg"  "../Complx/OG_Hoare" CleanQ_RB CleanQ_RBModel
+  imports CleanQ_RB 
+          CleanQ_RBModel
 (*>*)  
 begin
-declare[[show_types]]
 
 (* ==================================================================================== *)
 subsection \<open>CleanQ Abstract Concurrent Ring Buffer Model State\<close>
@@ -37,8 +37,9 @@ text \<open>
 
 (*<*)
 (* Define some global variables to make Simpl/Complex proofs work *)
-record 'g CleanQ_RB_State_vars = 
+record 'g CleanQ_CRB_State_vars = 
   RingCRB_'  :: "nat CleanQ_RB_State"
+  b_' :: "nat"
 (*>*)
 
 (* ------------------------------------------------------------------------------------ *)
@@ -254,8 +255,90 @@ text \<open>
 subsubsection \<open>Enqueue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
 
+definition CleanQ_RB_write_head_x :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_write_head_x b rb = rb \<lparr>rTXY := rb_write_head b (rTXY rb) \<rparr>"
+
+definition CleanQ_RB_incr_head_x :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_incr_head_x b rb = rb \<lparr>rTXY := rb_incr_head (rTXY rb), rSX := (rSX rb) - {b} \<rparr>"
+
+definition CleanQ_RB_write_head_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_write_head_y b rb = rb \<lparr>rTYX := rb_write_head b (rTYX rb) \<rparr>"
+
+definition CleanQ_RB_incr_head_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_incr_head_y b rb = rb \<lparr>rTYX := rb_incr_head (rTYX rb), rSY := (rSY rb) - {b} \<rparr>"
+
+lemma CleanQ_split_enq_x_equal:
+  shows "CleanQ_RB_incr_head_x b (CleanQ_RB_write_head_x b rb) = CleanQ_RB_enq_x b rb"
+  unfolding CleanQ_RB_incr_head_x_def CleanQ_RB_write_head_x_def CleanQ_RB_enq_x_def
+  rb_enq_def by simp
+
+lemma CleanQ_split_enq_y_equal:
+  shows "CleanQ_RB_incr_head_y b (CleanQ_RB_write_head_y b rb) = CleanQ_RB_enq_y b rb"
+  unfolding CleanQ_RB_incr_head_y_def CleanQ_RB_write_head_y_def CleanQ_RB_enq_y_def
+  rb_enq_def by simp
+
+lemma CleanQ_RB_enq_x_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> b \<in> rSX \<acute> RingCRB \<and>
+         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_write_head_x b \<acute>RingCRB) ;;
+        \<acute>RingCRB :== (CleanQ_RB_incr_head_x b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
+  apply(vcg)
+  using CleanQ_split_enq_x_equal
+  by (metis CleanQ_RB_enq_x_inv_all) 
+  
+lemma CleanQ_RB_enq_y_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> b \<in> rSY \<acute> RingCRB \<and>
+         CleanQ_RB_enq_y_possible \<acute>RingCRB \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_write_head_y b \<acute>RingCRB) ;;
+        \<acute>RingCRB :== (CleanQ_RB_incr_head_y b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
+  apply(vcg)
+  using CleanQ_split_enq_y_equal
+  by (metis CleanQ_RB_enq_y_inv_all)   
+  
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
+
+definition CleanQ_RB_read_tail_x :: "'a CleanQ_RB_State \<Rightarrow> 'a " 
+  where "CleanQ_RB_read_tail_x rb = rb_read_tail (rTYX rb)"
+
+definition CleanQ_RB_read_tail_y :: "'a CleanQ_RB_State \<Rightarrow> 'a " 
+  where "CleanQ_RB_read_tail_y rb = rb_read_tail (rTXY rb)"
+
+definition CleanQ_RB_incr_tail_x :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_incr_tail_x b rb = rb \<lparr>rTYX := rb_incr_tail (rTYX rb), rSX := (rSX rb) \<union> {b} \<rparr>"
+
+definition CleanQ_RB_incr_tail_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_incr_tail_y b rb = rb \<lparr>rTXY := rb_incr_tail (rTXY rb), rSY := (rSY rb) \<union> {b} \<rparr>"
+
+lemma CleanQ_split_deq_x_equal:
+  shows "(let b = CleanQ_RB_read_tail_x rb in CleanQ_RB_incr_tail_x b rb) = CleanQ_RB_deq_x rb"
+  unfolding CleanQ_RB_deq_x_def rb_deq_def CleanQ_RB_read_tail_x_def CleanQ_RB_incr_tail_x_def
+  by simp
+
+lemma CleanQ_split_deq_y_equal:
+  shows "(let b = CleanQ_RB_read_tail_y rb in CleanQ_RB_incr_tail_y b rb) = CleanQ_RB_deq_y rb"
+  unfolding CleanQ_RB_deq_y_def rb_deq_def CleanQ_RB_read_tail_y_def CleanQ_RB_incr_tail_y_def
+  by simp
+
+lemma CleanQ_RB_deq_x_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB) ;;
+        \<acute>RingCRB :== (CleanQ_RB_incr_tail_x \<acute>b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
+  apply(vcg)
+  using CleanQ_split_deq_x_equal
+  by (metis CleanQ_RB_deq_x_all_inv) 
+
+lemma CleanQ_RB_deq_y_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) ;;
+        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y \<acute>b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
+  apply(vcg)
+  using CleanQ_split_deq_y_equal
+  by (metis CleanQ_RB_deq_y_all_inv) 
   
 end 
