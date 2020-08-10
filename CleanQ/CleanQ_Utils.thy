@@ -54,4 +54,12 @@ proof -
     using ne dist X1 dn by(simp)
 qed
 
+lemma list_distinct_drop_take_element:
+  "distinct L \<Longrightarrow>  x \<in> set (drop n L) \<Longrightarrow> x \<notin> set (take n L)"
+  by (metis append_take_drop_id disjoint_iff_not_equal distinct_append)
+
+lemma list_distinct_drop_take_inter:
+  "distinct L \<Longrightarrow>  set (drop n L) \<inter> set (take n L) = {}"
+  by (meson Int_emptyI list_distinct_drop_take_element)
+
 end
