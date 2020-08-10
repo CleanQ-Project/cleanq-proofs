@@ -248,7 +248,12 @@ text \<open>
   We now formulate the state transition operations in terms of the CleanQ RB model
   state. Again, the two agents can, independently from each other, perform one of 
   two operations, \verb+enqueue+ and \verb+dequeue+,  which trigger an ownership 
-  transfer of buffer elements.  
+  transfer of buffer elements. In the previous model we implemented \verb+enqueue+ and
+  \verb+dequeue+ as a single atomic step. Here we define it as two steps each.   
+
+  We will first show that the enqueue and dequeue operations in two calls are
+  the same as the atomic step and also preserve the invariant. This is basically
+  showing equivalence in the non concurrent setting
 \<close>
 
 (* ------------------------------------------------------------------------------------ *)
@@ -340,5 +345,180 @@ lemma CleanQ_RB_deq_y_preserves_invariants :
   apply(vcg)
   using CleanQ_split_deq_y_equal
   by (metis CleanQ_RB_deq_y_all_inv) 
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Invariants are TRUE invariants\<close>
+(* ------------------------------------------------------------------------------------ *)
+text \<open>
+  To show that the Invariants we defined are true invariants it has to hold at each
+  step of the computation and not only at beginning and end. To show this
+  we will show the invariant for each of the two steps of \verb+enqueue+ and \verb+dequeue+. 
+\<close>
+
+lemma CleanQ_CRB_read_deq_x_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB)
+      \<lbrace> \<acute>b = (CleanQ_RB_read_tail_x \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute>RingCRB \<and> 
+         CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace>"
+  by vcg
   
+lemma CleanQ_CRB_read_deq_y_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB)
+      \<lbrace> \<acute>b = (CleanQ_RB_read_tail_y \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute>RingCRB \<and> 
+        CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace>"
+  by vcg
+
+lemma CleanQ_CRB_incr_deq_x_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> \<acute>b = (CleanQ_RB_read_tail_x \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> 
+         CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_incr_tail_x \<acute>b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
+  apply vcg
+  by (metis CleanQ_RB_deq_x_all_inv CleanQ_split_deq_x_equal)
+
+lemma CleanQ_RB_incr_deq_y_preserves_invariants : 
+  "\<Gamma>\<turnstile> \<lbrace> \<acute>b = (CleanQ_RB_read_tail_y \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> 
+         CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y \<acute>b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
+    apply vcg
+  by (metis CleanQ_RB_deq_y_all_inv CleanQ_split_deq_y_equal)
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Weak frame condition preserver invariants\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+lemma CleanQ_CRB_frame_x_I1 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "I1_rb_img rb K"
+  using assms unfolding frame_rb_weak_x_def 
+  apply auto
+  apply (metis CleanQ_RB_list_def UnCI UnE rb_delta_tail_incr set_append)
+  apply (simp add: CleanQ_RB_list_def rb_delta_tail_incr)
+  apply (metis CleanQ_RB_list_def UnCI UnE rb_delta_head_incr rb_delta_tail_incr set_append)
+  apply (metis CleanQ_RB_list_def UnCI UnE rb_delta_head_incr set_append)
+  apply (metis CleanQ_RB_list_def Int_iff UnE Un_commute inf_sup_absorb rb_delta_head_incr 
+         rb_delta_tail_incr set_append)
+  by (metis CleanQ_RB_list_def UnCI rb_delta_head_incr set_append)
+
+lemma CleanQ_CRB_frame_y_I1 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "I1_rb_img rb K"
+  using assms unfolding frame_rb_weak_y_def 
+  apply auto
+  apply (metis CleanQ_RB_list_def UnCI UnE rb_delta_tail_incr set_append)
+  apply (metis CleanQ_RB_list_def UnCI UnE rb_delta_head_incr rb_delta_tail_incr set_append)
+  apply (simp add: CleanQ_RB_list_def rb_delta_tail_incr)
+  apply (metis CleanQ_RB_list_def UnE UnI2 Un_commute rb_delta_head_incr set_append)
+  apply (metis CleanQ_RB_list_def UnCI rb_delta_head_incr set_append)
+  by (metis CleanQ_RB_list_def Int_iff UnE Un_commute inf_sup_absorb rb_delta_head_incr 
+      rb_delta_tail_incr set_append)
+
+lemma frame_rb_weak_x_in_deltaxy_notin_txy:
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "x \<in> set (rb_delta_tail_st (rTXY rb') (rTXY rb)) \<Longrightarrow> x \<notin> set (CleanQ_RB_list (rTXY rb))"
+  using assms apply simp unfolding rb_delta_tail_st_def CleanQ_RB_list_def
+  by (metis (no_types, lifting) disjoint_iff_not_equal distinct_append frame_weak_x_tl_delta invariants rb_delta_tail_st_def)
+
+lemma frame_rb_weak_y_in_deltaxy_notin_txy:
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "x \<in> set (rb_delta_tail_st (rTYX rb') (rTYX rb)) \<Longrightarrow> x \<notin> set (CleanQ_RB_list (rTYX rb))"
+  using assms apply simp unfolding rb_delta_tail_st_def CleanQ_RB_list_def
+  by (metis (no_types, lifting) disjoint_iff_not_equal distinct_append frame_weak_y_tl_delta invariants 
+      rb_delta_tail_st_def)
+
+lemma frame_rb_weak_x_in_sy_notin_txy:
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows" x \<in> rSY rb \<Longrightarrow> x \<in> set (CleanQ_RB_list (rTXY rb)) \<Longrightarrow> False"
+  by (smt CleanQ_RB_Invariants.elims(2) CleanQ_RB_list_def I2_rb_img.simps I3_rb_img.simps Int_iff 
+      UnE disjoint_insert(1) distinct_append frame frame_weak_x_sy_delta frame_weak_x_tl_delta 
+      inf_sup_absorb inf_sup_aci(5) insert_Diff invariants set_append)
+
+lemma frame_rb_weak_y_in_sx_notin_tyx:
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows" x \<in> rSX rb \<Longrightarrow> x \<in> set (CleanQ_RB_list (rTYX rb)) \<Longrightarrow> False"
+  by (smt CleanQ_RB_Invariants.elims(2) CleanQ_RB_list_def I2_rb_img.simps I3_rb_img.simps Int_iff 
+      UnE disjoint_insert(1) distinct_append frame frame_weak_y_sx_delta frame_weak_y_tl_delta 
+      inf_sup_absorb inf_sup_aci(5) insert_Diff invariants set_append)
+
+lemma frame_rb_weak_y_in_sx_notin_txy:
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows" x \<in> rSX rb \<Longrightarrow> x \<in> set (CleanQ_RB_list (rTXY rb)) \<Longrightarrow> False"
+  by (smt CleanQ_RB_Invariants.elims(2) CleanQ_RB_list_def I2_rb_img.elims(2) Int_iff UnE 
+      Un_commute disjoint_iff_not_equal frame frame_weak_y_hd_delta frame_weak_y_sx_delta 
+      frame_weak_y_sy frame_weak_y_tl_delta inf_sup_absorb invariants set_append)
+
+lemma frame_rb_weak_x_in_txy_notin_tyx:
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"  
+  shows "x \<in> set (CleanQ_RB_list (rTXY rb)) \<Longrightarrow> x \<in> set (CleanQ_RB_list (rTYX rb)) \<Longrightarrow> False"
+  using frame unfolding frame_rb_weak_x_def
+proof -
+  assume a1: "rSX rb = rSX rb' \<and> frame_rb_weak_left (rTXY rb') (rTXY rb) \<and> frame_rb_weak_right (rTYX rb') (rTYX rb) \<and> rSY rb' \<union> set (rb_delta_tail_st (rTXY rb') (rTXY rb)) = set (rb_delta_head_st (rTYX rb') (rTYX rb)) \<union> rSY rb \<and> distinct (rb_delta_head_st (rTYX rb') (rTYX rb)) \<and> rSY rb \<inter> set (rb_delta_head_st (rTYX rb') (rTYX rb)) = {}"
+  assume a2: "x \<in> set (CleanQ_RB_list (rTXY rb))"
+  assume a3: "x \<in> set (CleanQ_RB_list (rTYX rb))"
+  have f4: "\<And>a. a \<notin> set (CleanQ_RB_list (rTXY rb)) \<or> a \<in> set (CleanQ_RB_list (rTXY rb'))"
+    by (metis (no_types) CleanQ_RB_list_def UnCI frame frame_weak_x_tl_delta invariants set_append)
+  then have f5: "x \<notin> rSY rb'"
+    using a2 by (meson CleanQ_RB_Invariants.elims(2) I2_rb_img.simps disjoint_iff_not_equal invariants)
+  have "x \<notin> set (CleanQ_RB_list (rTYX rb'))"
+    using f4 a2 by (meson CleanQ_RB_Invariants.elims(2) I2_rb_img.simps disjoint_iff_not_equal invariants)
+  then show ?thesis
+    by (smt CleanQ_RB_Invariants.elims(2) CleanQ_RB_list_def I3_rb_img.elims(2) Int_iff Set.set_insert 
+        UnE a1 a2 a3 disjoint_insert(1) distinct_append f5 frame frame_weak_x_tl_delta inf_sup_absorb 
+        invariants rb_delta_head_incr set_append)
+qed 
+
+lemma CleanQ_CRB_frame_x_I2 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "I2_rb_img rb"
+  using assms unfolding frame_rb_weak_x_def 
+  apply auto
+  apply (smt CleanQ_RB_list_def IntE UnE Un_commute disjoint_iff_not_equal inf_sup_absorb 
+         rb_delta_tail_incr set_append)
+  apply (metis CleanQ_RB_list_def UnCI disjoint_iff_not_equal rb_delta_tail_incr set_append)
+  apply (smt CleanQ_RB_list_def Int_iff UnE disjoint_iff_not_equal inf_sup_absorb rb_delta_head_incr 
+         rb_delta_tail_incr set_append)
+  prefer 2
+  apply (smt CleanQ_RB_list_def IntE UnE Un_commute disjoint_iff_not_equal inf_sup_absorb 
+         rb_delta_head_incr rb_delta_tail_incr set_append)
+  apply (meson frame frame_rb_weak_x_in_sy_notin_txy invariants)
+  by (meson frame frame_rb_weak_x_in_txy_notin_tyx invariants)
+
+lemma CleanQ_CRB_frame_y_I2 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+    and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "I2_rb_img rb"
+  using assms unfolding frame_rb_weak_y_def 
+  apply auto
+  apply (smt CleanQ_RB_list_def IntE UnE Un_commute disjoint_iff_not_equal inf_sup_absorb 
+         rb_delta_tail_incr set_append)
+  prefer 2 apply (meson frame frame_rb_weak_y_in_sx_notin_tyx invariants) 
+  prefer 3 apply (metis CleanQ_RB_list_def UnCI disjoint_iff_not_equal rb_delta_tail_incr set_append)
+  apply (meson frame frame_rb_weak_y_in_sx_notin_txy invariants)
+  apply (smt CleanQ_RB_list_def IntE UnE disjoint_iff_not_equal inf_sup_absorb rb_delta_head_incr 
+          rb_delta_tail_incr set_append)
+  by (smt CleanQ_RB_list_def Int_iff UnE Un_commute disjoint_iff_not_equal distinct_append 
+      inf_sup_absorb rb_delta_head_incr rb_delta_tail_incr set_append)
+  
+
 end 

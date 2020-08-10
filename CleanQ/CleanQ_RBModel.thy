@@ -887,6 +887,17 @@ lemma CleanQ_RB_deq_y_all_inv :
   unfolding CleanQ_RB_deq_y_def
   by (metis CleanQ_RB_Invariants.elims(3))
 
+
+lemma CleanQ_RB_deq_y_all_inv :
+  fixes rb rb'
+  assumes frame: ""
+  shows "CleanQ_RB_Invariants K rb'"
+  apply(subst Y_deq)
+  unfolding CleanQ_RB_deq_y_possible_def
+  using can_deq invariants CleanQ_RB_deq_y_I4 CleanQ_RB_deq_y_I3 CleanQ_RB_deq_y_I2 CleanQ_RB_deq_y_I1
+  unfolding CleanQ_RB_deq_y_def
+  by (metis CleanQ_RB_Invariants.elims(3))
+
 (* ==================================================================================== *)
 subsection \<open>Integration in SIMPL\<close>
 (* ==================================================================================== *)
