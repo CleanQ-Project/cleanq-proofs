@@ -937,7 +937,7 @@ definition  CleanQ_List_Frame_Weak_x ::
           lSX st = lSX st' \<and> lSY st \<union> set dsy = lSY st'\<union> set dtxy \<and>
           dtxy @ lTXY st  = lTXY st' \<and> lTYX st = lTYX st' @ dsy \<and>
           set dsy \<inter> (lSY st) = {} \<and> set dtxy \<inter> set (lTXY st) = {} \<and> 
-          set dsy \<inter> set (lTXY st) = {} \<and> distinct dtxy \<and> distinct dsy"
+          set dsy \<inter> set (lTXY st) = {} \<and> distinct dsy"
 
 definition  CleanQ_List_Frame_Weak_y :: 
   "'a CleanQ_List_State \<Rightarrow> 'a CleanQ_List_State \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> bool"
@@ -945,7 +945,7 @@ definition  CleanQ_List_Frame_Weak_y ::
           lSY st = lSY st' \<and> lSX st \<union> set dsx = lSX st'\<union> set dtyx \<and>
           dtyx @ lTYX st  = lTYX st' \<and> lTXY st = lTXY st' @  dsx \<and>
           set dsx \<inter> (lSX st) = {} \<and> set dtyx \<inter> set (lTYX st) = {} \<and> 
-          set dsx \<inter> set  (lTYX st) = {}  \<and> distinct dtyx \<and> distinct dsx "
+          set dsx \<inter> set  (lTYX st) = {} \<and> distinct dsx "
 
 
 text \<open>
@@ -1109,7 +1109,7 @@ fun frame_list_weak ::
     B' \<union> set \<delta>aB = set \<delta>Bc \<union> B \<and>
     c' @ \<delta>Bc = c \<and>
     B \<inter> set \<delta>Bc = {} \<and>
-    distinct \<delta>Bc \<and>  distinct \<delta>aB \<and>
+    distinct \<delta>Bc \<and> 
     set a \<inter> set \<delta>Bc = {} \<and>
     set a \<inter> set \<delta>aB = {} \<and>      
     B \<inter> set \<delta>Bc = {})
