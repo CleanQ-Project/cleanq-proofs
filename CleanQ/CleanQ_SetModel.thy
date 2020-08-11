@@ -1042,6 +1042,10 @@ fun CleanQ_Set_Frame_Strong :: "'a tuple \<Rightarrow>'a tuple \<Rightarrow> boo
   where "CleanQ_Set_Frame_Strong (sx',txy',sy',tyx') (sx,txy,sy,tyx) \<longleftrightarrow> 
                                           sx' = sx \<and> txy' = txy \<and> sy' = sy \<and> tyx' = tyx"
 
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Weak Frame Condition\<close>
+(* ------------------------------------------------------------------------------------ *)
+
 text \<open>
   For the concurrent case, we can not assume that the sets we do not explicitly modify by 
   an operation do not change and for this we have to weaken the frame condition that 
@@ -1116,7 +1120,9 @@ lemma  CleanQ_Set_Frame_Weak_x_owns3:
   "CleanQ_Set_Frame_Weak_x st' st A B \<Longrightarrow> A \<subseteq> TXY st' \<and> B \<subseteq> (SY st' \<union> A)"
   unfolding CleanQ_Set_Frame_Weak_x_def by(auto)
 
-text \<open>The weak frame condition for an \verb+enqueue+ or \verb+dequeue+ preserves I1. \<close>
+text \<open>
+  The weak frame condition for an \verb+enqueue+ or \verb+dequeue+ preserves I1. 
+\<close>
 
 lemma CleanQ_Set_enq_x_I1_weak:
 assumes I: "CleanQ_Set_Invariants K st'" 

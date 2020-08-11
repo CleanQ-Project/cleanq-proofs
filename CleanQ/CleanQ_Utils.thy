@@ -54,12 +54,64 @@ proof -
     using ne dist X1 dn by(simp)
 qed
 
+lemma list_set_take_drop_subtract: 
+ assumes ne: "L \<noteq> []" and dist : "distinct L"
+ shows "set (drop 1 L) = set (L) - set (take 1 L)"
+  by (simp add: drop_Suc list_set_hd_tl_subtract take_Suc dist ne)
+
+
+
+lemma list_tail_drop_one:
+  "tl L = drop 1 L"
+  by (simp add: drop_Suc)
+
+lemma list_head_take_one:
+  "L \<noteq> [] \<Longrightarrow> [hd L] = take 1 L"
+  by (simp add: take_Suc)
+
+lemma list_head_take_one_set:
+  "L \<noteq> [] \<Longrightarrow> set ([hd L]) = set(take 1 L)"
+  by (simp add: take_Suc)
+
+lemma list_head_take_one_set2:
+  "L \<noteq> [] \<Longrightarrow> {hd L} = set(take 1 L)"
+  by (simp add: take_Suc)
+
 lemma list_distinct_drop_take_element:
   "distinct L \<Longrightarrow>  x \<in> set (drop n L) \<Longrightarrow> x \<notin> set (take n L)"
   by (metis append_take_drop_id disjoint_iff_not_equal distinct_append)
 
+lemma list_drop_set_inter1:
+  "set L \<inter> A = {} \<Longrightarrow> set (drop n L) \<inter> A = {}"
+  using in_set_dropD by fastforce
+
+lemma list_drop_set_inter2:
+  "A \<inter> set L = {} \<Longrightarrow> A \<inter> set (drop n L) = {}"
+  using in_set_dropD by fastforce
+
+lemma list_take_set_inter1:
+  "set L \<inter> A = {} \<Longrightarrow> set (take n L) \<inter> A = {}"
+  by (meson disjoint_eq_subset_Compl order_trans set_take_subset)
+
+lemma list_take_set_inter2:
+  "A \<inter> set L = {} \<Longrightarrow> A \<inter> set (take n L) = {}"
+  by (metis inf_commute list_take_set_inter1)
+
 lemma list_distinct_drop_take_inter:
   "distinct L \<Longrightarrow>  set (drop n L) \<inter> set (take n L) = {}"
   by (meson Int_emptyI list_distinct_drop_take_element)
+
+lemma list_take_drop_union_inters:
+  "A \<inter> set L = {} \<Longrightarrow> distinct L \<Longrightarrow> (A \<union> set (take n L)) \<inter> set (drop n L) = {}"
+  by (simp add: Int_Un_distrib inf_commute list_distinct_drop_take_inter list_drop_set_inter2)
+  
+
+lemma list_take_drop_cons:
+  "L = take n L @ drop n L"
+  by(auto)
+
+lemma list_take_drop_union:
+  "set L = set (take n L) \<union> set (drop n L)"
+  using list_take_drop_cons by (metis set_append)
 
 end
