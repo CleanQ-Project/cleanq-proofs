@@ -1272,29 +1272,25 @@ proof(unfold I3_def, intro conjI)
   with I owns have "set (lTYX st') \<inter> set \<delta>Bc = {}"by(auto simp:CleanQ_List_Invariants_simp)
   moreover from I have "distinct (lTYX st')" by(auto simp:CleanQ_List_Invariants_simp)
   ultimately show "distinct (lTYX st)"
-    using dsBC fC
-    by (metis distinct_append)
+    using dsBC fC[symmetric] by(simp)
 qed
 
 
 lemma  CleanQ_List_enq_y_weak_I3 :
   fixes st st' K x
   assumes I: "CleanQ_List_Invariants K st'"
-      and enq: "st = CleanQ_List_enq_y x st'"
-      and frame: "frame2_weak (lTYX st' @ [x], lSX st', lTYX st', lSY st' - {x}) (lTYX st, lSX st, lTXY st, lSY st)"
+      and frame: "frame_list_weak (lTYX st' @ [x], lSX st', lTXY st', lSY st' - {x}) (lTYX st, lSX st, lTXY st, lSY st)"
       and owns: "x \<in> lSY st'"
     shows "I3 st"
 proof(unfold I3_def, intro conjI)
   from frame obtain \<delta>aB \<delta>Bc where
-    fA: "(lTYX st') @ [x] = \<delta>aB @ (lTYX st)" and
-    fB: "(lSX st') \<union> set \<delta>aB = set \<delta>Bc \<union> (lSX st)" and
-    fC: "(lTXY st') @ \<delta>Bc = lTXY st" and
-    dBC: "(lSX st) \<inter> set \<delta>Bc = {}" and
+    fA: "lTYX st' @ [x] = \<delta>aB @ lTYX st" and
+    fB: "lSX st' \<union> set \<delta>aB = set \<delta>Bc \<union> lSX st" and
+    fC: "lTXY st' @ \<delta>Bc = lTXY st" and
+    dBC: "lSX st \<inter> set \<delta>Bc = {}" and
     dsBC: "distinct \<delta>Bc" and
-    fD: "(lSY st') - {x} = lSY st"
-    by (metis CleanQ_List_State.select_convs(1) CleanQ_List_State.select_convs(2) 
-        CleanQ_List_State.select_convs(3) CleanQ_List_State.select_convs(4) CleanQ_List_enq_y_upd 
-        Un_commute append.left_neutral append_Nil2 assms(2) distinct.simps(1) empty_set inf_bot_right)
+    fD: "lSY st' - {x} = lSY st"
+    by(auto)
 
   from I owns have "x \<notin> set (lTYX st')" by(auto simp:CleanQ_List_Invariants_simp)
   with I have "distinct ((lTYX st') @ [x])" by(auto simp:CleanQ_List_Invariants_simp)
@@ -1307,67 +1303,14 @@ proof(unfold I3_def, intro conjI)
   with I owns have "set (lTXY st') \<inter> set \<delta>Bc = {}" by(auto simp:CleanQ_List_Invariants_simp)
   moreover from I have "distinct (lTXY st')" by(auto simp:CleanQ_List_Invariants_simp)
   ultimately show "distinct (lTXY st)"
-    using dsBC fC
-    by (metis distinct_append)
+    using dsBC fC[symmetric]
+    by(simp)
 qed
-
-lemma CleanQ_List_enq_x_weak_Invariants :
-  fixes st st' K b
-  assumes I: "CleanQ_List_Invariants K st'"
-      and rb: "st = CleanQ_List_enq_x b st'"
-      and frame: "frame_list_weak ((lTXY st') @ [b],lSY st', lTYX st', (lSX st') - {b}) (lTXY st, lSY st, lTYX st, lSX st)"
-      and owns: "b \<in> lSX st'"
-    shows "CleanQ_List_Invariants K st"  
-  by (metis CleanQ_List_enq_x_Invariants I owns rb)
-
-lemma CleanQ_List_enq_y_weak_Invariants :
-  fixes st st' K b
-  assumes I: "CleanQ_List_Invariants K st'"
-      and rb: "st = CleanQ_List_enq_y b st'"
-      and frame: "frame_list_weak ((lTYX st') @ [b],lSX st', lTXY st', (lSY st') - {b}) (lTYX st, lSX st, lTXY st, lSY st)"
-      and owns: "b \<in> lSY st'"
-    shows "CleanQ_List_Invariants K st"  
-  by (metis CleanQ_List_enq_y_Invariants I owns rb)
-
-
-
-
 
 
 text \<open>The weak frame condition for an dequeue  preserves invariant 3.\<close>
+
 lemma CleanQ_List_deq_x_weak_I3:
-  fixes st st' K x
-  assumes I: "CleanQ_List_Invariants K st'"
-      and deq: "st = CleanQ_List_deq_x st'"
-      and frame: "frame_list_weak (lTXY st', lSY st', lTYX st', lSX st' \<union> {x}) (lTXY st, lSY st, lTYX st, lSX st)"
-      and hd: "lTYX st \<noteq> [] \<and> x = hd (lTYX st)"
-    shows "I3 st"
-proof(unfold I3_def, intro conjI)
-  from frame obtain \<delta>aB \<delta>Bc where
-    fA: "lTXY st' = \<delta>aB @ lTXY st" and
-    fB: "lSY st' \<union> set \<delta>aB = set \<delta>Bc \<union> lSY st" and
-    fC: "lTYX st' @ \<delta>Bc  = lTYX st" and
-    dBC: "lSY st \<inter> set \<delta>Bc = {}" and
-    dsBC: "distinct \<delta>Bc" and
-    fD: "lSX st' \<union> {x} = lSX st"
-    by auto
-
-  from I have "distinct (lTXY st')" by(auto simp:CleanQ_List_Invariants_simp)
-  with fA show "distinct (lTXY st)" by(auto)
-  from fA have "set (\<delta>aB @ lTXY st) = set (lTXY st')" by(simp)
-  hence "set \<delta>aB \<subseteq> set (lTXY st')" by(auto)
-  with fB have "set \<delta>Bc \<subseteq> set (lTXY st') \<union> (lSY st')" by(auto)
-  with I have "set (lTYX st') \<inter> set \<delta>Bc = {}" by(auto simp:CleanQ_List_Invariants_simp)
-  moreover from I have "distinct (lTYX st')" by(auto simp:CleanQ_List_Invariants_simp)
-  ultimately show "distinct (lTYX st)"
-    using dsBC fC CleanQ_List_deq_x_I3 I deq  by (auto simp:CleanQ_List_Invariants_simp)
-qed
-
-
-text \<open>The weak frame condition for an dequeue  preserves invariant 3.\<close>
-
-
-lemma CleanQ_List_deq_x_weak_I3_v2:
   fixes st st' K x
   assumes I: "CleanQ_List_Invariants K st'"
       and frame: "frame_list_weak (lTXY st', lSY st', lTYX st', lSX st' \<union> {x}) (lTXY st, lSY st, lTYX st, lSX st)"
@@ -1376,19 +1319,27 @@ lemma CleanQ_List_deq_x_weak_I3_v2:
   using I frame hd unfolding CleanQ_List_Invariants_def apply auto
 proof -
   fix \<delta>aB :: "'a list" and \<delta>Bc :: "'a list"
-  assume a1: "I3 st'"
-  assume a2: "lTXY st' = \<delta>aB @ lTXY st"
-  assume a3: "I2_list_img st'"
-  assume a4: "lSY st' \<union> set \<delta>aB = set \<delta>Bc \<union> lSY st"
+  assume a1: "I2_list_img st'"
+  assume a2: "I3 st'"
+  assume a3: "distinct \<delta>Bc"
+  assume a4: "lTXY st' = \<delta>aB @ lTXY st"
   assume a5: "lTYX st' @ \<delta>Bc = lTYX st"
-  assume a6: "distinct \<delta>Bc"
-  have "set (lTYX st') \<inter> (set \<delta>Bc \<union> lSY st) = {}"
-    using a4 a3 a2 by (metis (no_types) I2_list_img_def Int_Un_distrib Int_commute bot_eq_sup_iff set_append)
+  assume "lSY st \<inter> set \<delta>Bc = {}"
+  assume a6: "lSY st' \<union> set \<delta>aB = set \<delta>Bc \<union> lSY st"
+  have f7: "\<And>A. (lSY st' \<union> A) \<inter> set (lTYX st') = A \<inter> set (lTYX st')"
+    using a1 by (simp add: I2_list_img_def Int_Un_distrib2)
+  have "\<And>A. set \<delta>aB \<inter> (set (lTYX st') \<inter> (set \<delta>aB \<union> A)) = set \<delta>aB \<inter> set (lTYX st')"
+    by blast
+  then have "set \<delta>aB \<inter> set (lTYX st') = {}"
+    using a4 a1 by (metis (no_types) I2_list_img_def inf_commute inf_sup_absorb set_append sup_bot.left_neutral)
+  then have "set \<delta>Bc \<inter> set (lTYX st') = {}"
+    using f7 a6 by blast
   then show ?thesis
-    using a6 a5 a2 a1 by (metis I3_def Int_Un_distrib bot_eq_sup_iff distinct_append)
+    using a5 a4 a3 a2 by (metis (no_types) I3_def distinct_append inf_commute)
 qed
 
 
+text \<open>The weak frame condition for an dequeue  preserves invariant 3.\<close>
 
 lemma CleanQ_List_deq_y_weak_I3:
   fixes st st' K x
@@ -1396,25 +1347,23 @@ lemma CleanQ_List_deq_y_weak_I3:
       and frame: "frame_list_weak (lTYX st', lSX st', lTXY st', lSY st' \<union> {x}) (lTYX st, lSX st, lTXY st, lSY st)"
       and hd: "lTXY st \<noteq> [] \<and> x = hd (lTXY st)"
     shows "I3 st"
-proof(unfold I3_def, intro conjI)
-  from frame obtain \<delta>aB \<delta>Bc where
-    fA: "lTYX st' = \<delta>aB @ lTYX st" and
-    fB: "lSX st' \<union> set \<delta>aB = set \<delta>Bc \<union> lSX st" and
-    fC: "lTXY st' @ \<delta>Bc  = lTXY st" and
-    dBC: "lSX st \<inter> set \<delta>Bc = {}" and
-    dsBC: "distinct \<delta>Bc" and
-    fD: "lSY st' \<union> {x} = lSY st"
-    by auto
-
-  from I have "distinct (lTYX st')"  by (auto simp:CleanQ_List_Invariants_simp)
-  with fA show "distinct (lTYX st)" by(auto)
-  from fA have "set (\<delta>aB @ lTYX st) = set (lTYX st')" by(simp)
-  hence "set \<delta>aB \<subseteq> set (lTYX st')" by(auto)
-  with fB have "set \<delta>Bc \<subseteq> set (lTYX st') \<union> (lSX st')" by(auto)
-  with I have "set (lTXY st') \<inter> set \<delta>Bc = {}" by (auto simp:CleanQ_List_Invariants_simp)
-  moreover from I have "distinct (lTXY st')" by (auto simp:CleanQ_List_Invariants_simp)
-  ultimately show "distinct (lTXY st)"
-    using dsBC fC CleanQ_List_deq_y_I3 I deq by (auto simp:CleanQ_List_Invariants_simp)
+ using I frame hd unfolding CleanQ_List_Invariants_def apply auto
+proof -
+  fix \<delta>aB :: "'a list" and \<delta>Bc :: "'a list"
+  assume a1: "I2_list_img st'"
+  assume a2: "I3 st'"
+  assume a3: "distinct \<delta>Bc"
+  assume a4: "lTYX st' = \<delta>aB @ lTYX st"
+  assume a5: "lTXY st' @ \<delta>Bc = lTXY st"
+  assume a6: "lSX st' \<union> set \<delta>aB = set \<delta>Bc \<union> lSX st"
+  have f7: "lSX st' \<inter> set (lTXY st') = {}"
+    using a1 by (metis I2_list_img_def)
+  have "set (lTXY st') \<inter> set \<delta>aB = {}"
+    using a4 a1 by (metis (no_types) I2_list_img_def inf_bot_right inf_left_commute inf_sup_absorb set_append)
+  then have "set \<delta>Bc \<inter> set (lTXY st') = {}"
+    using f7 a6 by blast
+  then show ?thesis
+    using a5 a4 a3 a2 by (metis I3_def distinct_append inf_commute)
 qed
 
 
