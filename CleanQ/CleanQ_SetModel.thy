@@ -1209,8 +1209,8 @@ fun frame_weak ::
     A \<union> \<Delta>AB = A'\<and>        
     B \<union> \<Delta>BC = B' \<union> \<Delta>AB \<and>    
     C = C' \<union> \<Delta>BC \<and>    
+    A \<inter> \<Delta>AB = {} \<and>          
     A \<inter> \<Delta>BC = {} \<and>
-    A \<inter> \<Delta>AB = {} \<and>      
     B \<inter> \<Delta>BC = {} )"
 
 
