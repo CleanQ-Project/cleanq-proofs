@@ -163,11 +163,18 @@ proof -
     by (metis frame frame_rb_weak_x_def) 
   show " \<And>x. x \<in> rSX rb \<Longrightarrow> x \<in> rSX rb'"
     by (metis frame frame_rb_weak_x_def)
-  show "\<exists>\<delta>aB::'a list.
-       map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) = \<delta>aB @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) \<and>
+  show " \<exists>\<delta>aB::'a list.
+       map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) =
+       \<delta>aB @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) \<and>
        (\<exists>\<delta>Bc::'a list.
            rSY rb' \<union> set \<delta>aB = set \<delta>Bc \<union> rSY rb \<and>
-           map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>Bc = map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb)) \<and> rSY rb \<inter> set \<delta>Bc = {} \<and> distinct \<delta>Bc)"
+           map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>Bc =
+           map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb)) \<and>
+           rSY rb \<inter> set \<delta>Bc = {} \<and>
+           distinct \<delta>Bc \<and>
+           (\<lambda>x::nat. the (ring (rTXY rb) x)) ` set (rb_valid_entries (rTXY rb)) \<inter> set \<delta>Bc = {} \<and>
+           (\<lambda>x::nat. the (ring (rTXY rb) x)) ` set (rb_valid_entries (rTXY rb)) \<inter> set \<delta>aB = {} \<and>
+           rSY rb \<inter> set \<delta>Bc = {})"
   using frame unfolding frame_rb_weak_x_def frame_rb_weak_left_def
   proof
     define \<delta>xy where "\<delta>xy = rb_delta_tail_st (rTXY rb') (rTXY rb)"
@@ -188,9 +195,19 @@ proof -
     from \<delta>yx_def frame have c5: "rSY rb \<inter> set \<delta>yx = {}" 
       unfolding frame_rb_weak_x_def
       by blast 
-    
-    show ?thesis using c1 c2 c3 c4 c5
-      by blast
+
+    from \<delta>yx_def frame have c6: "set (CleanQ_RB_list (rTXY rb)) \<inter> set \<delta>yx  = {}"
+      unfolding CleanQ_RB_list_def
+      by (smt CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I2_rb_img_def I3_rb_img_def Set.set_insert
+          UnE Un_insert_right c1 c3 disjoint_iff_not_equal disjoint_insert(1) distinct_append set_append 
+          subsetD sup_ge1)
+
+    from \<delta>xy_def frame have c7: "set (CleanQ_RB_list (rTXY rb)) \<inter> set \<delta>xy = {}"
+      unfolding CleanQ_RB_list_def
+      by (metis CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I3_rb_img_def c1 distinct_append inf_commute) 
+
+    show ?thesis using c1 c2 c3 c4 c5 c6 c7
+      by (metis (no_types, lifting) CleanQ_RB_list_def comp_apply image_cong list.set_map) 
   qed
 qed
 
@@ -208,10 +225,17 @@ proof -
   show " \<And>x. x \<in> rSY rb \<Longrightarrow> x \<in> rSY rb'"
     by (metis frame frame_rb_weak_y_def)
   show "\<exists>\<delta>aB::'a list.
-       map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) = \<delta>aB @ map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb)) \<and>
+       map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) =
+       \<delta>aB @ map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb)) \<and>
        (\<exists>\<delta>Bc::'a list.
            rSX rb' \<union> set \<delta>aB = set \<delta>Bc \<union> rSX rb \<and>
-           map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) @ \<delta>Bc = map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) \<and> rSX rb \<inter> set \<delta>Bc = {} \<and> distinct \<delta>Bc)"
+           map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) @ \<delta>Bc =
+           map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) \<and>
+           rSX rb \<inter> set \<delta>Bc = {} \<and>
+           distinct \<delta>Bc \<and>
+           (\<lambda>x::nat. the (ring (rTYX rb) x)) ` set (rb_valid_entries (rTYX rb)) \<inter> set \<delta>Bc = {} \<and>
+           (\<lambda>x::nat. the (ring (rTYX rb) x)) ` set (rb_valid_entries (rTYX rb)) \<inter> set \<delta>aB = {} \<and>
+           rSX rb \<inter> set \<delta>Bc = {})"
   using frame unfolding frame_rb_weak_y_def frame_rb_weak_left_def
   proof
   
@@ -233,9 +257,19 @@ proof -
     from \<delta>yx_def frame have c5: "rSX rb \<inter> set \<delta>yx = {}" 
       unfolding frame_rb_weak_y_def
       by blast 
-    
-    show ?thesis using c1 c2 c3 c4 c5
-      by blast
+  
+    from \<delta>yx_def frame have c6: "set (CleanQ_RB_list (rTYX rb)) \<inter> set \<delta>yx  = {}"
+      unfolding CleanQ_RB_list_def
+      by (smt CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I2_rb_img_def I3_rb_img_def Set.set_insert
+          UnE Un_insert_right c1 c3 disjoint_iff_not_equal disjoint_insert(1) distinct_append set_append 
+          subsetD sup_ge1)
+
+    from \<delta>xy_def frame have c7: "set (CleanQ_RB_list (rTYX rb)) \<inter> set \<delta>xy = {}"
+      unfolding CleanQ_RB_list_def
+      by (metis CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I3_rb_img_def c1 distinct_append inf_commute) 
+
+    show ?thesis using c1 c2 c3 c4 c5 c6 c7
+      by (metis (no_types, lifting) CleanQ_RB_list_def comp_apply image_cong list.set_map)
   qed
 qed
 
@@ -600,5 +634,30 @@ lemma CleanQ_CRB_frame_y_I_all :
   using assms unfolding frame_rb_weak_y_def CleanQ_RB_Invariants_def
   by (meson CleanQ_CRB_frame_y_I1 CleanQ_CRB_frame_y_I2 CleanQ_CRB_frame_y_I3 CleanQ_CRB_frame_y_I4 
       frame invariants)
+
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Interference pairs\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+
+lemma CleanQ_RB_enq_interfernce_1 :
+    "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
+         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) 
+        \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
+         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace>"
+  apply vcg
+
+(*
+lemma CleanQ_RB_enq_interfernce_1 :
+    "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
+         CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> b = CleanQ_RB_read_tail_y \<acute>RingCRB  \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y b \<acute>RingCRB) 
+        \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
+         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace>"
+  apply vcg
+  unfolding CleanQ_RB_incr_tail_y_def rb_incr_tail_def
+*)
 
 end 
