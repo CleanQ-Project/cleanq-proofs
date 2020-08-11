@@ -547,11 +547,58 @@ lemma CleanQ_CRB_frame_y_I2 :
   apply (metis CleanQ_RB_list_def UnCI disjoint_iff_not_equal rb_delta_tail_incr set_append)
   by (smt CleanQ_RB_list_def I3_rb_img_def UnE disjoint_insert(1) distinct_append insert_Diff 
       rb_delta_head_incr rb_delta_tail_incr set_append subsetD sup.commute sup_ge1)
-(*
-  lemma CleanQ_CRB_frame_x_I3 :
-    fixes rb rb' K
-    assumes frame: "frame_rb_weak_x rb' rb"
+
+lemma CleanQ_CRB_frame_x_I3 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
       and invariants : "CleanQ_RB_Invariants K rb'"
   shows "I3_rb_img rb"
-*) 
+  using assms unfolding frame_rb_weak_x_def CleanQ_RB_Invariants_def I3_rb_img_def
+  by (smt CleanQ_RB_list_def I2_rb_img_def distinct_append inf_commute inf_left_commute inf_sup_absorb 
+      inf_sup_distrib1 rb_delta_head_incr rb_delta_tail_incr set_append)
+
+lemma CleanQ_CRB_frame_y_I3 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+      and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "I3_rb_img rb"
+  using assms unfolding frame_rb_weak_y_def CleanQ_RB_Invariants_def I3_rb_img_def
+  by (smt CleanQ_RB_list_def I2_rb_img_def distinct_append inf_commute inf_left_commute inf_sup_absorb 
+      inf_sup_distrib1 rb_delta_head_incr rb_delta_tail_incr set_append)
+
+lemma CleanQ_CRB_frame_x_I4 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
+      and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "I4_rb_valid rb"
+  using assms unfolding frame_rb_weak_x_def CleanQ_RB_Invariants_def I4_rb_valid_def
+  by (simp add: frame_rb_weak_left_def frame_rb_weak_right_def)
+
+  
+lemma CleanQ_CRB_frame_y_I4 :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+      and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "I4_rb_valid rb"
+  using assms unfolding frame_rb_weak_y_def CleanQ_RB_Invariants_def I4_rb_valid_def
+  by (simp add: frame_rb_weak_left_def frame_rb_weak_right_def)
+  
+lemma CleanQ_CRB_frame_x_I_all :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_x rb' rb"
+      and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "CleanQ_RB_Invariants K rb"
+  using assms unfolding frame_rb_weak_x_def CleanQ_RB_Invariants_def
+  by (meson CleanQ_CRB_frame_x_I1 CleanQ_CRB_frame_x_I2 CleanQ_CRB_frame_x_I3 CleanQ_CRB_frame_x_I4 
+      frame invariants)
+
+lemma CleanQ_CRB_frame_y_I_all :
+  fixes rb rb' K
+  assumes frame: "frame_rb_weak_y rb' rb"
+      and invariants : "CleanQ_RB_Invariants K rb'"
+  shows "CleanQ_RB_Invariants K rb"
+  using assms unfolding frame_rb_weak_y_def CleanQ_RB_Invariants_def
+  by (meson CleanQ_CRB_frame_y_I1 CleanQ_CRB_frame_y_I2 CleanQ_CRB_frame_y_I3 CleanQ_CRB_frame_y_I4 
+      frame invariants)
+
 end 
