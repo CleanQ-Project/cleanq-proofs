@@ -1152,7 +1152,9 @@ assumes I: "CleanQ_Set_Invariants K st'"
   using assms unfolding I1_def CleanQ_Set_Frame_Weak_x_def CleanQ_Set_Invariants_def
   by(auto simp:CleanQ_Set_Invariants_simp)
 
-text \<open>The weak frame condition for an \verb+enqueue+ or \verb+dequeue+ preserves I2. \<close>
+text \<open>
+  The weak frame condition for an \verb+enqueue+ or \verb+dequeue+ preserves I2. 
+\<close>
 
 lemma CleanQ_Set_enq_x_I2_weak:
 assumes I: "CleanQ_Set_Invariants K st'" 
@@ -1243,7 +1245,6 @@ text \<open>The weak frame condition for an enqueue from @{term D} into @{term A
 lemma CleanQ_Set_enq_x_I1_weak2:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_enq b st'"
       and frame: "frame_weak (TXY st' \<union> {b},SY st', TYX st', SX st' - {b})
                              (TXY st, SY st, TYX st, SX st)"
       and owns: "b \<in> SX st'"
@@ -1255,7 +1256,6 @@ lemma CleanQ_Set_enq_x_I1_weak2:
 lemma CleanQ_Set_enq_y_I1_weak2:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_enq b st'"
       and frame: "frame_weak (TYX st' \<union> {b},SX st', TXY st', SY st' - {b})
                              (TYX st, SX st, TXY st, SY st)"
       and owns: "b \<in> SY st'"
@@ -1267,7 +1267,6 @@ lemma CleanQ_Set_enq_y_I1_weak2:
 lemma CleanQ_Set_enq_x_I2_weak2:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_enq b st'"
       and frame: "frame_weak (TXY st' \<union> {b},SY st', TYX st', SX st' - {b} )
                              (TXY st, SY st, TYX st, SX st)"
       and owns: "b \<in> SX st'"
@@ -1334,7 +1333,6 @@ qed
 lemma CleanQ_Set_enq_y_I2_weak2:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_enq b st'"
       and frame: "frame_weak (TYX st' \<union> {b},SX st', TXY st', SY st' - {b}) 
                              (TYX st, SX st, TXY st, SY st)"
       and owns: "b \<in> SY st'"
@@ -1408,7 +1406,6 @@ text \<open>
 lemma CleanQ_Set_deq_x_weak_I1:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_deq b st'"
       and frame: "frame_weak (TXY st',SY st', TYX st' - {b}, SX st' \<union> {b}) 
                              (TXY st, SY st, TYX st, SX st)"
       and owns: "b \<in> TYX st'"
@@ -1420,7 +1417,6 @@ lemma CleanQ_Set_deq_x_weak_I1:
 lemma CleanQ_Set_deq_y_weak_I1:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_enq_y b st'"
       and frame: "frame_weak (TYX st',SX st', TXY st' - {b}, SY st' \<union> {b}) 
                              (TYX st, SX st, TXY st, SY st)"
       and owns: "b \<in> TXY st'"
@@ -1432,7 +1428,6 @@ lemma CleanQ_Set_deq_y_weak_I1:
 lemma CleanQ_Set_deq_x_weak_I2:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_enq_x b st'"
       and frame: "frame_weak (TXY st',SY st', TYX st' - {b},  SX st' \<union> {b}) 
                              (TXY st, SY st, TYX st, SX st)"
       and owns: "b \<in> TYX st'"
@@ -1500,7 +1495,6 @@ qed
 lemma CleanQ_Set_deq_y_weak_I2:
   fixes st st' K b
   assumes I: "CleanQ_Set_Invariants K st'"
-      and rb: "st = CleanQ_Set_enq_y b st'"
       and frame: "frame_weak (TYX st',SX st', TXY st' - {b}, SY st' \<union> {b}) 
                              (TYX st, SX st, TXY st, SY st)"
       and owns: "b \<in> TXY st'"

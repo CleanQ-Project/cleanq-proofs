@@ -932,20 +932,20 @@ text \<open>
   e.g. when enqueueing from X the sets TXY, SY and TYX might change through actions of Y.
 \<close>
 definition  CleanQ_List_Frame_Weak_x :: 
-    "'a CleanQ_List_State \<Rightarrow> 'a CleanQ_List_State \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> bool"
-    where "CleanQ_List_Frame_Weak_x st' st dtxy dsy  \<longleftrightarrow> 
-            lSX st = lSX st' \<and> lSY st \<union> set dsy = lSY st'\<union> set dtxy \<and>
-            dtxy @ lTXY st  = lTXY st' \<and> lTYX st = lTYX st' @ dsy \<and>
-            set dsy \<inter> (lSY st) = {} \<and> set dtxy \<inter> set (lTXY st) = {} \<and> 
-            set dsy \<inter> set (lTXY st) = {} \<and> distinct dtxy \<and> distinct dsy"
+  "'a CleanQ_List_State \<Rightarrow> 'a CleanQ_List_State \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> bool"
+  where "CleanQ_List_Frame_Weak_x st' st dtxy dsy  \<longleftrightarrow> 
+          lSX st = lSX st' \<and> lSY st \<union> set dsy = lSY st'\<union> set dtxy \<and>
+          dtxy @ lTXY st  = lTXY st' \<and> lTYX st = lTYX st' @ dsy \<and>
+          set dsy \<inter> (lSY st) = {} \<and> set dtxy \<inter> set (lTXY st) = {} \<and> 
+          set dsy \<inter> set (lTXY st) = {} \<and> distinct dtxy \<and> distinct dsy"
 
 definition  CleanQ_List_Frame_Weak_y :: 
-    "'a CleanQ_List_State \<Rightarrow> 'a CleanQ_List_State \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> bool"
-    where "CleanQ_List_Frame_Weak_y st' st dtyx dsx  \<longleftrightarrow> 
-            lSY st = lSY st' \<and> lSX st \<union> set dsx = lSX st'\<union> set dtyx \<and>
-            dtyx @ lTYX st  = lTYX st' \<and> lTXY st = lTXY st' @  dsx \<and>
-            set dsx \<inter> (lSX st) = {} \<and> set dtyx \<inter> set (lTYX st) = {} \<and> 
-            set dsx \<inter> set  (lTYX st) = {}  \<and> distinct dtyx \<and> distinct dsx "
+  "'a CleanQ_List_State \<Rightarrow> 'a CleanQ_List_State \<Rightarrow> 'a list \<Rightarrow> 'a list \<Rightarrow> bool"
+  where "CleanQ_List_Frame_Weak_y st' st dtyx dsx  \<longleftrightarrow> 
+          lSY st = lSY st' \<and> lSX st \<union> set dsx = lSX st'\<union> set dtyx \<and>
+          dtyx @ lTYX st  = lTYX st' \<and> lTXY st = lTXY st' @  dsx \<and>
+          set dsx \<inter> (lSX st) = {} \<and> set dtyx \<inter> set (lTYX st) = {} \<and> 
+          set dsx \<inter> set  (lTYX st) = {}  \<and> distinct dtyx \<and> distinct dsx "
 
 
 text \<open>
@@ -996,6 +996,108 @@ lemma CleanQ_List_Frame_Weak_y_deq:
 
 
 text \<open>
+  The weak frame condition for an \verb+enqueue+ or \verb+dequeue+ preserves I1. 
+\<close>
+
+lemma CleanQ_List_enq_x_I1_weak:
+assumes I: "CleanQ_List_Invariants K st'" 
+   and frame: "CleanQ_List_Frame_Weak_y st' st [] [b]"
+ shows "I1_list_img st K"
+  using assms unfolding I1_def CleanQ_List_Frame_Weak_y_def CleanQ_List_Invariants_def
+  by(auto simp:CleanQ_List_Invariants_simp)
+
+lemma CleanQ_List_enq_y_I1_weak:
+assumes I: "CleanQ_List_Invariants K st'" 
+   and frame: "CleanQ_List_Frame_Weak_x st' st [] [b]"
+ shows "I1_list_img st K"
+  using assms unfolding I1_def CleanQ_List_Frame_Weak_x_def CleanQ_List_Invariants_def
+  by(auto simp:CleanQ_List_Invariants_simp)
+
+lemma CleanQ_List_deq_x_I1_weak:
+assumes I: "CleanQ_List_Invariants K st'"  and  owns:  "b = hd (lTYX st')"
+   and frame: "CleanQ_List_Frame_Weak_y st' st [b] []"
+ shows "I1_list_img st K"
+  using assms unfolding I1_def CleanQ_List_Frame_Weak_y_def CleanQ_List_Invariants_def
+  by (smt I1_list_img_def Un_assoc Un_commute set_append)
+  
+lemma CleanQ_List_deq_y_I1_weak:
+assumes I: "CleanQ_List_Invariants K st'"  and  owns:  "b = hd (lTXY st')"
+   and frame: "CleanQ_List_Frame_Weak_x st' st [b] []"
+ shows "I1_list_img st K"
+  using assms unfolding I1_def CleanQ_List_Frame_Weak_x_def CleanQ_List_Invariants_def
+  by (smt I1_list_img_def Un_assoc Un_commute set_append)
+
+
+text \<open>
+  The weak frame condition for an \verb+enqueue+ or \verb+dequeue+ preserves I2. 
+\<close>
+
+lemma CleanQ_List_enq_x_I2_weak:
+assumes I: "CleanQ_List_Invariants K st'" 
+   and frame: "CleanQ_List_Frame_Weak_y st' st [] [b]"
+ shows "I2_list_img st"
+  using assms unfolding CleanQ_List_Frame_Weak_y_def I2_list_img_def
+  by(auto simp:CleanQ_List_Invariants_simp)
+
+lemma CleanQ_List_enq_y_I2_weak:
+assumes I: "CleanQ_List_Invariants K st'" 
+   and frame: "CleanQ_List_Frame_Weak_x st' st [] [b]"
+ shows "I2_list_img st"
+  using assms unfolding CleanQ_List_Frame_Weak_x_def I2_list_img_def
+  by(auto simp:CleanQ_List_Invariants_simp)
+
+lemma CleanQ_List_deq_x_I2_weak:
+assumes I: "CleanQ_List_Invariants K st'" and  owns:  "b = hd (lTYX st')"
+   and frame: "CleanQ_List_Frame_Weak_y st' st [b] []"
+ shows "I2_list_img st"
+  using assms unfolding CleanQ_List_Frame_Weak_y_def I2_list_img_def
+  apply(simp add:CleanQ_List_Invariants_simp)
+  by (metis disjoint_insert(2) list.simps(15))
+  
+lemma CleanQ_List_deq_y_I2_weak:
+assumes I: "CleanQ_List_Invariants K st'" and  owns:  "b = hd (lTXY st')"
+   and frame: "CleanQ_List_Frame_Weak_x st' st [b] []"
+ shows "I2_list_img st"
+  using assms unfolding CleanQ_List_Frame_Weak_x_def I2_list_img_def
+  apply(simp add:CleanQ_List_Invariants_simp)
+  by (metis disjoint_insert(2) inf_commute list.simps(15))
+
+text \<open>
+  The weak frame condition for an \verb+enqueue+ or \verb+dequeue+ preserves I3. 
+\<close>
+
+lemma CleanQ_List_enq_x_I3_weak:
+assumes I: "CleanQ_List_Invariants K st'"
+   and frame: "CleanQ_List_Frame_Weak_y st' st [] [b]"
+ shows "I3 st"
+  using assms unfolding CleanQ_List_Frame_Weak_y_def I3_def
+  by(auto simp add:CleanQ_List_Invariants_simp)
+
+lemma CleanQ_List_enq_y_I3_weak:
+assumes I: "CleanQ_List_Invariants K st'"
+   and frame: "CleanQ_List_Frame_Weak_x st' st [] [b]"
+ shows "I3 st"
+  using assms unfolding CleanQ_List_Frame_Weak_x_def I3_def
+  by(auto simp add:CleanQ_List_Invariants_simp)
+
+lemma CleanQ_List_deq_y_I3_weak:
+assumes I: "CleanQ_List_Invariants K st'" 
+   and frame: "CleanQ_List_Frame_Weak_x st' st [b] []"
+ shows "I3 st"
+  using assms unfolding CleanQ_List_Frame_Weak_x_def I3_def
+  apply(simp add:CleanQ_List_Invariants_simp)
+  by (metis distinct.simps(2))
+
+lemma CleanQ_List_deq_x_I3_weak:
+assumes I: "CleanQ_List_Invariants K st'"
+   and frame: "CleanQ_List_Frame_Weak_y st' st [b] []"
+ shows "I3 st"
+  using assms unfolding CleanQ_List_Frame_Weak_y_def I3_def
+  apply(simp add:CleanQ_List_Invariants_simp)
+  by (metis distinct.simps(2))
+
+
+text \<open>
   Additionally we have to define the weak frame condition for the concurrency case 
   again similar to the set model.
 \<close>
@@ -1007,12 +1109,34 @@ fun frame_list_weak ::
     B' \<union> set \<delta>aB = set \<delta>Bc \<union> B \<and>
     c' @ \<delta>Bc = c \<and>
     B \<inter> set \<delta>Bc = {} \<and>
-    distinct \<delta>Bc)
+    distinct \<delta>Bc \<and>  distinct \<delta>aB \<and>
+    set a \<inter> set \<delta>Bc = {} \<and>
+    set a \<inter> set \<delta>aB = {} \<and>      
+    B \<inter> set \<delta>Bc = {})
   \<and> D' = D"
 
 lemma frame2_s_w:
   "frame_strong (a',B',c',D') (a,B,c,D) \<Longrightarrow> frame_list_weak (a',B',c',D') (a,B,c,D)"
   by(auto)
+
+
+lemma CleanQ_List_frame_weak_equiv_x:
+  "CleanQ_List_Invariants  K st \<Longrightarrow> 
+      frame_list_weak (lTXY st', lSY st', lTYX st', lSX st' ) (lTXY st, lSY st, lTYX st, lSX st)
+                              \<longleftrightarrow> (\<exists>\<Delta>AB \<Delta>BC. CleanQ_List_Frame_Weak_x st' st \<Delta>AB \<Delta>BC)"
+  unfolding frame_list_weak.simps CleanQ_List_Frame_Weak_x_def 
+  apply(auto)   
+   apply auto[1]
+  by (metis inf_commute sup.commute)
+  
+  
+
+lemma CleanQ_List_frame_weak_equiv_y:
+  "frame_weak (TYX st', SX st', TXY st', SY st' ) (TYX st, SX st, TXY st, SY st) 
+                             \<longleftrightarrow> (\<exists>\<Delta>AB \<Delta>BC. CleanQ_Set_Frame_Weak_y st' st \<Delta>AB \<Delta>BC)"
+  unfolding frame_weak.simps CleanQ_Set_Frame_Weak_y_def
+  by (metis Int_commute)
+
 
 
 text \<open>The second weak frame condition refines the first.\<close>
@@ -1070,19 +1194,16 @@ proof -
 qed
 
 
-
-text \<open>
-  Also for the weak frame condition we have to show that enqueue preserves
-  invariant 3.\<close>
-
 lemma  CleanQ_List_enq_x_weak_I3 :
   fixes st st' K x
   assumes I: "CleanQ_List_Invariants K st'"
       and enq: "st = CleanQ_List_enq_x x st'"
-      and frame: "frame2_weak (lTXY st' @ [x], lSY st', lTYX st', lSX st' - {x}) (lTXY st, lSY st, lTYX st, lSX st)"
+      and frame: "agagagagaga (lTXY st' @ [x], lSY st', lTYX st', lSX st' - {x}) (lTXY st, lSY st, lTYX st, lSX st)"
       and owns: "x \<in> lSX st'"
     shows "I3 st"
 proof(unfold I3_def, intro conjI)
+
+
   from frame obtain \<delta>aB \<delta>Bc where
     fA: "(lTXY st') @ [x] = \<delta>aB @ (lTXY st)" and
     fB: "(lSY st') \<union> set \<delta>aB = set \<delta>Bc \<union> (lSY st)" and
