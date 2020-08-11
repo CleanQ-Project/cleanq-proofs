@@ -1709,6 +1709,17 @@ assumes rw: "rb' = rb_write_head b rb"
  shows "  (ring rb') (head rb') = Some b"
   using rw unfolding rb_write_head_def by(auto)
 
+lemma rb_write_head_element_notin_valid:
+ shows "head rb \<notin> (set (rb_valid_entries rb))"
+  unfolding rb_write_head_def
+  by (simp add: rb_valid_entries_head)  
+
+lemma rb_write_head_element_notin_valid2:
+assumes rw: "rb' = rb_write_head b rb \<and> b \<notin> set (map (the o ring rb) (rb_valid_entries rb))"
+ shows "b \<notin> set (map (the o ring rb) (rb_valid_entries rb))"
+  using rw unfolding rb_write_head_def
+  by blast
+  
 
 (* ==================================================================================== *)
 subsection \<open>Enqueue Operation\<close>
@@ -1913,7 +1924,6 @@ lemma rb_list_opt_elements_not_none:
   using valid unfolding CleanQ_RB_list_opt_def rb_valid_def
   by(auto)
 
-
 text \<open>
   If the ring is valid, then the list is bounded by the size of the ring.
 \<close>
@@ -2009,6 +2019,15 @@ lemma rb_deq_subset :
   using dist rb_deq_not_empty list_set_hd_tl_union2 rb_deq_list_not_in 
         rb_deq_list_tail rb_deq_list_was_in rb_valid_def
   by fastforce
+
+text \<open>
+  A head write does not change the CleanQ_RB_list
+\<close>
+
+lemma rb_enq_write_same :
+  shows "CleanQ_RB_list rb = CleanQ_RB_list (rb_write_head b rb)"
+  unfolding CleanQ_RB_list_def rb_write_head_def
+  by (simp add: rb_valid_entries_def)
 
 
 (* ==================================================================================== *)
