@@ -867,31 +867,47 @@ subsubsection \<open>Interference pairs\<close>
 
 
 lemma CleanQ_RB_enq_interfernce_1 :
-    "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
-         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) 
-        \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
-         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute>RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
+     enq =  CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> deq =  CleanQ_RB_deq_x_possible \<acute>RingCRB \<and>
+     CleanQ_RB_deq_y_possible \<acute>RingCRB \<and> enq2 = CleanQ_RB_enq_y_possible \<acute>RingCRB   \<rbrace> 
+    \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) 
+    \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
+      enq =  CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> deq =  CleanQ_RB_deq_x_possible \<acute>RingCRB \<and>
+     CleanQ_RB_deq_y_possible \<acute>RingCRB \<and> enq2 = CleanQ_RB_enq_y_possible \<acute>RingCRB   \<rbrace>"
   by vcg
 
 lemma CleanQ_RB_enq_interfernce_2 :
-    "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<and>
-         CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> b = CleanQ_RB_read_tail_y \<acute>RingCRB  \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y b \<acute>RingCRB) 
-        \<lbrace> CleanQ_RB_Invariants K \<acute> RingCRB \<and>  CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace>"
-  by (vcg, auto simp:CleanQ_RB_deq_y_enq_x_possible CleanQ_RB_deq_y_all_inv)
+  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
+         deq =  CleanQ_RB_deq_x_possible \<acute>RingCRB \<and>
+         CleanQ_RB_deq_y_possible \<acute>RingCRB \<and> enq = CleanQ_RB_enq_y_possible \<acute>RingCRB \<and>
+         b = CleanQ_RB_read_tail_y \<acute>RingCRB  \<rbrace> 
+      \<acute>RingCRB :== (CleanQ_RB_incr_tail_y b \<acute>RingCRB) 
+      \<lbrace> CleanQ_RB_Invariants K \<acute> RingCRB \<and>  CleanQ_RB_enq_x_possible \<acute>RingCRB \<and>
+         deq =  CleanQ_RB_deq_x_possible \<acute>RingCRB  \<and> CleanQ_RB_enq_x_possible \<acute>RingCRB \<and>
+         enq = CleanQ_RB_enq_y_possible \<acute>RingCRB \<and>
+        x \<in> rSX \<acute> RingCRB  \<rbrace>"
+  apply (vcg,  simp)
+  by (metis CleanQ_RB_deq_x_possible_def CleanQ_RB_deq_y_all_inv CleanQ_RB_deq_y_enq_x_possible 
+            CleanQ_RB_deq_y_no_change CleanQ_RB_enq_y_possible_def)
 
 lemma CleanQ_RB_enq_interfernce_3 :
-    "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
-                b \<in> rSY \<acute> RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and>
-         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_write_head_y b \<acute>RingCRB) 
-        \<lbrace> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and>
-         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace>"
-  apply(vcg, auto simp: CleanQ_RB_enq_x_possible_def CleanQ_RB_write_head_y_def)
-  by(metis CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(1) CleanQ_RB_enq_write_y_def
-           CleanQ_RB_enq_y_write_inv_all CleanQ_RB_write_head_y_def)
+    "\<Gamma>\<turnstile> \<lbrace>  rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute>RingCRB \<and>
+           enq = CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> deq =  CleanQ_RB_deq_x_possible \<acute>RingCRB \<and>
+           CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> deq2 =  CleanQ_RB_deq_y_possible \<acute>RingCRB \<and>
+           b \<in> rSY \<acute>RingCRB  \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_write_head_y b \<acute>RingCRB)
+        \<lbrace> CleanQ_RB_Invariants K \<acute> RingCRB \<and> x \<in> rSX \<acute> RingCRB \<and> b \<in> rSY \<acute>RingCRB  \<and>
+         enq = CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> deq =  CleanQ_RB_deq_x_possible \<acute>RingCRB \<and>
+         CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> deq2 = CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace>"
+  apply(vcg, simp add: CleanQ_RB_write_head_y_def CleanQ_RB_enq_x_possible_def rb_enq_write_can_enq
+                       CleanQ_RB_enq_y_possible_def CleanQ_RB_deq_y_possible_def)
 
+  apply(auto)
+  apply (metis CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(1) CleanQ_RB_enq_write_y_def CleanQ_RB_enq_y_possible_def CleanQ_RB_enq_y_write_inv_all)
+  apply (metis CleanQ_RB_Invariants_def CleanQ_RB_State.select_convs(4) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) CleanQ_RB_deq_x_possible_def I4_rb_valid_def rb_can_deq_def rb_enq_write_same rb_list_empty rb_valid_def rb_write_preserves_valid)
+  apply (metis CleanQ_RB_Invariants_def CleanQ_RB_State.select_convs(4) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) CleanQ_RB_deq_x_possible_def I4_rb_valid_def rb_can_deq_def rb_enq_write_same rb_list_empty rb_valid_def rb_write_preserves_valid)
+  done 
+  
 
 lemma CleanQ_RB_enq_interfernce_4 :
     "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and>   b \<in> rSY \<acute> RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and>

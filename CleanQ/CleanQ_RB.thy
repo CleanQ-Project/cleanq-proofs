@@ -1911,12 +1911,12 @@ subsection \<open>Other Lemmas\<close>
 (* ==================================================================================== *)
 
 lemma rb_enq_can_deq:
-  "rb_can_deq rb \<Longrightarrow> rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_can_deq (rb_enq b rb)"
+  "rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_can_deq (rb_enq b rb)"
   using rb_can_deq_def rb_enq_valid_entries rb_valid_entries_empty_list 
         rb_valid_implies_ptr_valid by fastforce
 
 lemma rb_deq_can_enq:
-  "rb_can_deq rb \<Longrightarrow> rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_can_enq (snd (rb_deq rb))"
+  "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_can_enq (snd (rb_deq rb))"
   by (simp add: rb_can_deq_def rb_can_enq_def rb_deq_def rb_incr_tail_invalid_entries 
                 rb_incr_tail_valid_ptr rb_invalid_entries_full 
                 rb_invalid_entries_never_empty_list rb_valid_implies_ptr_valid)
