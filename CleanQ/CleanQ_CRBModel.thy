@@ -514,8 +514,18 @@ lemma CleanQ_split_deq_x_equal:
   unfolding CleanQ_RB_deq_x_def rb_deq_def CleanQ_RB_read_tail_x_def CleanQ_RB_incr_tail_x_def
   by simp
 
+lemma CleanQ_split_deq_x_equal2[simp]:
+  shows "CleanQ_RB_incr_tail_x (CleanQ_RB_read_tail_x rb) rb = CleanQ_RB_deq_x rb"
+  unfolding CleanQ_RB_deq_x_def rb_deq_def CleanQ_RB_read_tail_x_def CleanQ_RB_incr_tail_x_def
+  by simp
+
 lemma CleanQ_split_deq_y_equal:
   shows "(let b = CleanQ_RB_read_tail_y rb in CleanQ_RB_incr_tail_y b rb) = CleanQ_RB_deq_y rb"
+  unfolding CleanQ_RB_deq_y_def rb_deq_def CleanQ_RB_read_tail_y_def CleanQ_RB_incr_tail_y_def
+  by simp
+
+lemma CleanQ_split_deq_y_equal2[simp]:
+  shows "CleanQ_RB_incr_tail_y (CleanQ_RB_read_tail_y rb) rb = CleanQ_RB_deq_y rb"
   unfolding CleanQ_RB_deq_y_def rb_deq_def CleanQ_RB_read_tail_y_def CleanQ_RB_incr_tail_y_def
   by simp
 
@@ -527,6 +537,7 @@ lemma CleanQ_RB_deq_x_preserves_invariants :
   apply(vcg)
   using CleanQ_split_deq_x_equal
   by (metis CleanQ_RB_deq_x_all_inv) 
+
 
 lemma CleanQ_RB_deq_y_preserves_invariants : 
   "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace> 
@@ -862,14 +873,11 @@ lemma CleanQ_RB_enq_interfernce_1 :
   by vcg
 
 lemma CleanQ_RB_enq_interfernce_2 :
-    "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> 
+    "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<and>
          CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> b = CleanQ_RB_read_tail_y \<acute>RingCRB  \<rbrace> 
         \<acute>RingCRB :== (CleanQ_RB_incr_tail_y b \<acute>RingCRB) 
-        \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> 
-         CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace>"
-  apply vcg
-  sorry
-
+        \<lbrace> CleanQ_RB_Invariants K \<acute> RingCRB \<and>  CleanQ_RB_enq_x_possible \<acute>RingCRB \<rbrace>"
+  by (vcg, auto simp:CleanQ_RB_deq_y_enq_x_possible CleanQ_RB_deq_y_all_inv)
 
 
 end 

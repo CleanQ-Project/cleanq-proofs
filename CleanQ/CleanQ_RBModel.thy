@@ -918,6 +918,35 @@ lemma CleanQ_RB_deq_y_all_inv :
 
 
 (* ==================================================================================== *)
+subsection \<open>Other Lemmas\<close>
+(* ==================================================================================== *)
+
+lemma CleanQ_RB_deq_y_enq_x_possible:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_enq_x_possible rb 
+        \<Longrightarrow> CleanQ_RB_enq_x_possible (CleanQ_RB_deq_y rb)"
+  unfolding CleanQ_RB_enq_x_possible_def CleanQ_RB_deq_y_def CleanQ_RB_deq_y_possible_def
+  by (simp add: rb_deq_can_enq CleanQ_RB_Invariants_def  I4_rb_valid_def prod.case_eq_if)
+
+lemma CleanQ_RB_deq_x_enq_y_possible:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible rb \<Longrightarrow> CleanQ_RB_deq_x_possible rb 
+        \<Longrightarrow> CleanQ_RB_enq_y_possible (CleanQ_RB_deq_x rb)"
+  unfolding CleanQ_RB_deq_x_possible_def CleanQ_RB_deq_x_def CleanQ_RB_enq_y_possible_def
+  by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def case_prod_beta rb_deq_can_enq)
+
+lemma CleanQ_RB_enq_y_deq_x_possible:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible rb \<Longrightarrow> CleanQ_RB_deq_x_possible rb 
+        \<Longrightarrow> CleanQ_RB_deq_x_possible (CleanQ_RB_enq_y b rb)"
+  unfolding CleanQ_RB_enq_y_possible_def CleanQ_RB_deq_x_possible_def  CleanQ_RB_enq_y_def
+  by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_enq_can_deq)
+
+lemma CleanQ_RB_enq_x_deq_y_possible:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_x_possible rb \<Longrightarrow> CleanQ_RB_deq_y_possible rb 
+        \<Longrightarrow> CleanQ_RB_deq_y_possible (CleanQ_RB_enq_x b rb)"
+  unfolding CleanQ_RB_enq_x_possible_def CleanQ_RB_deq_y_possible_def  CleanQ_RB_enq_y_def
+  by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_enq_can_deq)
+
+
+(* ==================================================================================== *)
 subsection \<open>Integration in SIMPL\<close>
 (* ==================================================================================== *)
 
