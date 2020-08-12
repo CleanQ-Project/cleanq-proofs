@@ -942,7 +942,7 @@ lemma CleanQ_RB_enq_y_deq_x_possible:
 lemma CleanQ_RB_enq_x_deq_y_possible:
   "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_x_possible rb \<Longrightarrow> CleanQ_RB_deq_y_possible rb 
         \<Longrightarrow> CleanQ_RB_deq_y_possible (CleanQ_RB_enq_x b rb)"
-  unfolding CleanQ_RB_enq_x_possible_def CleanQ_RB_deq_y_possible_def  CleanQ_RB_enq_y_def
+  unfolding CleanQ_RB_enq_x_possible_def CleanQ_RB_deq_y_possible_def  CleanQ_RB_enq_x_def
   by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_enq_can_deq)
 
 
