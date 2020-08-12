@@ -555,7 +555,7 @@ assumes I2_holds: "I2 rb"  and  Y_owned: "\<forall>b \<in> B. b \<in> SY rb"
 
 
 text \<open>
-  Likewise, we can show that the \verb+CleanQ_Set_Invariants" are preserved by combining
+  Likewise, we can show that the \verb+CleanQ_Set_Invariants+ are preserved by combining
   the lemmas above:
 \<close>
 

@@ -238,7 +238,7 @@ lemma CleanQ_List_enq_y_upd :
   by(simp add:CleanQ_List_enq_y_def)
 
 text \<open>
-  We can now show that the result of the \verb+enqueue_ operation is the same as the
+  We can now show that the result of the \verb+enqueue+ operation is the same as the
   \verb+enqueue+ operation on the set model. This is the refinement proof for the
   \verb+enqueue+ operation, showing commutative equivalence.
 \<close>
