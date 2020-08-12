@@ -1719,7 +1719,11 @@ assumes rw: "rb' = rb_write_head b rb \<and> b \<notin> set (map (the o ring rb)
  shows "b \<notin> set (map (the o ring rb) (rb_valid_entries rb))"
   using rw unfolding rb_write_head_def
   by blast
-  
+
+lemma rb_write_head_element_read:
+assumes rw: "rb' = rb_write_head b rb"
+ shows " the ((ring rb') (head rb')) = b"
+  using rw unfolding rb_write_head_def by(auto)
 
 (* ==================================================================================== *)
 subsection \<open>Enqueue Operation\<close>
@@ -2029,7 +2033,11 @@ lemma rb_enq_write_same :
   unfolding CleanQ_RB_list_def rb_write_head_def
   by (simp add: rb_valid_entries_def)
 
-
+lemma rb_enq_write_can_enq :
+  shows "rb_can_enq rb \<Longrightarrow> rb_can_enq (rb_write_head b rb)"
+  unfolding CleanQ_RB_list_def rb_write_head_def
+  by (simp add: rb_can_enq_def rb_full_def)
+  
 (* ==================================================================================== *)
 subsection \<open>Frame condition under concurrent operation of two sides\<close>
 (* ==================================================================================== *)  

@@ -528,6 +528,8 @@ lemma CleanQ_RB_enq_x_inv_all :
   by (metis CleanQ_RB_Invariants_simp  CleanQ_RB_enq_x_I1 CleanQ_RB_enq_x_I2 
       CleanQ_RB_enq_x_I3 CleanQ_RB_enq_x_I4 CleanQ_RB_enq_x_def Inv X_owned can_enq)
 
+
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -894,24 +896,6 @@ lemma CleanQ_RB_deq_y_I4 :
   using can_deq invariants
   by(simp add: CleanQ_RB_deq_y_possible_def rb_deq_remains_valid prod.case_eq_if CleanQ_RB_Invariants_simp) 
 
-
-lemma CleanQ_RB_enq_x_write_I1:
-  assumes Inv:" CleanQ_RB_Invariants K rb" and
-          sx: "b \<in> rSX rb" and
-          enq:"CleanQ_RB_enq_x_possible rb" 
-  shows "CleanQ_RB_list (rTXY (CleanQ_RB_enq_write_x b rb)) = CleanQ_RB_list (rTXY rb)"
-  using assms
-  by (metis CleanQ_RB_State.select_convs(3) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(3) 
-      CleanQ_RB_enq_write_x_def rb_enq_write_same) 
-
-lemma CleanQ_RB_enq_y_write_I1:
-  assumes Inv:" CleanQ_RB_Invariants K rb" and
-          sy: "b \<in> rSY rb" and
-          enq:"CleanQ_RB_enq_y_possible rb" 
-  shows "CleanQ_RB_list (rTYX (CleanQ_RB_enq_write_y b rb)) = CleanQ_RB_list (rTYX rb)"
-  using assms
-  by (metis CleanQ_RB_State.ext_inject CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) CleanQ_RB_enq_write_y_def rb_enq_write_same)
-  
 lemma CleanQ_RB_deq_x_all_inv :
   assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
     and invariants : "CleanQ_RB_Invariants K rb"
