@@ -14,5 +14,7 @@ session "CleanQ" = "HOL" +
         CleanQ_SetModel 
         CleanQ_ListModel
         CleanQ_RBModel
+        
+        
     document_files (in ".")
         "root.tex"

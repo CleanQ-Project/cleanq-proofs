@@ -2025,7 +2025,7 @@ lemma rb_deq_subset :
   by fastforce
 
 text \<open>
-  A head write does not change the CleanQ_RB_list
+  A head write does not change the \verb+CleanQ_RB_list+.
 \<close>
 
 lemma rb_enq_write_same :
