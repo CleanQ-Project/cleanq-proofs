@@ -282,17 +282,6 @@ definition CleanQ_RB_enq_y_possible :: "'a CleanQ_RB_State \<Rightarrow> bool"
 
 
 text \<open>
-  Only the write part of enq for concurrency proofs. 
-\<close>
-
-definition CleanQ_RB_enq_write_x :: "'a \<Rightarrow> 'a CleanQ_RB_State  \<Rightarrow> 'a CleanQ_RB_State"
-  where "CleanQ_RB_enq_write_x b rb = rb \<lparr> rSX := (rSX rb), rTXY := rb_write_head b (rTXY rb) \<rparr>"
-
-definition CleanQ_RB_enq_write_y :: "'a \<Rightarrow> 'a CleanQ_RB_State  \<Rightarrow> 'a CleanQ_RB_State"
-  where "CleanQ_RB_enq_write_y b rb = rb \<lparr> rSX := (rSX rb), rTYX := rb_write_head b (rTYX rb) \<rparr>"
-
-
-text \<open>
   Next we can show that if we can enqueue something into the bounded ring buffer, 
   the system behaves exactly like the list model, by showing the commutative 
   of the lifting function and the enqueue operation.

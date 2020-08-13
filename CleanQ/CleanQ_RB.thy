@@ -1684,6 +1684,8 @@ text \<open>
 definition rb_read_tail :: "'a CleanQ_RB \<Rightarrow> 'a"
   where "rb_read_tail rb = the (((ring rb) (tail rb)))"
 
+definition rb_read_head :: "'a CleanQ_RB \<Rightarrow> 'a"
+  where "rb_read_head rb = the (((ring rb) (head rb)))"
 
 text \<open>
   Writing an entry preserves the list of valid entries as well as the validity of
@@ -1698,7 +1700,19 @@ lemma rb_write_preserves_valid:
   "rb_valid rb \<Longrightarrow> rb_valid (rb_write_head b rb)"
   apply(auto simp: rb_valid_def rb_write_head_def rb_valid_ptr_def)
   by (metis rb_write_head_def rb_write_perserves_valid_entries)
-  
+
+
+lemma rb_write_head_valid:
+  "rb_valid rb \<longleftrightarrow> rb_valid (rb_write_head b rb)"
+  apply(auto simp:rb_write_preserves_valid)
+  unfolding rb_valid_def
+  apply(simp only: rb_write_perserves_valid_entries[symmetric])
+  apply(auto)
+  apply(simp add:rb_valid_ptr_def rb_write_head_def rb_valid_def)
+  unfolding rb_write_head_def
+  by (metis fun_upd_apply rb_valid_entries_head select_convs(1) surjective update_convs(1))
+
+
 lemma rb_write_head_element_not_none:
 assumes rw: "rb' = rb_write_head b rb"
  shows "  (ring rb') (head rb') \<noteq> None"
@@ -1724,6 +1738,10 @@ lemma rb_write_head_element_read:
 assumes rw: "rb' = rb_write_head b rb"
  shows " the ((ring rb') (head rb')) = b"
   using rw unfolding rb_write_head_def by(auto)
+
+
+ 
+
 
 (* ==================================================================================== *)
 subsection \<open>Enqueue Operation\<close>
