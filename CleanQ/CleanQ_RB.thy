@@ -1921,6 +1921,13 @@ lemma rb_deq_can_enq:
                 rb_incr_tail_valid_ptr rb_invalid_entries_full 
                 rb_invalid_entries_never_empty_list rb_valid_implies_ptr_valid)
 
+lemma rb_write_can_enq:
+  "rb_can_enq rb = rb_can_enq (rb_write_head b rb)"
+  by (simp add: rb_can_enq_def rb_full_def rb_write_head_def)
+
+lemma rb_write_can_deq:
+  "rb_can_deq rb = rb_can_deq (rb_write_head b rb)"
+  by (simp add: rb_can_deq_def rb_empty_def rb_write_head_def)
 
 (* ==================================================================================== *)
 subsection \<open>Lifting Ring Buffers to Lists\<close>
