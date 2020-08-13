@@ -298,13 +298,17 @@ definition CleanQ_RB_write_head_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Righ
 definition CleanQ_RB_incr_head_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
   where "CleanQ_RB_incr_head_y b rb = rb \<lparr>rTYX := rb_incr_head (rTYX rb), rSY := (rSY rb) - {b} \<rparr>"
 
-
-
 definition CleanQ_RB_read_head_x :: "'a CleanQ_RB_State \<Rightarrow> 'a " 
   where "CleanQ_RB_read_head_x rb = rb_read_head (rTXY rb)"
 
 definition CleanQ_RB_read_head_y :: "'a CleanQ_RB_State \<Rightarrow> 'a " 
   where "CleanQ_RB_read_head_y rb = rb_read_head (rTYX rb)"
+
+definition CleanQ_RB_head_none_x :: "'a CleanQ_RB_State \<Rightarrow> bool" 
+  where "CleanQ_RB_head_none_x rb = rb_head_none (rTXY rb)"
+
+definition CleanQ_RB_head_none_y :: "'a CleanQ_RB_State \<Rightarrow> bool" 
+  where "CleanQ_RB_head_none_y rb = rb_head_none (rTYX rb)"
 
 lemma CleanQ_split_enq_x_equal[simp]:
   shows "CleanQ_RB_incr_head_x b (CleanQ_RB_write_head_x b rb) = CleanQ_RB_enq_x b rb"
@@ -514,7 +518,101 @@ lemma CleanQ_RB_enq_y_preserves_invariants :
   apply(vcg)
   using CleanQ_split_enq_y_equal
   by (metis CleanQ_RB_enq_y_inv_all)   
+
+
+
+
+
+
+
+
+
+lemma CleanQ_RB_head_write_x_not_none:
+  "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_x b rb)"
+  unfolding CleanQ_RB_head_none_x_def CleanQ_RB_write_head_x_def
+  by (simp add: rb_write_head_not_none)
+
+lemma CleanQ_RB_head_write_y_not_none:
+  "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_y b rb)"
+  unfolding CleanQ_RB_head_none_y_def CleanQ_RB_write_head_y_def
+  by (simp add: rb_write_head_not_none)
+
+lemma CleanQ_RB_write_head_read_head_x:
+  "b = CleanQ_RB_read_head_x (CleanQ_RB_write_head_x b rb)"
+  unfolding CleanQ_RB_read_head_x_def CleanQ_RB_write_head_x_def
+  by (simp add: rb_read_head_def rb_write_head_element_read)
+
+lemma CleanQ_RB_write_head_read_head_y:
+  "b = CleanQ_RB_read_head_y (CleanQ_RB_write_head_y b rb)"
+  unfolding CleanQ_RB_read_head_y_def CleanQ_RB_write_head_y_def
+  by (simp add: rb_read_head_def rb_write_head_element_read)
+
+lemma CleanQ_RB_enq_x_equiv_incr_head:
+  "\<not>CleanQ_RB_head_none_x rb  \<Longrightarrow> b = (CleanQ_RB_read_head_x rb) \<Longrightarrow> (CleanQ_RB_incr_head_x b rb) = CleanQ_RB_enq_x b rb"
+proof -
+  assume buf : "b = (CleanQ_RB_read_head_x rb)"
+  assume notnone: "\<not>CleanQ_RB_head_none_x rb" 
+
+  from buf have x1:
+    "rb_read_head ((rTXY rb)) = b"
+    unfolding CleanQ_RB_read_head_x_def by(auto)
+
+  from x1 have x2:
+    "ring (rTXY (rb::'a CleanQ_RB_State)) (head (rTXY rb)) = Some b"
+    using notnone unfolding rb_read_head_def apply(auto) 
+    by (simp add: CleanQ_RB_head_none_x_def rb_head_none_def)
+
+   from x2 have x3: "rb_write_head b (rTXY rb) = (rTXY rb)"
+    unfolding rb_read_head_def 
+    by (metis CleanQ_RB.surjective CleanQ_RB.update_convs(1) fun_upd_triv rb_write_head_def)
+
+  have rbeq:
+    "rb_enq b (rTXY rb) =  rb_incr_head (rTXY rb)"
+    using x3 unfolding rb_enq_def
+    by simp
+
+  show ?thesis
+    using rbeq unfolding CleanQ_RB_enq_x_def CleanQ_RB_incr_head_x_def
+    by(auto)
+qed
+
+
+
+
+abbreviation "CleanQ_Enq_X_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb"
+abbreviation "CleanQ_Enq_X_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb \<and>  b = CleanQ_RB_read_head_x rb \<and> \<not>CleanQ_RB_head_none_x rb "
+abbreviation "CleanQ_Enq_X_R K rb b \<equiv> CleanQ_RB_Invariants K rb"
+
+abbreviation "CleanQ_Enq_Y_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_y_possible rb \<and> b \<in> rSY rb"
+abbreviation "CleanQ_Enq_Y_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_y_possible rb \<and> b \<in> rSY rb \<and>  b = CleanQ_RB_read_head_y rb \<and> \<not>CleanQ_RB_head_none_y rb "
+abbreviation "CleanQ_Enq_Y_R K rb b \<equiv> CleanQ_RB_Invariants K rb"
+
+
+
+
+abbreviation "CleanQ_Deq_X_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb"
+abbreviation "CleanQ_Deq_X_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb \<and> b = CleanQ_RB_read_tail_x rb"
+abbreviation "CleanQ_Deq_X_R K rb b \<equiv> CleanQ_RB_Invariants K rb"
+
+
+
+lemma  CleanQ_RB_write_head_x_hoare:
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_Enq_X_P K \<acute>RingCRB b \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_write_head_x b \<acute>RingCRB)
+      \<lbrace> CleanQ_Enq_X_Q K \<acute> RingCRB b  \<rbrace>"
+  apply(vcg, auto simp: CleanQ_RB_enq_x_write_inv_all CleanQ_RB_enq_x_write_can_enq 
+                        CleanQ_RB_write_head_read_head_x CleanQ_RB_head_write_x_not_none)
+  by(simp add: CleanQ_RB_write_head_x_def)
+
+
+lemma  CleanQ_RB_incr_head_x_hoare:
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_Enq_X_Q K \<acute>RingCRB b \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_incr_head_x b \<acute>RingCRB)
+      \<lbrace> CleanQ_Enq_X_R K \<acute> RingCRB b  \<rbrace>"
+  by(vcg, simp add: CleanQ_RB_enq_x_equiv_incr_head CleanQ_RB_enq_x_inv_all)
   
+
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -913,13 +1011,6 @@ text \<open>
 \<close>
 
 
-abbreviation "CleanQ_Enq_X_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb"
-abbreviation "CleanQ_Enq_X_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb \<and>  b = CleanQ_RB_read_head_x rb"
-abbreviation "CleanQ_Enq_X_R K rb b \<equiv> CleanQ_RB_Invariants K rb"
-
-abbreviation "CleanQ_Deq_X_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb"
-abbreviation "CleanQ_Deq_X_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb \<and> b = CleanQ_RB_read_tail_x rb"
-abbreviation "CleanQ_Deq_X_R K rb b \<equiv> CleanQ_RB_Invariants K rb"
 
 paragraph \<open>Y writes the descriptor ring\<close>
 

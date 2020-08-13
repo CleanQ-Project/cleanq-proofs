@@ -1687,6 +1687,9 @@ definition rb_read_tail :: "'a CleanQ_RB \<Rightarrow> 'a"
 definition rb_read_head :: "'a CleanQ_RB \<Rightarrow> 'a"
   where "rb_read_head rb = the (((ring rb) (head rb)))"
 
+definition rb_head_none :: "'a CleanQ_RB \<Rightarrow> bool"
+  where "rb_head_none rb =  (((ring rb) (head rb)) = None)"
+
 text \<open>
   Writing an entry preserves the list of valid entries as well as the validity of
   the ring buffer, as the head / tail pointers are not changed.
