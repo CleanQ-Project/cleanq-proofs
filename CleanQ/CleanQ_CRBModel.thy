@@ -157,55 +157,8 @@ lemma frame_rb_weak_x_list_weak:
     shows "frame_list_weak (lTXY (CleanQ_RB2List rb'), lSY (CleanQ_RB2List rb'), lTYX (CleanQ_RB2List rb'), lSX (CleanQ_RB2List rb')) 
                            (lTXY (CleanQ_RB2List rb), lSY (CleanQ_RB2List rb), lTYX (CleanQ_RB2List rb), lSX (CleanQ_RB2List rb))"
   unfolding CleanQ_RB2List_def CleanQ_RB_list_def
-  apply auto 
-proof -
-  show "\<And>x. x \<in> rSX rb' \<Longrightarrow> x \<in> rSX rb"
-    by (metis frame frame_rb_weak_x_def) 
-  show " \<And>x. x \<in> rSX rb \<Longrightarrow> x \<in> rSX rb'"
-    by (metis frame frame_rb_weak_x_def)
-  show " \<exists>\<delta>aB::'a list.
-       map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) =
-       \<delta>aB @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) \<and>
-       (\<exists>\<delta>Bc::'a list.
-           rSY rb' \<union> set \<delta>aB = set \<delta>Bc \<union> rSY rb \<and>
-           map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>Bc =
-           map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb)) \<and>
-           rSY rb \<inter> set \<delta>Bc = {} \<and> distinct \<delta>Bc)"
-  using frame unfolding frame_rb_weak_x_def frame_rb_weak_left_def
-  proof
-    define \<delta>xy where "\<delta>xy = rb_delta_tail_st (rTXY rb') (rTXY rb)"
-    define \<delta>yx where "\<delta>yx = rb_delta_head_st (rTYX rb') (rTYX rb)"
-  
-    have c1: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) = \<delta>xy @ map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
-      using I1 \<delta>xy_def frame frame_weak_x_tl_delta by blast
-  
-    have c2: "map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) @ \<delta>yx = map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb))"
-      using I1 \<delta>yx_def frame frame_weak_x_hd_delta by blast
-    
-    have c3: "rSY rb' \<union> set \<delta>xy = set \<delta>yx \<union> rSY rb "
-      using I1 \<delta>xy_def \<delta>yx_def frame frame_weak_x_sy_delta by blast 
-  
-    from I1 have c4: "distinct \<delta>yx"
-      using \<delta>yx_def frame frame_rb_weak_x_def by blast 
-  
-    from \<delta>yx_def frame have c5: "rSY rb \<inter> set \<delta>yx = {}" 
-      unfolding frame_rb_weak_x_def
-      by blast 
-
-    from \<delta>yx_def frame have c6: "set (CleanQ_RB_list (rTXY rb)) \<inter> set \<delta>yx  = {}"
-      unfolding CleanQ_RB_list_def
-      by (smt CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I2_rb_img_def I3_rb_img_def Set.set_insert
-          UnE Un_insert_right c1 c3 disjoint_iff_not_equal disjoint_insert(1) distinct_append set_append 
-          subsetD sup_ge1)
-
-    from \<delta>xy_def frame have c7: "set (CleanQ_RB_list (rTXY rb)) \<inter> set \<delta>xy = {}"
-      unfolding CleanQ_RB_list_def
-      by (metis CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I3_rb_img_def c1 distinct_append inf_commute) 
-
-    show ?thesis using c1 c2 c3 c4 c5 c6 c7
-      by (metis (no_types, lifting) CleanQ_RB_list_def comp_apply image_cong list.set_map) 
-  qed
-qed
+  using I1 frame frame_rb_weak_x_def frame_weak_x_hd_delta frame_weak_x_tl_delta by fastforce
+ 
 
 lemma frame_rb_weak_y_list_weak:
   fixes rb rb' K
@@ -214,57 +167,7 @@ lemma frame_rb_weak_y_list_weak:
     shows "frame_list_weak (lTYX (CleanQ_RB2List rb'), lSX (CleanQ_RB2List rb'), lTXY (CleanQ_RB2List rb'), lSY (CleanQ_RB2List rb')) 
                            (lTYX (CleanQ_RB2List rb), lSX (CleanQ_RB2List rb), lTXY (CleanQ_RB2List rb), lSY (CleanQ_RB2List rb))"
   unfolding CleanQ_RB2List_def CleanQ_RB_list_def
-  apply auto 
-proof -
-  show "\<And>x. x \<in> rSY rb' \<Longrightarrow> x \<in> rSY rb"
-    by (metis frame frame_rb_weak_y_def) 
-  show " \<And>x. x \<in> rSY rb \<Longrightarrow> x \<in> rSY rb'"
-    by (metis frame frame_rb_weak_y_def)
-  show "\<exists>\<delta>aB::'a list.
-       map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) =
-       \<delta>aB @ map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb)) \<and>
-       (\<exists>\<delta>Bc::'a list.
-           rSX rb' \<union> set \<delta>aB = set \<delta>Bc \<union> rSX rb \<and>
-           map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) @ \<delta>Bc =
-           map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb)) \<and>
-           rSX rb \<inter> set \<delta>Bc = {} \<and> distinct \<delta>Bc)"
-  using frame unfolding frame_rb_weak_y_def frame_rb_weak_left_def
-  proof
-  
-    define \<delta>xy where "\<delta>xy = rb_delta_tail_st (rTYX rb') (rTYX rb)"
-    define \<delta>yx where "\<delta>yx = rb_delta_head_st (rTXY rb') (rTXY rb)"
-  
-    have c1: "map (the \<circ> ring (rTYX rb')) (rb_valid_entries (rTYX rb')) = \<delta>xy @ map (the \<circ> ring (rTYX rb)) (rb_valid_entries (rTYX rb))"
-      using I1 \<delta>xy_def frame frame_weak_y_tl_delta by blast
-  
-    have c2: "map (the \<circ> ring (rTXY rb')) (rb_valid_entries (rTXY rb')) @ \<delta>yx = map (the \<circ> ring (rTXY rb)) (rb_valid_entries (rTXY rb))"
-      using I1 \<delta>yx_def frame frame_weak_y_hd_delta by blast
-    
-    have c3: "rSX rb' \<union> set \<delta>xy = set \<delta>yx \<union> rSX rb "
-      using I1 \<delta>xy_def \<delta>yx_def frame frame_weak_y_sx_delta by blast 
-  
-    from I1 have c4: "distinct \<delta>yx"
-      using \<delta>yx_def frame frame_rb_weak_y_def by blast 
-  
-    from \<delta>yx_def frame have c5: "rSX rb \<inter> set \<delta>yx = {}" 
-      unfolding frame_rb_weak_y_def
-      by blast 
-  
-    from \<delta>yx_def frame have c6: "set (CleanQ_RB_list (rTYX rb)) \<inter> set \<delta>yx  = {}"
-      unfolding CleanQ_RB_list_def
-      by (smt CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I2_rb_img_def I3_rb_img_def Set.set_insert
-          UnE Un_insert_right c1 c3 disjoint_iff_not_equal disjoint_insert(1) distinct_append set_append 
-          subsetD sup_ge1)
-
-    from \<delta>xy_def frame have c7: "set (CleanQ_RB_list (rTYX rb)) \<inter> set \<delta>xy = {}"
-      unfolding CleanQ_RB_list_def
-      by (metis CleanQ_RB_Invariants_def CleanQ_RB_list_def I1 I3_rb_img_def c1 distinct_append inf_commute) 
-
-    show ?thesis using c1 c2 c3 c4 c5 c6 c7
-      by (metis (no_types, lifting) CleanQ_RB_list_def comp_apply image_cong list.set_map)
-  qed
-qed
-
+  using I1 frame frame_rb_weak_y_def frame_weak_y_hd_delta frame_weak_y_tl_delta by fastforce
 
 (* ==================================================================================== *)
 subsection \<open>State Transition Operations\<close>
@@ -1235,10 +1138,10 @@ lemma CleanQ_CRB_Dequeue_X_Q_write_head:
   \<lbrace>  CleanQ_Deq_X_Q K \<acute>RingCRB bx \<rbrace>"
   apply(vcg, simp add: CleanQ_RB_write_head_y_can_enq_x[symmetric]
                       CleanQ_RB_write_head_y_can_deq_x[symmetric] )
-  by (metis CleanQ_RB_Invariants_def CleanQ_RB_deq_x_possible_def CleanQ_RB_list_def 
-            CleanQ_RB_read_tail_x_def CleanQ_RB_write_head_y_I4 CleanQ_RB_write_head_y_Invariant 
-              CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_list I4_rb_valid_def prod.sel(1) 
-              rb_deq_def rb_deq_list_was_head rb_read_tail_def rb_valid_implies_ptr_valid)
+  by (metis CleanQ_RB_Invariants_def CleanQ_RB_deq_x_possible_def
+      CleanQ_RB_read_tail_x_def CleanQ_RB_write_head_y_I4 CleanQ_RB_write_head_y_Invariant 
+      CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_list I4_rb_valid_def prod.sel(1) 
+      rb_deq_def rb_deq_list_was_head rb_valid_implies_ptr_valid)
  
 lemma CleanQ_CRB_Dequeue_X_R_write_head:
 "\<Gamma>\<turnstile> \<lbrace> CleanQ_Deq_X_R K \<acute>RingCRB bx  \<rbrace> 
@@ -1322,11 +1225,10 @@ lemma CleanQ_RB_enq_interfernce_3 :
         \<lbrace> CleanQ_RB_Invariants K \<acute> RingCRB \<and> b \<in> rSY \<acute>RingCRB  \<and>
          enq = CleanQ_RB_enq_x_possible \<acute>RingCRB \<and> deq =  CleanQ_RB_deq_x_possible \<acute>RingCRB \<and>
          CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> deq2 = CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace>"
-  apply(vcg, simp add:CleanQ_RB_enq_y_write_can_enq CleanQ_RB_write_head_y_can_enq_deq_simps
-                      CleanQ_RB_enq_y_write_inv_all)
-  by(simp add:CleanQ_RB_write_head_y_def)
-
- 
+  apply(vcg)
+  by (metis CleanQ_RB_State.ext_inject CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) 
+      CleanQ_RB_write_head_y_Invariant CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_can_deq_y 
+      CleanQ_RB_write_head_y_can_enq_x CleanQ_RB_write_head_y_can_enq_y CleanQ_RB_write_head_y_def)
 
 lemma CleanQ_RB_enq_interfernce_4 :
  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingCRB \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and>
@@ -1342,5 +1244,13 @@ lemma CleanQ_RB_enq_interfernce_4 :
   apply (simp add: CleanQ_RB_enq_y_result CleanQ_RB_enq_y_deq_x_possible)
   by (meson CleanQ_RB_enq_y_deq_y_possible)
 
+
+(* ==================================================================================== *)
+subsection \<open>Integration in COMPLEX\<close>
+(* ==================================================================================== *)
+
+text \<open>
+  Next, we can formulate the \verb+enqueue+ and \verb+dequeue+ operations in COMPLEX.
+\<close>
 
 end 
