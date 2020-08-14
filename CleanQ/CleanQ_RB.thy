@@ -1704,7 +1704,6 @@ lemma rb_write_preserves_valid:
   apply(auto simp: rb_valid_def rb_write_head_def rb_valid_ptr_def)
   by (metis rb_write_head_def rb_write_perserves_valid_entries)
 
-
 lemma rb_write_head_valid:
   "rb_valid rb \<longleftrightarrow> rb_valid (rb_write_head b rb)"
   apply(auto simp:rb_write_preserves_valid)
@@ -1716,14 +1715,22 @@ lemma rb_write_head_valid:
   by (metis fun_upd_apply rb_valid_entries_head select_convs(1) surjective update_convs(1))
 
 
+lemma rb_write_head_not_none:
+  "\<not>rb_head_none (rb_write_head b rb)"
+  unfolding rb_head_none_def rb_write_head_def by simp
+
+lemma rb_write_head_same:
+ "\<not>rb_head_none rb \<Longrightarrow> b = rb_read_head rb \<Longrightarrow> rb_write_head (rb_read_head rb) rb = rb"
+  by (simp add: rb_head_none_def rb_read_head_def rb_write_head_def)
+
 lemma rb_write_head_element_not_none:
 assumes rw: "rb' = rb_write_head b rb"
- shows "  (ring rb') (head rb') \<noteq> None"
+ shows " (ring rb') (head rb') \<noteq> None"
   using rw unfolding rb_write_head_def by(auto)
 
 lemma rb_write_head_element:
 assumes rw: "rb' = rb_write_head b rb"
- shows "  (ring rb') (head rb') = Some b"
+ shows " (ring rb') (head rb') = Some b"
   using rw unfolding rb_write_head_def by(auto)
 
 lemma rb_write_head_element_notin_valid:
