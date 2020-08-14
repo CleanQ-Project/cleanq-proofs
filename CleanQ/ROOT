@@ -14,6 +14,7 @@ session "CleanQ" = "HOL" +
         CleanQ_SetModel 
         CleanQ_ListModel
         CleanQ_RBModel
+        CleanQ_CRBModel
         
         
     document_files (in ".")
