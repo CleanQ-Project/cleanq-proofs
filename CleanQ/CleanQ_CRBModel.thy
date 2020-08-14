@@ -169,6 +169,8 @@ lemma frame_rb_weak_y_list_weak:
   unfolding CleanQ_RB2List_def CleanQ_RB_list_def
   using I1 frame frame_rb_weak_y_def frame_weak_y_hd_delta frame_weak_y_tl_delta by fastforce
 
+
+
 (* ==================================================================================== *)
 subsection \<open>State Transition Operations\<close>
 (* ==================================================================================== *)
@@ -285,14 +287,14 @@ text \<open>
   the read operation.
 \<close>
 
-lemma CleanQ_RB_write_head_x_equiv:
+lemma CleanQ_RB_write_head_x_equiv[simp]:
 assumes notnone: "\<not>CleanQ_RB_head_none_x rb"  and buf: "b = (CleanQ_RB_read_head_x rb)"
   shows "CleanQ_RB_write_head_x b rb = rb"
   using assms 
   unfolding CleanQ_RB_write_head_x_def CleanQ_RB_head_none_x_def CleanQ_RB_read_head_x_def
   by (simp add: rb_write_head_same)
 
-lemma CleanQ_RB_write_head_y_equiv:
+lemma CleanQ_RB_write_head_y_equiv[simp]:
 assumes notnone: "\<not>CleanQ_RB_head_none_y rb"  and buf: "b = (CleanQ_RB_read_head_y rb)"
   shows "CleanQ_RB_write_head_y b rb = rb"
   using assms 
@@ -336,11 +338,11 @@ text \<open>
   The entire lifted state to the list model is not changed at all.  
 \<close>
 
-lemma CleanQ_RB_write_head_x_lift_full:
+lemma CleanQ_RB_write_head_x_lift_full[simp]:
   "CleanQ_RB2List (CleanQ_RB_write_head_x b rb) = CleanQ_RB2List rb"
   unfolding CleanQ_RB2List_def by (simp, auto simp: CleanQ_RB_write_head_x_def)
 
-lemma CleanQ_RB_write_head_y_lift_full:
+lemma CleanQ_RB_write_head_y_lift_full[simp]:
   "CleanQ_RB2List (CleanQ_RB_write_head_y b rb) = CleanQ_RB2List rb"
   unfolding CleanQ_RB2List_def by (simp, auto simp: CleanQ_RB_write_head_y_def)
 
@@ -349,51 +351,39 @@ text \<open>
   Writing the head preserves all \verb+can_enq+ and \verb+can_deq+ predicates. 
 \<close>
 
-lemma CleanQ_RB_write_head_y_can_enq_x:
-  "CleanQ_RB_enq_x_possible rb = CleanQ_RB_enq_x_possible (CleanQ_RB_write_head_y b rb)"
+lemma CleanQ_RB_write_head_y_can_enq_x[simp]:
+  "CleanQ_RB_enq_x_possible (CleanQ_RB_write_head_y b rb) = CleanQ_RB_enq_x_possible rb"
   by (simp add: CleanQ_RB_write_head_y_def CleanQ_RB_enq_x_possible_def) 
 
-lemma CleanQ_RB_write_head_y_can_deq_x:
- "CleanQ_RB_deq_x_possible rb = CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_y b rb)"
-  by(simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_write_head_y_def rb_write_can_deq)
-
-lemma CleanQ_RB_write_head_y_can_deq_y:
-  "CleanQ_RB_deq_y_possible rb = CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_y b rb)"
+lemma CleanQ_RB_write_head_y_can_deq_y[simp]:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_y b rb) = CleanQ_RB_deq_y_possible rb"
   by (simp add: CleanQ_RB_deq_y_possible_def CleanQ_RB_write_head_y_def)
 
-lemma CleanQ_RB_write_head_y_can_enq_y:
- "CleanQ_RB_enq_y_possible rb = CleanQ_RB_enq_y_possible (CleanQ_RB_write_head_y b rb)"
-  by(simp add: CleanQ_RB_enq_y_possible_def CleanQ_RB_write_head_y_def rb_write_can_enq)
-
-
-lemma CleanQ_RB_write_head_x_can_enq_x:
-  "CleanQ_RB_enq_x_possible rb = CleanQ_RB_enq_x_possible (CleanQ_RB_write_head_x b rb)"
-  by(simp add: CleanQ_RB_write_head_x_def CleanQ_RB_enq_x_possible_def rb_write_can_enq)
-
-lemma CleanQ_RB_write_head_x_can_deq_x:
- "CleanQ_RB_deq_x_possible rb = CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_x b rb)"
-  by(simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_write_head_x_def rb_write_can_deq)
-
-lemma CleanQ_RB_write_head_x_can_deq_y:
-  "CleanQ_RB_deq_y_possible rb = CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_x b rb)"
-  by(simp add: CleanQ_RB_deq_y_possible_def CleanQ_RB_write_head_x_def rb_write_can_deq)
-
-lemma CleanQ_RB_write_head_x_can_enq_y:
- "CleanQ_RB_enq_y_possible rb = CleanQ_RB_enq_y_possible (CleanQ_RB_write_head_x b rb)"
-  by(simp add: CleanQ_RB_enq_y_possible_def CleanQ_RB_write_head_x_def rb_write_can_enq)
-
-
-
-lemmas CleanQ_RB_write_head_y_can_enq_deq_simps = CleanQ_RB_write_head_y_can_enq_x 
-                                                  CleanQ_RB_write_head_y_can_deq_x 
-                                                  CleanQ_RB_write_head_y_can_deq_y 
-                                                  CleanQ_RB_write_head_y_can_enq_y
-
-lemmas CleanQ_RB_write_head_x_can_enq_deq_simps = CleanQ_RB_write_head_x_can_enq_x 
-                                                  CleanQ_RB_write_head_x_can_deq_x 
-                                                  CleanQ_RB_write_head_x_can_deq_y 
-                                                  CleanQ_RB_write_head_x_can_enq_y
+lemma CleanQ_RB_write_head_y_can_deq_x[simp]:
+ "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_y b rb) = CleanQ_RB_deq_x_possible rb"
+  by(simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_write_head_y_def)
  
+lemma CleanQ_RB_write_head_y_can_enq_y[simp]:
+ "CleanQ_RB_enq_y_possible (CleanQ_RB_write_head_y b rb) = CleanQ_RB_enq_y_possible rb"
+  by(simp add: CleanQ_RB_enq_y_possible_def CleanQ_RB_write_head_y_def)
+
+
+lemma CleanQ_RB_write_head_x_can_enq_x[simp]:
+  "CleanQ_RB_enq_x_possible (CleanQ_RB_write_head_x b rb) = CleanQ_RB_enq_x_possible rb"
+  by(simp add: CleanQ_RB_write_head_x_def CleanQ_RB_enq_x_possible_def)
+
+lemma CleanQ_RB_write_head_x_can_deq_x[simp]:
+ "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_x b rb) = CleanQ_RB_deq_x_possible rb"
+  by(simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_x_can_deq_y[simp]:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_x b rb) = CleanQ_RB_deq_y_possible rb"
+  by(simp add: CleanQ_RB_deq_y_possible_def CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_x_can_enq_y[simp]:
+ "CleanQ_RB_enq_y_possible (CleanQ_RB_write_head_x b rb) = CleanQ_RB_enq_y_possible rb"
+  by(simp add: CleanQ_RB_enq_y_possible_def CleanQ_RB_write_head_x_def)
+
 
 text \<open>
   Next we show that the write operation preserves the invariant. We show this individually, 
@@ -401,50 +391,48 @@ text \<open>
   in the observable state and thus also preserves the invariant.
 \<close>
 
-lemma CleanQ_RB_write_head_x_I1:
- "I1_rb_img rb K \<longleftrightarrow> I1_rb_img (CleanQ_RB_write_head_x b rb) K"
-  by (simp add: CleanQ_RB_write_head_x_lift_full I1_rb_img_lift)
+lemma CleanQ_RB_write_head_x_I1[simp]:
+ "I1_rb_img (CleanQ_RB_write_head_x b rb) K = I1_rb_img rb K"
+  by (simp add:I1_rb_img_lift)
 
-lemma CleanQ_RB_write_head_x_I2:
- "I2_rb_img rb \<longleftrightarrow> I2_rb_img (CleanQ_RB_write_head_x b rb)"
-  by (simp add: CleanQ_RB_write_head_x_lift_full I2_rb_img_lift)
+lemma CleanQ_RB_write_head_x_I2[simp]:
+ "I2_rb_img (CleanQ_RB_write_head_x b rb) = I2_rb_img rb "
+  by (simp add: I2_rb_img_lift)
 
-lemma CleanQ_RB_write_head_x_I3:
-  "I3_rb_img rb \<longleftrightarrow> I3_rb_img (CleanQ_RB_write_head_x b rb)"
-  by (simp add:  CleanQ_RB_write_head_x_lift_full I3_rb_img_lift)
+lemma CleanQ_RB_write_head_x_I3[simp]:
+  "I3_rb_img (CleanQ_RB_write_head_x b rb) = I3_rb_img rb"
+  by (simp add: I3_rb_img_lift)
 
-lemma CleanQ_RB_write_head_x_I4:
-  "I4_rb_valid rb \<longleftrightarrow> I4_rb_valid (CleanQ_RB_write_head_x b rb)"
+lemma CleanQ_RB_write_head_x_I4[simp]:
+  "I4_rb_valid (CleanQ_RB_write_head_x b rb) = I4_rb_valid rb"
   unfolding I4_rb_valid_def CleanQ_RB_write_head_x_def
   by(simp, meson rb_write_head_valid)
 
 lemma CleanQ_RB_write_head_x_Invariant[simp]:
-  "CleanQ_RB_Invariants K rb \<longleftrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_write_head_x b rb)"
-  by (meson CleanQ_RB_Invariants_def CleanQ_RB_write_head_x_I1 CleanQ_RB_write_head_x_I2
-            CleanQ_RB_write_head_x_I3 CleanQ_RB_write_head_x_I4)
+  "CleanQ_RB_Invariants K (CleanQ_RB_write_head_x b rb) = CleanQ_RB_Invariants K rb"
+  by (simp add: CleanQ_RB_Invariants_def)
 
 
-lemma CleanQ_RB_write_head_y_I1:
- "I1_rb_img rb K \<longleftrightarrow> I1_rb_img (CleanQ_RB_write_head_y b rb) K"
-  by (simp add: CleanQ_RB_write_head_y_lift_full I1_rb_img_lift)
+lemma CleanQ_RB_write_head_y_I1[simp]:
+ "I1_rb_img (CleanQ_RB_write_head_y b rb) K = I1_rb_img rb K"
+  by (simp add:I1_rb_img_lift)
 
-lemma CleanQ_RB_write_head_y_I2:
- "I2_rb_img rb \<longleftrightarrow> I2_rb_img (CleanQ_RB_write_head_y b rb)"
-  by (simp add: CleanQ_RB_write_head_y_lift_full I2_rb_img_lift)
+lemma CleanQ_RB_write_head_y_I2[simp]:
+ "I2_rb_img (CleanQ_RB_write_head_y b rb) = I2_rb_img rb"
+  by (simp add: I2_rb_img_lift)
 
-lemma CleanQ_RB_write_head_y_I3:
-  "I3_rb_img rb \<longleftrightarrow> I3_rb_img (CleanQ_RB_write_head_y b rb)"
-  by (simp add:  CleanQ_RB_write_head_y_lift_full I3_rb_img_lift)
+lemma CleanQ_RB_write_head_y_I3[simp]:
+  "I3_rb_img (CleanQ_RB_write_head_y b rb) = I3_rb_img rb"
+  by (simp add: I3_rb_img_lift)
 
-lemma CleanQ_RB_write_head_y_I4:
-  "I4_rb_valid rb \<longleftrightarrow> I4_rb_valid (CleanQ_RB_write_head_y b rb)"
+lemma CleanQ_RB_write_head_y_I4[simp]:
+  "I4_rb_valid (CleanQ_RB_write_head_y b rb) = I4_rb_valid rb"
   unfolding I4_rb_valid_def CleanQ_RB_write_head_y_def
   by(simp, meson rb_write_head_valid)
 
 lemma CleanQ_RB_write_head_y_Invariant[simp]:
   "CleanQ_RB_Invariants K rb \<longleftrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_write_head_y b rb)"
-  by (meson CleanQ_RB_Invariants_def CleanQ_RB_write_head_y_I1 CleanQ_RB_write_head_y_I2
-            CleanQ_RB_write_head_y_I3 CleanQ_RB_write_head_y_I4)
+  by (simp add:CleanQ_RB_Invariants_def)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -512,20 +500,21 @@ text \<open>
 \<close>
 
 abbreviation "CleanQ_RB_enq_y_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<notin> rSX rb"
+
 abbreviation "CleanQ_RB_enq_x_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<notin> rSY rb"
 
 
 
 
-
-
-
-  
-
-
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
+
+text \<open>
+  The first part of the \verb+dequeue+ operation is to read from the ring buffer to 
+  obtain the element to be dequeued. Note, if the ring is not empty, there is always some
+  element to be dequeued.
+\<close>
 
 definition CleanQ_RB_read_tail_x :: "'a CleanQ_RB_State \<Rightarrow> 'a " 
   where "CleanQ_RB_read_tail_x rb = rb_read_tail (rTYX rb)"
@@ -533,72 +522,123 @@ definition CleanQ_RB_read_tail_x :: "'a CleanQ_RB_State \<Rightarrow> 'a "
 definition CleanQ_RB_read_tail_y :: "'a CleanQ_RB_State \<Rightarrow> 'a " 
   where "CleanQ_RB_read_tail_y rb = rb_read_tail (rTXY rb)"
 
-definition CleanQ_RB_incr_tail_x :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
-  where "CleanQ_RB_incr_tail_x b rb = rb \<lparr>rTYX := rb_incr_tail (rTYX rb), rSX := (rSX rb) \<union> {b} \<rparr>"
-
-definition CleanQ_RB_incr_tail_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
-  where "CleanQ_RB_incr_tail_y b rb = rb \<lparr>rTXY := rb_incr_tail (rTXY rb), rSY := (rSY rb) \<union> {b} \<rparr>"
-
-lemma CleanQ_split_deq_x_equal:
-  shows "(let b = CleanQ_RB_read_tail_x rb in CleanQ_RB_incr_tail_x b rb) = CleanQ_RB_deq_x rb"
-  unfolding CleanQ_RB_deq_x_def rb_deq_def CleanQ_RB_read_tail_x_def CleanQ_RB_incr_tail_x_def
-  by simp
-
-lemma CleanQ_split_deq_x_equal2[simp]:
-  shows "CleanQ_RB_incr_tail_x (CleanQ_RB_read_tail_x rb) rb = CleanQ_RB_deq_x rb"
-  unfolding CleanQ_RB_deq_x_def rb_deq_def CleanQ_RB_read_tail_x_def CleanQ_RB_incr_tail_x_def
-  by simp
-
-lemma CleanQ_split_deq_y_equal:
-  shows "(let b = CleanQ_RB_read_tail_y rb in CleanQ_RB_incr_tail_y b rb) = CleanQ_RB_deq_y rb"
-  unfolding CleanQ_RB_deq_y_def rb_deq_def CleanQ_RB_read_tail_y_def CleanQ_RB_incr_tail_y_def
-  by simp
-
-lemma CleanQ_split_deq_y_equal2[simp]:
-  shows "CleanQ_RB_incr_tail_y (CleanQ_RB_read_tail_y rb) rb = CleanQ_RB_deq_y rb"
-  unfolding CleanQ_RB_deq_y_def rb_deq_def CleanQ_RB_read_tail_y_def CleanQ_RB_incr_tail_y_def
-  by simp
-
-
-
-lemma CleanQ_RB_deq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB) ;;
-        \<acute>RingCRB :== (CleanQ_RB_incr_tail_x \<acute>b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
-  apply(vcg)
-  using CleanQ_split_deq_x_equal
-  by (metis CleanQ_RB_deq_x_all_inv) 
-
-
-lemma CleanQ_RB_deq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) ;;
-        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y \<acute>b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
-  apply(vcg)
-  using CleanQ_split_deq_y_equal
-  by (metis CleanQ_RB_deq_y_all_inv) 
-
-
-
-
-abbreviation "CleanQ_Deq_X_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb"
-abbreviation "CleanQ_Deq_X_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb \<and> b = CleanQ_RB_read_tail_x rb"
-abbreviation "CleanQ_Deq_X_R K rb b \<equiv> CleanQ_RB_Invariants K rb"
-
-
-
-
-(* ------------------------------------------------------------------------------------ *)
-subsection \<open>Invariants are TRUE invariants\<close>
-(* ------------------------------------------------------------------------------------ *)
 text \<open>
-  To show that the Invariants we defined are true invariants it has to hold at each
-  step of the computation and not only at beginning and end. To show this
-  we will show the invariant for each of the two steps of \verb+enqueue+ and \verb+dequeue+. 
+  The second part is to increment the tail pointer. This effectively removes the 
+  buffer from the ring and places it into the owned set SX or SY respectively.
 \<close>
 
+definition CleanQ_RB_incr_tail_x :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_incr_tail_x b rb = rb \<lparr>rTYX := rb_incr_tail (rTYX rb), 
+                                          rSX := (rSX rb) \<union> {b} \<rparr>"
+
+definition CleanQ_RB_incr_tail_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_incr_tail_y b rb = rb \<lparr>rTXY := rb_incr_tail (rTXY rb), 
+                                          rSY := (rSY rb) \<union> {b} \<rparr>"
+
+
+text \<open>
+  We define helper functions to check  whether the head position of the ring is 
+  \verb+None+ or it contains some buffer.
+\<close>
+
+definition CleanQ_RB_tail_none_x :: "'a CleanQ_RB_State \<Rightarrow> bool" 
+  where "CleanQ_RB_tail_none_x rb = rb_tail_none (rTXY rb)"
+
+definition CleanQ_RB_tail_none_y :: "'a CleanQ_RB_State \<Rightarrow> bool" 
+  where "CleanQ_RB_tail_none_y rb = rb_tail_none (rTYX rb)"
+
+
+text \<open>
+  We first show, that the combination of the two operations yields the original 
+  \verb+dequeue+ operation of the sequential ring buffer model. We add those two to 
+  the simp set.
+\<close>
+
+lemma CleanQ_split_deq_x_equal[simp]:
+  "CleanQ_RB_incr_tail_x (CleanQ_RB_read_tail_x rb) rb = CleanQ_RB_deq_x rb"
+  unfolding CleanQ_RB_deq_x_def rb_deq_def CleanQ_RB_read_tail_x_def CleanQ_RB_incr_tail_x_def
+  by simp
+
+lemma CleanQ_split_deq_y_equal[simp]:
+  "CleanQ_RB_incr_tail_y (CleanQ_RB_read_tail_y rb) rb = CleanQ_RB_deq_y rb"
+  unfolding CleanQ_RB_deq_y_def rb_deq_def CleanQ_RB_read_tail_y_def CleanQ_RB_incr_tail_y_def
+  by simp
+
+
+text \<open>
+  Secondly, we show that if the buffer at tail is $b$ then incrementing the head yields
+  the same outcome as the dequeue operation.
+\<close>
+
+lemma CleanQ_RB_deq_x_equiv_incr_tail:
+  "b = (CleanQ_RB_read_tail_x rb) \<Longrightarrow> CleanQ_RB_incr_tail_x b rb = CleanQ_RB_deq_x rb"
+  by(simp)
+
+lemma CleanQ_RB_deq_y_equiv_incr_tail:
+  "b = (CleanQ_RB_read_tail_y rb) \<Longrightarrow> CleanQ_RB_incr_tail_y b rb = CleanQ_RB_deq_y rb"
+  by(simp)
+  
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Pre-Post Conditions for the Dequeue Operation\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+text \<open>
+  We now define the hoare triples for the dequeue operation. Those are needed to later
+  for the interference proof. There are a total of three predicates for the dequeue
+  operation in small step semantics, while the predicates P and R define the big 
+  step semantics.
+
+  \verb+{P} read_tail {Q} incr_tail {R}+ 
+
+  We now provide abbreviations for each of the predicate P, Q, and R for the \verb+dequeue+
+  operation as seen from Y and X.   
+\<close>
+
+
+paragraph \<open>Dequeue P\<close>
+
+text \<open>
+  The P predicate is the pre-condition for the \verb+dequeue+ operation. For this operation
+  to succeed, the state must satisfy teh Invariant plus a dequeue must be possible, i.e.
+  the ring must not be empty. 
+\<close>
+
+abbreviation "CleanQ_RB_deq_x_P K rb \<equiv> CleanQ_RB_Invariants K rb \<and> 
+                                        CleanQ_RB_deq_x_possible rb"
+
+abbreviation "CleanQ_RB_deq_y_P K rb \<equiv> CleanQ_RB_Invariants K rb \<and> 
+                                          CleanQ_RB_deq_y_possible rb"
+
+
+paragraph \<open>Dequeue Q\<close>
+
+text \<open>
+  The Q predicate is the post-condition of the read part of the \verb+dequeue+ operation, 
+  and the pre-condition of the increment tail part. Just reading the buffer does not
+  change the ownership of the buffer and it remains in the ownership of the ring. As
+  such, a dequeue is still possible.
+\<close>
+
+abbreviation "CleanQ_RB_deq_x_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
+                                          CleanQ_RB_deq_x_possible rb \<and> 
+                                          b = CleanQ_RB_read_tail_x rb"
+
+abbreviation "CleanQ_RB_deq_y_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
+                                          CleanQ_RB_deq_y_possible rb \<and> 
+                                          b = CleanQ_RB_read_tail_y rb"
+
+paragraph \<open>Dequeue R\<close>
+
+text \<open>
+  The R predicate is the post-condition of the \verb+dequeue+ operation in big step
+  semantics, as well as the post condition of the increment tail part. We now know
+  that the buffer is in the ownership of the subjects i.e. an eleemnt of SX or SY 
+  respectively. We now do not know whether we can dequeue again. 
+\<close>
+
+abbreviation "CleanQ_RB_deq_x_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<in> rSX rb"
+abbreviation "CleanQ_RB_deq_y_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<in> rSY rb"
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -699,7 +739,17 @@ text \<open>
   We show the Hoare triple with \verb+{P) read_tail {Q}+.
 \<close>
 
+lemma  CleanQ_RB_read_tail_x_hoare:
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB \<acute>b  \<rbrace>"  
+  by(vcg)
 
+lemma  CleanQ_RB_read_tail_y_hoare:
+  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_P K \<acute>RingCRB \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB \<acute>b  \<rbrace>"  
+  by(vcg)
 
 
 paragraph \<open>Incrementing the Tail Pointer\<close>
@@ -708,49 +758,47 @@ text \<open>
   We show the Hoare triple with \verb+{Q) incr_tail {R}+.
 \<close>
 
+lemma  CleanQ_RB_incr_tail_x_hoare:
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_x_Q K \<acute>RingCRB b \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_incr_tail_x b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_deq_x_R K \<acute> RingCRB b  \<rbrace>"
+  apply(vcg, auto)
+  using CleanQ_RB_deq_x_all_inv apply blast
+  by (simp add: CleanQ_RB_deq_x_result CleanQ_RB_read_tail_x_def)
 
+lemma  CleanQ_RB_incr_tail_y_hoare:
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_y_Q K \<acute>RingCRB b \<rbrace> 
+        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y b \<acute>RingCRB)
+      \<lbrace> CleanQ_RB_deq_y_R K \<acute> RingCRB b  \<rbrace>"
+  apply(vcg, auto)
+  using CleanQ_RB_deq_y_all_inv apply blast
+  by (simp add: CleanQ_RB_deq_y_result CleanQ_RB_read_tail_y_def)
 
+ 
 paragraph \<open>Full Dequeue Operation\<close>
 
 text \<open>
   We show the Hoare triple with \verb+{P) deq {R}+.
 \<close>
 
-
-
-  
-
-
-lemma CleanQ_CRB_read_deq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB)
-      \<lbrace> \<acute>b = (CleanQ_RB_read_tail_x \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute>RingCRB \<and> 
-         CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace>"
-  by vcg
-
-
-lemma CleanQ_CRB_read_deq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_Invariants K \<acute> RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB)
-      \<lbrace> \<acute>b = (CleanQ_RB_read_tail_y \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute>RingCRB \<and> 
-        CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace>"
-  by vcg
-
-lemma CleanQ_CRB_incr_deq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> \<acute>b = (CleanQ_RB_read_tail_x \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> 
-         CleanQ_RB_deq_x_possible \<acute>RingCRB \<rbrace> 
+lemma CleanQ_RB_deq_x_hoare : 
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_x_P K \<acute>RingCRB  \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB) ;;
         \<acute>RingCRB :== (CleanQ_RB_incr_tail_x \<acute>b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
-  apply vcg
-  by (metis CleanQ_RB_deq_x_all_inv CleanQ_split_deq_x_equal)
+      \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB \<acute>b  \<rbrace>"
+  apply(vcg, auto)
+  using CleanQ_RB_deq_x_all_inv apply blast
+  by (simp add: CleanQ_RB_deq_x_result CleanQ_RB_read_tail_x_def)
 
-lemma CleanQ_RB_incr_deq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> \<acute>b = (CleanQ_RB_read_tail_y \<acute>RingCRB) \<and> CleanQ_RB_Invariants K \<acute> RingCRB \<and> 
-         CleanQ_RB_deq_y_possible \<acute>RingCRB \<rbrace> 
+lemma CleanQ_RB_deq_y_hoare : 
+  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_y_P K \<acute>RingCRB  \<rbrace> 
+        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) ;;
         \<acute>RingCRB :== (CleanQ_RB_incr_tail_y \<acute>b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingCRB \<rbrace>"
-    apply vcg
-  by (metis CleanQ_RB_deq_y_all_inv CleanQ_split_deq_y_equal)
+      \<lbrace> CleanQ_RB_deq_y_R K \<acute>RingCRB \<acute>b  \<rbrace>"
+  apply(vcg, auto)
+  using CleanQ_RB_deq_y_all_inv apply blast
+  by (simp add: CleanQ_RB_deq_y_result CleanQ_RB_read_tail_y_def)
+
 
 
 (* ------------------------------------------------------------------------------------ *)

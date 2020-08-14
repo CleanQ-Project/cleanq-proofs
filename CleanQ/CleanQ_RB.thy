@@ -1684,11 +1684,16 @@ text \<open>
 definition rb_read_tail :: "'a CleanQ_RB \<Rightarrow> 'a"
   where "rb_read_tail rb = the (((ring rb) (tail rb)))"
 
+definition rb_tail_none :: "'a CleanQ_RB \<Rightarrow> bool"
+  where "rb_tail_none rb =  (((ring rb) (tail rb)) = None)"
+
 definition rb_read_head :: "'a CleanQ_RB \<Rightarrow> 'a"
   where "rb_read_head rb = the (((ring rb) (head rb)))"
 
 definition rb_head_none :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_head_none rb =  (((ring rb) (head rb)) = None)"
+
+
 
 text \<open>
   Writing an entry preserves the list of valid entries as well as the validity of
@@ -1949,12 +1954,12 @@ lemma rb_deq_can_enq:
                 rb_incr_tail_valid_ptr rb_invalid_entries_full 
                 rb_invalid_entries_never_empty_list rb_valid_implies_ptr_valid)
 
-lemma rb_write_can_enq:
-  "rb_can_enq rb = rb_can_enq (rb_write_head b rb)"
+lemma rb_write_can_enq[simp]:
+  "rb_can_enq (rb_write_head b rb) = rb_can_enq rb"
   by (simp add: rb_can_enq_def rb_full_def rb_write_head_def)
 
-lemma rb_write_can_deq:
-  "rb_can_deq rb = rb_can_deq (rb_write_head b rb)"
+lemma rb_write_can_deq[simp]:
+  "rb_can_deq (rb_write_head b rb) = rb_can_deq rb "
   by (simp add: rb_can_deq_def rb_empty_def rb_write_head_def)
 
 (* ==================================================================================== *)
