@@ -24,8 +24,28 @@ theory CleanQ_ListRBRefinement
   "../Refinements"
   CleanQ_ListModel
   CleanQ_RBModel
+  CleanQ_SetListRefinement (* Only for the pre condition of the lists*)
 begin
 (*>*)
+
+
+(* ==================================================================================== *)
+subsection \<open>RB Pre- and post- conditions\<close>
+(* ==================================================================================== *)
+
+
+definition CleanQ_RB_enq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
+  where "CleanQ_RB_enq_x_pre K b =  Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb }"
+
+definition CleanQ_RB_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
+  where "CleanQ_RB_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_y_possible rb \<and> b \<in> rSY rb}"
+
+definition CleanQ_RB_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
+  where "CleanQ_RB_deq_x_pre K buf = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb \<and>
+                                                        buf = rb_read_tail (rTYX rb)}"
+definition CleanQ_RB_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
+  where "CleanQ_RB_deq_y_pre K buf = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_y_possible rb \<and>
+                                                        buf = rb_read_tail (rTXY rb)}"
 
 
 (* ------------------------------------------------------------------------------------ *)
