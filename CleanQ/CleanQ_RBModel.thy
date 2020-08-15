@@ -22,10 +22,11 @@ text \<open>
 
 theory CleanQ_RBModel 
 (*<*) 
-  imports Main "../Simpl/Vcg"  "../Complx/OG_Hoare" CleanQ_ListModel CleanQ_RB
+  imports Main 
+    CleanQ_ListModel
+    CleanQ_RB
 (*>*)  
 begin
-declare[[show_types]]
 
 (* ==================================================================================== *)
 subsection \<open>CleanQ Abstract Ring Buffer Model State\<close>
@@ -961,55 +962,4 @@ lemma CleanQ_RB_enq_y_deq_y_possible:
   by (simp add: CleanQ_RB_deq_y_possible_def CleanQ_RB_enq_y_def)
 
 
-(* ==================================================================================== *)
-subsection \<open>Integration in SIMPL\<close>
-(* ==================================================================================== *)
-
-lemma CleanQ_RB_enq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingRB \<and> CleanQ_RB_Invariants K \<acute>RingRB \<and> b \<in> rSX \<acute>RingRB \<and> 
-        CleanQ_RB_enq_x_possible \<acute>RingRB \<rbrace> 
-        \<acute>RingRB :== (CleanQ_RB_enq_x b \<acute>RingRB) 
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingRB \<rbrace>" 
-  apply(vcg)
-  by (meson CleanQ_RB_enq_x_inv_all) 
-
-lemma CleanQ_RB_enq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingRB \<and> CleanQ_RB_Invariants K \<acute>RingRB \<and> b \<in> rSY \<acute>RingRB \<and> 
-        CleanQ_RB_enq_y_possible \<acute>RingRB \<rbrace> 
-        \<acute>RingRB :== (CleanQ_RB_enq_y b \<acute>RingRB) 
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingRB \<rbrace>" 
-  apply(vcg)
-  by (meson CleanQ_RB_enq_y_inv_all) 
-
-lemma CleanQ_RB_deq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingRB \<and> CleanQ_RB_Invariants K \<acute>RingRB \<and> CleanQ_RB_deq_x_possible \<acute>RingRB \<rbrace> 
-        \<acute>RingRB :== (CleanQ_RB_deq_x \<acute>RingRB) 
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingRB \<rbrace>" 
-  apply(vcg)
-  using CleanQ_RB_deq_x_all_inv by blast
-  
-lemma CleanQ_RB_deq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>RingRB \<and> CleanQ_RB_Invariants K \<acute>RingRB \<and> CleanQ_RB_deq_y_possible \<acute>RingRB \<rbrace> 
-        \<acute>RingRB :== (CleanQ_RB_deq_y \<acute>RingRB) 
-      \<lbrace> CleanQ_RB_Invariants K \<acute>RingRB \<rbrace>" 
-  apply(vcg)
-  using CleanQ_RB_deq_y_all_inv by blast
-
-(* ==================================================================================== *)
-subsection \<open>Pre- and post- conditions\<close>
-(* ==================================================================================== *)
-
-
-definition CleanQ_RB_enq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
-  where "CleanQ_RB_enq_x_pre K b =  Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_x_possible rb \<and> b \<in> rSX rb }"
-
-definition CleanQ_RB_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"
-  where "CleanQ_RB_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_enq_y_possible rb \<and> b \<in> rSY rb}"
-
-definition CleanQ_RB_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
-  where "CleanQ_RB_deq_x_pre K buf = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_x_possible rb \<and>
-                                                        buf = rb_read_tail (rTYX rb)}"
-definition CleanQ_RB_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_RB_State, 'a CleanQ_RB_State) Semantic.xstate set"        
-  where "CleanQ_RB_deq_y_pre K buf = Semantic.Normal ` {rb. CleanQ_RB_Invariants K rb \<and> CleanQ_RB_deq_y_possible rb \<and>
-                                                        buf = rb_read_tail (rTXY rb)}"
 end 

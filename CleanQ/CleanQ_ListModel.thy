@@ -23,7 +23,7 @@ text \<open>
 
 theory CleanQ_ListModel
 (*<*)
-  imports Main "../Simpl/Vcg"  "../Complx/OG_Hoare" CleanQ_SetModel CleanQ_Utils
+  imports Main CleanQ_SetModel CleanQ_Utils
 (*>*)
 begin
 
@@ -843,59 +843,6 @@ assumes I_holds : "CleanQ_List_Invariants K rb"
   using assms CleanQ_List_deq_n_y_I1 CleanQ_List_deq_n_y_I2 CleanQ_List_deq_n_y_I3
   using CleanQ_List_Invariants_simp by blast
 
-
-(* ==================================================================================== *)
-subsection \<open>Integration in SIMPL\<close>
-(* ==================================================================================== *)
-
-
-text \<open>
-  We now integrate the the CleanQ List Model into SIMPL. For each of the two operations,
-  enqueue and dequeue, we specify a Hoare-triple with pre and post conditions, and
-  the operation.
-\<close>
-
-(* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>Enqueue Operation\<close>
-(* ------------------------------------------------------------------------------------ *)
-
-text \<open>
-  We first show, that we can define a Hoare triple for the enqueue operations from both
-  agents X and Y, and that in both cases the invariant is preserved.
-\<close>
-
-lemma CleanQ_List_enq_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>ListRB \<and> CleanQ_List_Invariants K \<acute>ListRB \<and> b \<in> lSX \<acute>ListRB \<rbrace> 
-        \<acute>ListRB :== (CleanQ_List_enq_x b \<acute>ListRB) 
-      \<lbrace> CleanQ_List_Invariants K \<acute>ListRB \<rbrace>"
-  by(vcg, simp only: CleanQ_List_enq_x_Invariants)
-
-
-lemma CleanQ_List_enq_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>ListRB \<and> CleanQ_List_Invariants K \<acute>ListRB \<and> b \<in> lSY \<acute>ListRB \<rbrace> 
-        \<acute>ListRB :== (CleanQ_List_enq_y b \<acute>ListRB) 
-      \<lbrace> CleanQ_List_Invariants K \<acute>ListRB \<rbrace>"
-  by(vcg, simp only: CleanQ_List_enq_y_Invariants)
-
-text \<open>
-  The same applies for the multi-step \verb+eneuque_n+ operation.
-\<close>
-
-lemma CleanQ_List_enq_n_x_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>ListRB \<and> CleanQ_List_Invariants K \<acute>ListRB 
-        \<and> (\<forall>b \<in> set B. b \<in> (lSX \<acute>ListRB)) \<and> distinct B \<rbrace> 
-        \<acute>ListRB :== (CleanQ_List_enq_n_x B \<acute>ListRB) 
-      \<lbrace> CleanQ_List_Invariants K \<acute>ListRB \<rbrace>"
-  apply(vcg) using CleanQ_List_enq_n_x_Invariants by blast
-
-lemma CleanQ_List_enq_n_y_preserves_invariants : 
-  "\<Gamma>\<turnstile> \<lbrace> rb' = \<acute>ListRB \<and> CleanQ_List_Invariants K \<acute>ListRB 
-        \<and> (\<forall>b \<in> set B. b \<in> (lSY \<acute>ListRB)) \<and> distinct B \<rbrace> 
-        \<acute>ListRB :== (CleanQ_List_enq_n_y B \<acute>ListRB) 
-      \<lbrace> CleanQ_List_Invariants K \<acute>ListRB \<rbrace>"
-  apply(vcg) using CleanQ_List_enq_n_y_Invariants by blast
-
-
 (* ==================================================================================== *)
 subsection \<open>Strong and Weak Frame Conditions\<close>
 (* ==================================================================================== *)
@@ -1365,34 +1312,6 @@ proof -
   then show ?thesis
     using a5 a4 a3 a2 by (metis I3_def distinct_append inf_commute)
 qed
-
-
-(* ==================================================================================== *)
-subsection \<open>Integration in COMPLEX\<close>
-(* ==================================================================================== *)
-
-text \<open>
-  We now integrate the list model into COMPLEX for concurrency
-\<close>
-
-(* ==================================================================================== *)
-subsection \<open>Pre- and post- conditions\<close>
-(* ==================================================================================== *)
-
-definition CleanQ_List_enq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"
-  where "CleanQ_List_enq_x_pre K b =  Semantic.Normal ` {rb. CleanQ_List_Invariants K rb \<and> b \<in> lSX rb \<and> b \<notin> set (lTXY rb)}"
-
-definition CleanQ_List_enq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"
-  where "CleanQ_List_enq_y_pre K b = Semantic.Normal ` {rb. CleanQ_List_Invariants K rb \<and> b \<in> lSY rb \<and> b \<notin> set (lTYX rb)}"
-
-definition CleanQ_List_deq_x_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"        
-  where "CleanQ_List_deq_x_pre K buf = Semantic.Normal ` {rb.  CleanQ_List_Invariants K rb \<and>
-                                                          (lTYX rb) \<noteq> [] \<and> buf = hd (lTYX rb) }"
-
-definition CleanQ_List_deq_y_pre :: "'a set \<Rightarrow> 'a \<Rightarrow> ('a CleanQ_List_State, 'a CleanQ_List_State) Semantic.xstate set"        
-  where "CleanQ_List_deq_y_pre K buf = Semantic.Normal ` {rb. CleanQ_List_Invariants K rb \<and>
-                                                          (lTXY rb) \<noteq> [] \<and> buf = hd (lTXY rb) }"
-
 
 end
 
