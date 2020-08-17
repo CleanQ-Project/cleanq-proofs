@@ -512,7 +512,7 @@ lemma CleanQ_RB_enq_y_inv_all :
 lemma CleanQ_RB_enq_x_inv_all :
  assumes Inv: "CleanQ_RB_Invariants K rb"  and  X_owned: "b \<in> rSX rb" and
          X_enq: "rb' = CleanQ_RB_enq_x b rb" and  can_enq: "CleanQ_RB_enq_x_possible rb"
-  shows "CleanQ_RB_Invariants K rb'"
+       shows "CleanQ_RB_Invariants K rb'"
   apply(subst X_enq)
   using can_enq unfolding CleanQ_RB_enq_x_def CleanQ_RB_list_def CleanQ_RB_enq_x_possible_def
   by (metis CleanQ_RB_Invariants_simp  CleanQ_RB_enq_x_I1 CleanQ_RB_enq_x_I2 
@@ -676,7 +676,7 @@ proof -
 qed
 
 lemma CleanQ_RB_deq_y_no_change:
-    assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
+assumes can_deq: "CleanQ_RB_deq_y_possible rb"  and  Y_deq: "rb' = CleanQ_RB_deq_y rb"
   shows "rSX rb' = rSX rb \<and> rTYX rb' = rTYX rb"
   using can_deq Y_deq unfolding CleanQ_RB_deq_y_def by (simp add: prod.case_eq_if)
 
@@ -919,16 +919,14 @@ lemma CleanQ_RB_deq_y_enq_x_possible:
 
 lemma CleanQ_RB_enq_y_enq_x_possible:
   "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible rb  
-        \<Longrightarrow> CleanQ_RB_enq_x_possible rb \<longleftrightarrow> CleanQ_RB_enq_x_possible (CleanQ_RB_enq_y b rb)"
+        \<Longrightarrow> CleanQ_RB_enq_x_possible (CleanQ_RB_enq_y b rb) = CleanQ_RB_enq_x_possible rb"
   unfolding CleanQ_RB_enq_x_possible_def CleanQ_RB_deq_y_def CleanQ_RB_deq_y_possible_def
   by (simp add: CleanQ_RB_enq_y_def)
   
 
-
-
 lemma CleanQ_RB_deq_y_deq_x_possible:
-  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_deq_x_possible rb  
-        \<longleftrightarrow> CleanQ_RB_deq_x_possible (CleanQ_RB_deq_y rb)"
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> 
+        CleanQ_RB_deq_x_possible (CleanQ_RB_deq_y rb) = CleanQ_RB_deq_x_possible rb"
   unfolding CleanQ_RB_deq_x_possible_def CleanQ_RB_deq_y_def 
   by (simp add: rb_deq_can_enq CleanQ_RB_Invariants_def  I4_rb_valid_def prod.case_eq_if)
 
