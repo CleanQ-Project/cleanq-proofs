@@ -276,5 +276,31 @@ lemma CleanQ_RB_concurent:
   apply(oghoare)
   by auto
 
+
+(* let's try this... I think we could start with this and showing this for all
+  four combinations. Then continue with splitting up *)
+
+
+lemma CleanQ_RB_test:
+     "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/F\<^esub>   
+      COBEGIN
+         \<lbrace>  CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_enq_x bx \<acute>CRB
+         \<lbrace>  CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB bx \<rbrace>, \<lbrace>True\<rbrace>
+         \<parallel> 
+         \<lbrace>  CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB by \<rbrace>
+          \<acute>CRB := CleanQ_RB_enq_y by \<acute>CRB 
+         \<lbrace>  CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB by \<rbrace>, \<lbrace>True\<rbrace>
+      COEND
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>"
+  apply(oghoare, auto)
+  apply(simp_all add :CleanQ_RB_enq_x_inv_all) 
+  apply(simp_all add :CleanQ_RB_enq_y_inv_all) 
+  apply (simp add: CleanQ_RB_enq_x_def CleanQ_RB_enq_y_possible_def)
+  apply (simp add: CleanQ_RB_enq_y_enq_x_possible)
+  apply (simp add: CleanQ_RB_enq_y_result)
+  by (simp add: CleanQ_RB_enq_x_result)
+  
+
   
 end 
