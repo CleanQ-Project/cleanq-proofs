@@ -444,6 +444,18 @@ definition CleanQ_RB_head_none_x :: "'a CleanQ_RB_State \<Rightarrow> bool"
 definition CleanQ_RB_head_none_y :: "'a CleanQ_RB_State \<Rightarrow> bool" 
   where "CleanQ_RB_head_none_y rb = rb_head_none (rTYX rb)"
 
+text \<open>
+  Reading the head when the other side enqueues yields the same result
+\<close>
+
+lemma CleanQ_RB_read_head_x_enq_y[simp]:
+  "CleanQ_RB_read_head_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_enq_y_def CleanQ_RB_read_head_x_def)
+
+lemma CleanQ_RB_read_head_y_enq_x[simp]:
+  "CleanQ_RB_read_head_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_enq_x_def CleanQ_RB_read_head_y_def)
+
 
 text \<open> 
   Writing the head location in the ring ensures that the head is not none. 
@@ -468,6 +480,40 @@ lemma CleanQ_RB_write_head_read_head_y[simp]:
   "b = CleanQ_RB_read_head_y (CleanQ_RB_write_head_y b rb)"
   unfolding CleanQ_RB_read_head_y_def CleanQ_RB_write_head_y_def
   by (simp add: rb_read_head_def rb_write_head_element_read)
+
+
+text \<open>
+  Writing the head on one side, does not change the head on the other side
+\<close>
+
+lemma CleanQ_RB_head_none_x_write_y[simp]:
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_y b rb) = CleanQ_RB_head_none_x rb"
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_y_def)
+  
+lemma CleanQ_RB_head_none_y_write_x[simp]:
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_x b rb) = CleanQ_RB_head_none_y rb"
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_read_head_x_write_y[simp]:
+  "CleanQ_RB_read_head_x (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_y_def)
+  
+lemma CleanQ_RB_read_head_y_write_x[simp]:
+  "CleanQ_RB_read_head_y (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_x_def)
+
+
+text \<open>
+  Enqueueing on one side does not change whether the other side is none or not.   
+\<close>
+
+lemma CleanQ_RB_head_none_x_enq_y[simp]:
+  "CleanQ_RB_head_none_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_head_none_x rb"
+  by (simp add: CleanQ_RB_enq_y_def CleanQ_RB_head_none_x_def)
+
+lemma CleanQ_RB_head_none_y_enq_x[simp]:
+  "CleanQ_RB_head_none_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_head_none_y rb"
+  by (simp add: CleanQ_RB_enq_x_def CleanQ_RB_head_none_y_def)
 
 
 text \<open>
@@ -877,6 +923,19 @@ lemma CleanQ_RB_read_tail_y_enq_x[simp]:
   unfolding CleanQ_RB_read_tail_y_def CleanQ_RB_write_head_x_def CleanQ_RB_enq_x_def
   unfolding rb_read_tail_def rb_write_head_def rb_enq_def rb_incr_head_def
   by (simp add: CleanQ_RB_deq_y_possible_def rb_can_deq_def rb_empty_def)
+
+
+text \<open>
+  The same applies when we read the tail after a dequeue of the other side
+\<close>
+
+lemma CleanQ_RB_read_tail_x_deq_y[simp]:
+  "CleanQ_RB_read_tail_x (CleanQ_RB_deq_y rb) = CleanQ_RB_read_tail_x rb"
+  by (simp add: CleanQ_RB_deq_y_def CleanQ_RB_read_tail_x_def prod.case_eq_if)
+
+lemma CleanQ_RB_read_tail_y_deq_x[simp]:
+  "CleanQ_RB_read_tail_y (CleanQ_RB_deq_x rb) = CleanQ_RB_read_tail_y rb"
+  by (simp add: CleanQ_RB_deq_x_def CleanQ_RB_read_tail_y_def prod.case_eq_if)
 
 
 (* ------------------------------------------------------------------------------------ *)

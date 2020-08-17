@@ -85,14 +85,14 @@ lemma  CleanQ_RB_incr_head_x_hoare:
         \<acute>RingCRB :== (CleanQ_RB_incr_head_x b \<acute>RingCRB)
       \<lbrace> CleanQ_RB_enq_x_R K \<acute> RingCRB b  \<rbrace>"
   apply(vcg, auto simp:CleanQ_RB_enq_x_inv_all)
-  by (simp add: CleanQ_RB_enq_x_result)
+  using CleanQ_RB_Invariants_def I2_rb_img_def by fastforce
 
 lemma  CleanQ_RB_incr_head_y_hoare:
   "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<rbrace> 
         \<acute>RingCRB :== (CleanQ_RB_incr_head_y b \<acute>RingCRB)
       \<lbrace> CleanQ_RB_enq_y_R K \<acute> RingCRB b  \<rbrace>"
   apply(vcg, auto simp:CleanQ_RB_enq_y_inv_all)
-  by (simp add: CleanQ_RB_enq_y_result)
+  using CleanQ_RB_Invariants_def I2_rb_img_def by fastforce
 
 
 paragraph \<open>Full Enqueue Operation\<close>
@@ -235,54 +235,43 @@ paragraph \<open>Y writes the descriptor ring\<close>
 
 lemma CleanQ_CRB_Enqueue_X_P_write_head:
 "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
-  \<lbrace>  CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace>"
+      \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace>"
   by(vcg, auto)  
 
 lemma CleanQ_CRB_Enqueue_X_Q_write_head:
 "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_Q K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
-  \<lbrace>  CleanQ_RB_enq_x_Q K \<acute>RingCRB bx \<rbrace>"
-  apply(vcg, auto) 
-  apply (simp add: CleanQ_RB_write_head_y_def)
-  apply (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_y_def)
-  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_y_def)
-
+      \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_enq_x_Q K \<acute>RingCRB bx \<rbrace>"
+  by(vcg, auto) 
 
 lemma CleanQ_CRB_Enqueue_X_R_write_head:
 "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_R K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
-  \<lbrace>  CleanQ_RB_enq_x_R K \<acute>RingCRB bx \<rbrace>"
+      \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_enq_x_R K \<acute>RingCRB bx \<rbrace>"
   by(vcg, auto)  
 
-
-  
 
 paragraph \<open>Y increments the head\<close>
 
 lemma CleanQ_CRB_Enqueue_X_P_incr_head:
-"\<Gamma>\<turnstile> \<lbrace>  rb = CleanQ_RB_write_head_y b \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> CleanQ_RB_enq_x_P K rb bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_head_y b rb 
-  \<lbrace>  CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace>"
-  apply(vcg, auto simp:CleanQ_RB_enq_y_inv_all CleanQ_RB_enq_y_enq_x_possible)
-  by (simp add: CleanQ_RB_enq_y_def CleanQ_RB_write_head_y_def)
-                                       
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<and>  CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace> 
+     \<acute>RingCRB :== CleanQ_RB_incr_head_y b \<acute>RingCRB
+    \<lbrace> CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_enq_y_enq_x_possible CleanQ_RB_enq_y_inv_all)
 
 lemma CleanQ_CRB_Enqueue_X_Q_incr_head:
-"\<Gamma>\<turnstile> \<lbrace>  rb = CleanQ_RB_write_head_y b \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> CleanQ_RB_enq_x_Q K rb bx   \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_head_y b rb 
-  \<lbrace>  CleanQ_RB_enq_x_Q K \<acute>RingCRB bx \<rbrace>"
-  apply(vcg, auto simp: CleanQ_RB_enq_y_inv_all CleanQ_RB_enq_y_enq_x_possible)
-  by(simp_all add: CleanQ_RB_enq_y_def CleanQ_RB_read_head_x_def CleanQ_RB_write_head_y_def
-                   CleanQ_RB_head_none_x_def )
-
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<and>  CleanQ_RB_enq_x_Q K \<acute>RingCRB bx   \<rbrace> 
+     \<acute>RingCRB :== CleanQ_RB_incr_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_enq_x_Q K \<acute>RingCRB bx \<rbrace>"
+  by(vcg, auto simp: CleanQ_RB_enq_y_inv_all CleanQ_RB_enq_y_enq_x_possible)
   
 lemma CleanQ_CRB_Enqueue_X_R_incr_head:
-"\<Gamma>\<turnstile> \<lbrace> rb = CleanQ_RB_write_head_y b \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> CleanQ_RB_enq_x_R K rb bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_head_y b rb 
-  \<lbrace>  CleanQ_RB_enq_x_R K \<acute>RingCRB bx \<rbrace>"
-  apply(vcg, auto simp: CleanQ_RB_enq_y_inv_all)
-  by (simp add: CleanQ_RB_enq_y_def CleanQ_RB_write_head_y_def)
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<and>  CleanQ_RB_enq_x_R K \<acute>RingCRB bx  \<rbrace> 
+     \<acute>RingCRB :== CleanQ_RB_incr_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_enq_x_R K \<acute>RingCRB bx \<rbrace>"
+  by(vcg, auto simp: CleanQ_RB_enq_y_inv_all CleanQ_RB_enq_y_def)
+
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Enqueue X, Dequeue X\<close>
@@ -311,31 +300,26 @@ lemma CleanQ_CRB_Enqueue_X_R_read_tail:
 paragraph \<open>Y increments the tail pointer\<close>
 
 lemma CleanQ_CRB_Enqueue_X_P_incr_tail:
-"\<Gamma>\<turnstile> \<lbrace>  b = CleanQ_RB_read_tail_y  \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<and> CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace> 
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB b \<and> CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace> 
       \<acute>RingCRB  :== CleanQ_RB_incr_tail_y b  \<acute>RingCRB 
   \<lbrace>  CleanQ_RB_enq_x_P K \<acute>RingCRB bx  \<rbrace>"
-  apply(vcg, auto simp:CleanQ_RB_deq_y_all_inv CleanQ_RB_deq_y_enq_x_possible )  
-  using CleanQ_RB_deq_y_no_change by blast
+  by(vcg, auto simp:CleanQ_RB_deq_y_all_inv CleanQ_RB_deq_y_enq_x_possible )  
 
 
 lemma CleanQ_CRB_Enqueue_X_Q_incr_tail:
-"\<Gamma>\<turnstile> \<lbrace>  b = CleanQ_RB_read_tail_y  \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<and> CleanQ_RB_enq_x_Q K \<acute>RingCRB bx  \<rbrace> 
+"\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_y_Q K \<acute>RingCRB b \<and> CleanQ_RB_enq_x_Q K \<acute>RingCRB bx  \<rbrace> 
      \<acute>RingCRB  :== CleanQ_RB_incr_tail_y b  \<acute>RingCRB 
   \<lbrace>  CleanQ_RB_enq_x_Q K \<acute>RingCRB bx \<rbrace>"
-  apply(vcg, auto simp:CleanQ_RB_deq_y_all_inv CleanQ_RB_deq_y_enq_x_possible)
-  using CleanQ_RB_deq_y_no_change by blast
+  by(vcg, auto simp:CleanQ_RB_deq_y_all_inv CleanQ_RB_deq_y_enq_x_possible)
   
 
 lemma CleanQ_CRB_Enqueue_X_R_incr_tail:
-"\<Gamma>\<turnstile> \<lbrace>  b = CleanQ_RB_read_tail_y  \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_deq_y_possible \<acute>RingCRB \<and> CleanQ_RB_enq_x_R K \<acute>RingCRB bx  \<rbrace> 
+"\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_y_Q K \<acute>RingCRB b \<and> CleanQ_RB_enq_x_R K \<acute>RingCRB bx \<and> b \<noteq> bx  \<rbrace> 
      \<acute>RingCRB  :== CleanQ_RB_incr_tail_y b  \<acute>RingCRB 
   \<lbrace>  CleanQ_RB_enq_x_R K \<acute>RingCRB bx \<rbrace>"
   apply(vcg, auto simp:CleanQ_RB_deq_y_all_inv CleanQ_RB_deq_y_enq_x_possible )
-  by (metis CleanQ_RB_Invariants_def CleanQ_RB_deq_y_possible_def CleanQ_RB_read_tail_y_def 
-            I2_rb_img_def I4_rb_valid_def IntI empty_iff prod.sel(1) rb_deq_def rb_deq_list_was_in)
-
-
-
+  by (metis CleanQ_RB_State.select_convs(2) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(2) 
+            CleanQ_RB_incr_tail_y_def CleanQ_split_deq_y_equal Un_iff empty_iff insert_iff)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -345,45 +329,44 @@ subsubsection \<open>Dequeue X, Enqueue Y\<close>
 paragraph \<open>Y writes the descriptor ring\<close>
 
 lemma CleanQ_CRB_Dequeue_X_P_write_head:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
-  \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB   \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
+     \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace>"
   by(vcg, auto)
 
 lemma CleanQ_CRB_Dequeue_X_Q_write_head:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
-  \<lbrace>  CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace> 
+       \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
   by(vcg, auto)
   
 lemma CleanQ_CRB_Dequeue_X_R_write_head:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
-  \<lbrace>  CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace> 
+       \<acute>RingCRB :== CleanQ_RB_write_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
   by(vcg, auto)
 
 
 paragraph \<open>Y increments the head pointer\<close>
 
 lemma CleanQ_CRB_Dequeue_X_P_incr_head:
-"\<Gamma>\<turnstile> \<lbrace>  rb = CleanQ_RB_write_head_y b \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> CleanQ_RB_deq_x_P K rb  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_head_y b rb 
-  \<lbrace>  CleanQ_RB_deq_x_P K \<acute>RingCRB   \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<and> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
+       \<acute>RingCRB :== CleanQ_RB_incr_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace>"
   by(vcg, auto simp:CleanQ_RB_enq_y_inv_all CleanQ_RB_enq_y_deq_x_possible)
   
 lemma CleanQ_CRB_Dequeue_X_Q_incr_head:
-"\<Gamma>\<turnstile> \<lbrace>  rb = CleanQ_RB_write_head_y b \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> CleanQ_RB_deq_x_Q K rb bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_head_y b rb 
-  \<lbrace>  CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<and> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace> 
+       \<acute>RingCRB :== CleanQ_RB_incr_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
   by(vcg, auto simp:CleanQ_RB_enq_y_inv_all CleanQ_RB_enq_y_deq_x_possible) 
   
  
 lemma CleanQ_CRB_Dequeue_X_R_incr_head:
-"\<Gamma>\<turnstile> \<lbrace>  rb = CleanQ_RB_write_head_y b \<acute>RingCRB \<and> b \<in> rSY \<acute>RingCRB \<and> CleanQ_RB_enq_y_possible \<acute>RingCRB \<and> CleanQ_RB_deq_x_R K rb bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_head_y b rb 
-  \<lbrace>  CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
-  apply(vcg, auto simp:CleanQ_RB_enq_y_inv_all)
-  by (simp add: CleanQ_RB_enq_y_def)
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<and> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace> 
+       \<acute>RingCRB :== CleanQ_RB_incr_head_y b \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_enq_y_inv_all)
   
   
 (* ------------------------------------------------------------------------------------ *)
@@ -393,52 +376,44 @@ subsubsection \<open>Dequeue X, Dequeue X\<close>
 
 paragraph \<open>Y reads the descriptor ring\<close>
 
-
 lemma CleanQ_CRB_Dequeue_X_P_read_tail:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB  \<rbrace> 
-   \<acute>b :== CleanQ_RB_read_tail_y \<acute>RingCRB 
-  \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB   \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
+       \<acute>b :== CleanQ_RB_read_tail_y \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace>"
   by(vcg)
 
 lemma CleanQ_CRB_Dequeue_X_Q_read_tail:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>b :== CleanQ_RB_read_tail_y \<acute>RingCRB  
-  \<lbrace>  CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace> 
+       \<acute>b :== CleanQ_RB_read_tail_y \<acute>RingCRB  
+    \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
   by(vcg)
   
 lemma CleanQ_CRB_Dequeue_X_R_read_tail:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>b :== CleanQ_RB_read_tail_y \<acute>RingCRB 
-  \<lbrace>  CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace> 
+       \<acute>b :== CleanQ_RB_read_tail_y \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
   by(vcg)
-
-
 
 
 paragraph \<open>Y increments the tail pointer\<close>
 
-
 lemma CleanQ_CRB_Dequeue_X_P_incr_tail:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_tail_y by \<acute>RingCRB 
-  \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB   \<rbrace>"
-  apply(vcg, auto)
-  oops
+"\<Gamma>\<turnstile>\<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB by \<and> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
+      \<acute>RingCRB :== CleanQ_RB_incr_tail_y by \<acute>RingCRB 
+   \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB   \<rbrace>"
+  by(vcg, auto simp: CleanQ_RB_deq_y_deq_x_possible CleanQ_RB_deq_y_all_inv)
 
 lemma CleanQ_CRB_Dequeue_X_Q_incr_tail:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_tail_y by \<acute>RingCRB   
-  \<lbrace>  CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
-  apply(vcg, auto)
-  oops
-
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB by \<and> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace> 
+       \<acute>RingCRB :== CleanQ_RB_incr_tail_y by \<acute>RingCRB   
+    \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB bx \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_deq_y_all_inv CleanQ_RB_deq_y_deq_x_possible)
 
 lemma CleanQ_CRB_Dequeue_X_R_incr_tail:
-"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx  \<rbrace> 
-   \<acute>RingCRB :== CleanQ_RB_incr_tail_y by \<acute>RingCRB 
-  \<lbrace>  CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
-  apply(vcg, auto)
-  oops
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB by \<and> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace> 
+       \<acute>RingCRB :== CleanQ_RB_incr_tail_y by \<acute>RingCRB 
+    \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB bx \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_deq_y_all_inv)
 
 
 end 

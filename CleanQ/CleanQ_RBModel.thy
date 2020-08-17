@@ -519,6 +519,21 @@ lemma CleanQ_RB_enq_x_inv_all :
       CleanQ_RB_enq_x_I3 CleanQ_RB_enq_x_I4 CleanQ_RB_enq_x_def Inv X_owned can_enq)
 
 
+lemma CleanQ_RB_enq_x_buf_in_SX[simp]:
+  "bx \<in> rSX (CleanQ_RB_enq_y b rb) \<longleftrightarrow> bx \<in> rSX rb"
+  unfolding CleanQ_RB_enq_y_def by(simp)
+  
+lemma CleanQ_RB_enq_y_buf_in_SY[simp]:
+  "by \<in> rSY (CleanQ_RB_enq_x b rb) \<longleftrightarrow> by \<in> rSY rb"
+  unfolding CleanQ_RB_enq_x_def by(simp) 
+
+lemma CleanQ_RB_enq_x_buf_notin_SY[simp]:
+  "bx \<notin> rSX (CleanQ_RB_enq_y b rb) \<longleftrightarrow> bx \<notin> rSX rb"
+  unfolding CleanQ_RB_enq_y_def by(simp)
+
+lemma CleanQ_RB_enq_y_buf_notin_SX[simp]:
+  "by \<notin> rSY (CleanQ_RB_enq_x b rb) \<longleftrightarrow> by \<notin> rSY rb"
+  unfolding CleanQ_RB_enq_x_def by(simp) 
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Dequeue Operation\<close>
@@ -572,6 +587,23 @@ lemma CleanQ_RB_deq_x_no_change:
     assumes can_deq: "CleanQ_RB_deq_x_possible rb"  and  X_deq: "rb' = CleanQ_RB_deq_x rb"
   shows "rSY rb' = rSY rb \<and> rTXY rb' = rTXY rb"
   using can_deq X_deq unfolding CleanQ_RB_deq_x_def by (simp add: prod.case_eq_if)
+
+
+lemma CleanQ_RB_deq_x_buf_in_SY[simp]:
+  "by \<in> rSY (CleanQ_RB_deq_x rb) \<longleftrightarrow> by \<in> rSY rb"
+  unfolding CleanQ_RB_deq_x_def by (simp add: prod.case_eq_if)
+  
+lemma CleanQ_RB_deq_y_buf_in_SX[simp]:
+  "bx \<in> rSX (CleanQ_RB_deq_y rb) \<longleftrightarrow> bx \<in> rSX rb"
+  unfolding CleanQ_RB_deq_y_def by (simp add: prod.case_eq_if) 
+
+lemma CleanQ_RB_deq_x_buf_notin_SY[simp]:
+  "by \<notin> rSY (CleanQ_RB_deq_x rb) \<longleftrightarrow> by \<notin> rSY rb"
+  unfolding CleanQ_RB_deq_x_def by (simp add: prod.case_eq_if)
+  
+lemma CleanQ_RB_deq_y_buf_notin_SX[simp]:
+  "bx \<notin> rSX (CleanQ_RB_deq_y rb) \<longleftrightarrow> bx \<notin> rSX rb"
+  unfolding CleanQ_RB_deq_y_def by (simp add: prod.case_eq_if) 
 
 
 
