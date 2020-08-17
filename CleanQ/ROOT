@@ -11,11 +11,13 @@ session "CleanQ" = "HOL" +
         "../Simpl/Simpl" 
         "../Complx/OG_Hoare" 
     theories 
-        CleanQ_SetModel 
-        CleanQ_ListModel
-        CleanQ_RBModel
-        CleanQ_CRBModel
+        CleanQ_SetModel_Simpl        
+        CleanQ_SetModel_Complx      
+        CleanQ_ListModel_Simpl
+        CleanQ_RBModel_Simpl
+        CleanQ_CRBModel_Simpl
         
         
     document_files (in ".")
         "root.tex"
+

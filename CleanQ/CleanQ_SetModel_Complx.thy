@@ -107,10 +107,8 @@ lemma CleanQ_Set_enq_x_two_step :
         \<lbrace>CleanQ_Set_Invariants (K-{b}) \<acute>SRB  \<rbrace> 
         \<acute>SRB := \<acute>SRB \<lparr> TXY := (TXY \<acute>SRB) \<union> {b} \<rparr>  
         \<lbrace>CleanQ_Set_Invariants K \<acute>SRB\<rbrace>, \<lbrace>True\<rbrace>"
-  unfolding CleanQ_Set_Invariants_def
-  apply oghoare
-   apply auto
-  sorry
+  apply (oghoare, auto)
+  oops
 
 (*<*)
 end
