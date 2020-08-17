@@ -36,6 +36,7 @@ text \<open>
 record CleanQ_CRB_State_vars = 
   CRB  :: "nat CleanQ_RB_State"
   buf :: "nat"
+  uni :: "nat set"
 (*>*)
 
 
@@ -214,5 +215,66 @@ lemma CleanQ_RB_deq_y_hoare :
   using CleanQ_RB_deq_y_all_inv apply fastforce
   by simp
 
+type_synonym funcs = "string \<times> nat"
+datatype faults = Overflow | InvalidMem
 
+definition 
+  CleanQ_CRB_deq_x :: "(CleanQ_CRB_State_vars, funcs, faults) ann_com"
+  where "CleanQ_CRB_deq_x \<equiv> 
+    \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB \<rbrace>
+      \<acute>buf := (CleanQ_RB_read_tail_x \<acute>CRB) ;;
+    \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf \<rbrace>
+      \<acute>CRB := (CleanQ_RB_incr_tail_x \<acute>buf \<acute>CRB)"
+
+
+definition 
+  CleanQ_CRB_deq_y :: "(CleanQ_CRB_State_vars, funcs, faults) ann_com"
+  where "CleanQ_CRB_deq_y \<equiv> 
+    \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB \<rbrace>
+      \<acute>buf := (CleanQ_RB_read_tail_y \<acute>CRB) ;;
+    \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf \<rbrace>
+      \<acute>CRB := (CleanQ_RB_incr_tail_y \<acute>buf \<acute>CRB)"
+
+definition 
+  CleanQ_CRB_enq_x :: "nat \<Rightarrow> (CleanQ_CRB_State_vars, funcs, faults) ann_com"
+  where "CleanQ_CRB_enq_x bf \<equiv> 
+   \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bf \<rbrace>
+    \<acute>CRB := (CleanQ_RB_write_head_x bf \<acute>CRB) ;;
+   \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB \<acute>buf \<rbrace>
+    \<acute>CRB := (CleanQ_RB_incr_head_x bf \<acute>CRB)"
+
+definition 
+  CleanQ_CRB_enq_y :: "nat \<Rightarrow> (CleanQ_CRB_State_vars, funcs, faults) ann_com"
+  where "CleanQ_CRB_enq_y bf \<equiv> 
+   \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB bf \<rbrace>
+    \<acute>CRB := (CleanQ_RB_write_head_y bf \<acute>CRB) ;;
+   \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB \<acute>buf \<rbrace>
+    \<acute>CRB := (CleanQ_RB_incr_head_y bf \<acute>CRB)"
+(*
+definition 
+  CleanQ_CRB_x :: "nat \<Rightarrow> (CleanQ_CRB_State_vars, funcs, faults) ann_com"
+  where "CleanQ_CRB_x b \<equiv>
+   \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
+    (InvalidMem, \<lbrace> b \<in> rSX \<acute>CRB \<rbrace>) \<longmapsto>
+   \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace> 
+    \<acute>CRB := CleanQ_CRB_enq_x b 
+   \<lbrace> CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB b \<rbrace>"
+*)
+
+lemma CleanQ_RB_concurent:
+     "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/F\<^esub>   
+      COBEGIN
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+           \<acute>buf := CleanQ_RB_read_head_x \<acute>CRB
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>
+         \<parallel> 
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+          \<acute>buf := CleanQ_RB_read_head_y \<acute>CRB
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>
+      COEND
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>"
+  apply(oghoare)
+  by auto
+
+  
 end 
