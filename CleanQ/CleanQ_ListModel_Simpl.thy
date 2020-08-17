@@ -12,13 +12,11 @@
 
 
 
-section "CleanQ Abstract List Model"
+section \<open>List Model Simpl proofs\<close>
 
 text \<open>
-  We define a first refinement of the abstract model based on sets. We redefine the
-  transfer sets as lists in order to get the FIFO for the transfer from X to Y and
-  vice versa. We define the model of this first refinement in the the following 
-  Isabelle theory: 
+  Due to problems importing both SIMPL and COMPLX we split the files and have all the proofs
+  using SIMPL in this file
 \<close>
 
 theory CleanQ_ListModel_Simpl
