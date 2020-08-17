@@ -778,9 +778,11 @@ text \<open>
   about whether we can enqueue again.
 \<close>
 
-abbreviation "CleanQ_RB_enq_y_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<notin> rSX rb"
+abbreviation "CleanQ_RB_enq_x_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<notin> rSX rb"
 
-abbreviation "CleanQ_RB_enq_x_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<notin> rSY rb"
+abbreviation "CleanQ_RB_enq_y_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<notin> rSY rb"
+
+
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -936,6 +938,21 @@ lemma CleanQ_RB_read_tail_x_deq_y[simp]:
 lemma CleanQ_RB_read_tail_y_deq_x[simp]:
   "CleanQ_RB_read_tail_y (CleanQ_RB_deq_x rb) = CleanQ_RB_read_tail_y rb"
   by (simp add: CleanQ_RB_deq_x_def CleanQ_RB_read_tail_y_def prod.case_eq_if)
+
+
+text \<open>
+  The tail in the queue is in the owning set after the dequeue operation has completed  
+\<close>
+
+lemma CleanQ_RB_read_tail_x_deq_x[simp]:
+  "CleanQ_RB_read_tail_x rb \<in> rSX (CleanQ_RB_deq_x rb)"
+  unfolding CleanQ_RB_read_tail_x_def CleanQ_RB_deq_x_def rb_deq_def
+  by (simp)
+
+lemma CleanQ_RB_read_tail_y_deq_y[simp]:
+  "CleanQ_RB_read_tail_y rb \<in> rSY (CleanQ_RB_deq_y rb)"
+  unfolding CleanQ_RB_read_tail_y_def CleanQ_RB_deq_y_def rb_deq_def
+  by (simp)
 
 
 (* ------------------------------------------------------------------------------------ *)

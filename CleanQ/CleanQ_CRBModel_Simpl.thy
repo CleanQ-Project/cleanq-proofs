@@ -62,15 +62,15 @@ text \<open>
 \<close>
 
 lemma  CleanQ_RB_write_head_x_hoare:
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_P K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_write_head_x b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_enq_x_Q K \<acute> RingCRB b  \<rbrace>"     
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_P K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_write_head_x b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_enq_x_Q K \<acute> RingCRB b \<rbrace>"     
   by(vcg, auto)
 
 lemma  CleanQ_RB_write_head_y_hoare:
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_P K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_write_head_y b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_enq_y_Q K \<acute> RingCRB b  \<rbrace>"                                                 
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_P K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_write_head_y b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_enq_y_Q K \<acute> RingCRB b \<rbrace>"                                                 
   by(vcg, auto)
 
 
@@ -81,17 +81,17 @@ text \<open>
 \<close>
 
 lemma  CleanQ_RB_incr_head_x_hoare:
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_enq_x_Q K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_incr_head_x b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_enq_x_R K \<acute> RingCRB b  \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_Q K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_incr_head_x b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_enq_x_R K \<acute> RingCRB b \<rbrace>"
   apply(vcg, auto simp:CleanQ_RB_enq_x_inv_all)
   by (simp add: CleanQ_RB_enq_x_result)
 
 
 lemma  CleanQ_RB_incr_head_y_hoare:
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_incr_head_y b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_enq_y_R K \<acute> RingCRB b  \<rbrace>"
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_Q K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_incr_head_y b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_enq_y_R K \<acute> RingCRB b \<rbrace>"
   apply(vcg, auto simp:CleanQ_RB_enq_y_inv_all)
   by (simp add: CleanQ_RB_enq_y_result)
 
@@ -103,21 +103,21 @@ text \<open>
 \<close>
 
 lemma CleanQ_RB_enq_x_hoare : 
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_P K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_write_head_x b \<acute>RingCRB) ;;
-        \<acute>RingCRB :== (CleanQ_RB_incr_head_x b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_enq_x_R K \<acute>RingCRB b \<rbrace>"
-  apply(vcg) using CleanQ_RB_enq_x_inv_all CleanQ_RB_enq_x_result by fastforce
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_x_P K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_write_head_x b \<acute>RingCRB) ;;
+       \<acute>RingCRB :== (CleanQ_RB_incr_head_x b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_enq_x_R K \<acute>RingCRB b \<rbrace>"
+  apply(vcg, auto simp:CleanQ_RB_enq_x_inv_all)
+  using CleanQ_RB_enq_x_result by fastforce
  
 
 lemma CleanQ_RB_enq_y_hoare : 
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_P K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_write_head_y b \<acute>RingCRB) ;;
-        \<acute>RingCRB :== (CleanQ_RB_incr_head_y b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_enq_y_R K \<acute>RingCRB b \<rbrace>"
-  apply(vcg) using CleanQ_RB_enq_y_inv_all CleanQ_RB_enq_y_result by fastforce
-
-
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_enq_y_P K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_write_head_y b \<acute>RingCRB) ;;
+       \<acute>RingCRB :== (CleanQ_RB_incr_head_y b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_enq_y_R K \<acute>RingCRB b \<rbrace>"
+  apply(vcg, auto simp:CleanQ_RB_enq_y_inv_all)
+  using CleanQ_RB_enq_y_result by fastforce
 
 
 
@@ -139,15 +139,15 @@ text \<open>
 \<close>
 
 lemma  CleanQ_RB_read_tail_x_hoare:
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB \<acute>b  \<rbrace>"  
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
+       \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB \<acute>b \<rbrace>"  
   by(vcg)
 
 lemma  CleanQ_RB_read_tail_y_hoare:
-  "\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_P K \<acute>RingCRB \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB \<acute>b  \<rbrace>"  
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_P K \<acute>RingCRB \<rbrace> 
+       \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB \<acute>b \<rbrace>"  
   by(vcg)
 
 
@@ -158,20 +158,16 @@ text \<open>
 \<close>
 
 lemma  CleanQ_RB_incr_tail_x_hoare:
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_x_Q K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_incr_tail_x b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_deq_x_R K \<acute> RingCRB b  \<rbrace>"
-  apply(vcg, auto)
-  using CleanQ_RB_deq_x_all_inv apply blast
-  by (simp add: CleanQ_RB_deq_x_result CleanQ_RB_read_tail_x_def)
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_Q K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_incr_tail_x b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_deq_x_R K \<acute> RingCRB b \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_deq_x_all_inv)
 
 lemma  CleanQ_RB_incr_tail_y_hoare:
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_y_Q K \<acute>RingCRB b \<rbrace> 
-        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_deq_y_R K \<acute> RingCRB b  \<rbrace>"
-  apply(vcg, auto)
-  using CleanQ_RB_deq_y_all_inv apply blast
-  by (simp add: CleanQ_RB_deq_y_result CleanQ_RB_read_tail_y_def)
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_Q K \<acute>RingCRB b \<rbrace> 
+       \<acute>RingCRB :== (CleanQ_RB_incr_tail_y b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_deq_y_R K \<acute> RingCRB b \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_deq_y_all_inv)
 
  
 paragraph \<open>Full Dequeue Operation\<close>
@@ -181,23 +177,19 @@ text \<open>
 \<close>
 
 lemma CleanQ_RB_deq_x_hoare : 
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_x_P K \<acute>RingCRB  \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB) ;;
-        \<acute>RingCRB :== (CleanQ_RB_incr_tail_x \<acute>b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB \<acute>b  \<rbrace>"
-  apply(vcg, auto)
-  using CleanQ_RB_deq_x_all_inv apply blast
-  by (simp add: CleanQ_RB_deq_x_result CleanQ_RB_read_tail_x_def)
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_x_P K \<acute>RingCRB \<rbrace> 
+       \<acute>b :== (CleanQ_RB_read_tail_x \<acute>RingCRB) ;;
+       \<acute>RingCRB :== (CleanQ_RB_incr_tail_x \<acute>b \<acute>RingCRB)
+    \<lbrace> CleanQ_RB_deq_x_R K \<acute>RingCRB \<acute>b \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_deq_x_all_inv)
+  
 
 lemma CleanQ_RB_deq_y_hoare : 
-  "\<Gamma>\<turnstile> \<lbrace>  CleanQ_RB_deq_y_P K \<acute>RingCRB  \<rbrace> 
-        \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) ;;
-        \<acute>RingCRB :== (CleanQ_RB_incr_tail_y \<acute>b \<acute>RingCRB)
-      \<lbrace> CleanQ_RB_deq_y_R K \<acute>RingCRB \<acute>b  \<rbrace>"
-  apply(vcg, auto)
-  using CleanQ_RB_deq_y_all_inv apply blast
-  by (simp add: CleanQ_RB_deq_y_result CleanQ_RB_read_tail_y_def)
-
+"\<Gamma>\<turnstile> \<lbrace> CleanQ_RB_deq_y_P K \<acute>RingCRB \<rbrace> 
+       \<acute>b :== (CleanQ_RB_read_tail_y \<acute>RingCRB) ;;
+       \<acute>RingCRB :== (CleanQ_RB_incr_tail_y \<acute>b \<acute>RingCRB)
+     \<lbrace> CleanQ_RB_deq_y_R K \<acute>RingCRB \<acute>b \<rbrace>"
+  by(vcg, auto simp:CleanQ_RB_deq_y_all_inv)
 
 
 (* ==================================================================================== *)
