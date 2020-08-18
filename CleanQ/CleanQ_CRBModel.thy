@@ -861,8 +861,6 @@ text \<open>
   the same, either it is Some or it is None.
 \<close>
 
-(* TODO:  create a few lemmas in CleanQ_RB so there is no need to unfold rb_ * *)
-
 lemma CleanQ_RB_read_head_x_deq_y_equiv[simp]:
   "CleanQ_RB_read_head_x (CleanQ_RB_deq_y rb) =  CleanQ_RB_read_head_x rb"
   unfolding CleanQ_RB_read_head_x_def CleanQ_RB_deq_y_def rb_read_head_def rb_deq_def

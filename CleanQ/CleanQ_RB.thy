@@ -101,11 +101,11 @@ text \<open>
   The list of valid and invalid entries are distinct.
 \<close>
 
-lemma rb_valid_entries_distinct:
+lemma rb_valid_entries_distinct[simp]:
   "distinct (rb_valid_entries rb)"
   unfolding rb_valid_entries_def by(auto)
 
-lemma rb_invalid_entries_distinct:
+lemma rb_invalid_entries_distinct[simp]:
   "distinct (rb_invalid_entries rb)"
   unfolding rb_invalid_entries_def by(auto)
 
@@ -263,7 +263,7 @@ text \<open>
   valid entries or the set thereof does not contain any elements. 
 \<close>
 
-lemma rb_valid_entries_empty_list :
+lemma rb_valid_entries_empty_list[simp] :
   "rb_empty rb \<Longrightarrow> rb_valid_entries rb = []"
    unfolding rb_empty_def rb_valid_entries_def by(simp)
 
@@ -276,7 +276,7 @@ lemma rb_valid_entries_empty_list_length:
   apply(subst rb_valid_entries_empty_list2)
   by(auto)
 
-lemma rb_valid_entries_empty_set :
+lemma rb_valid_entries_empty_set[simp] :
   "rb_empty rb \<Longrightarrow> set (rb_valid_entries rb) = {}"
    unfolding rb_empty_def rb_valid_entries_def by(simp)
 

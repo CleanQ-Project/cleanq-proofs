@@ -196,6 +196,7 @@ lemma CleanQ_List_Invariants_Set_Invariants:
                 I1_list_img_lift I2_list_img_lift)
 
 
+
 (* ==================================================================================== *)
 subsection \<open>State Transition Operations\<close>
 (* ==================================================================================== *)
