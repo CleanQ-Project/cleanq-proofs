@@ -495,4 +495,147 @@ lemma CleanQ_RB_loop_deq_enq:
    using CleanQ_RB_deq_y_all_inv apply blast
    using CleanQ_RB_deq_x_all_inv by blast
 
+ lemma CleanQ_RB_loop_all:
+     "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
+      COBEGIN
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         DO \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+           (True,\<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB bx \<rbrace>) \<longmapsto> 
+           \<lbrace>  CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_deq_x \<acute>CRB ;;
+           \<lbrace>  CleanQ_RB_deq_x_R \<acute>uni \<acute>CRB bx \<rbrace>
+           (True,\<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bx \<rbrace>) \<longmapsto> 
+           \<lbrace>  CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_enq_x bx \<acute>CRB
+         OD
+         \<lbrace>  CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB bx \<rbrace>, \<lbrace>True\<rbrace>  
+         \<parallel> 
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         DO
+        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+          (True, \<lbrace>  CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB by \<rbrace>) \<longmapsto> 
+            \<lbrace>  CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB by \<rbrace>
+            \<acute>CRB := CleanQ_RB_deq_y \<acute>CRB ;;
+           \<lbrace>  CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB by \<rbrace>
+           (True,\<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB bx \<rbrace>) \<longmapsto> 
+           \<lbrace>  CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_enq_y bx \<acute>CRB
+         OD
+         \<lbrace>  CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB by \<rbrace>, \<lbrace>True\<rbrace>
+      COEND
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
+   apply(oghoare, auto)
+   apply (meson CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   using CleanQ_RB_deq_x_all_inv apply blast
+   using CleanQ_RB_deq_y_all_inv apply blast
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (meson CleanQ_RB_enq_x_result CleanQ_RB_enq_y_buf_in_SY)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_enq_x_possible)
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_x_deq_y_possible)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_deq_x_possible)
+   using CleanQ_RB_deq_x_all_inv apply blast
+   using CleanQ_RB_deq_x_enq_y_possible apply blast
+   using CleanQ_RB_deq_y_all_inv apply blast
+   using CleanQ_RB_deq_y_enq_x_possible apply blast
+   using CleanQ_RB_deq_x_all_inv apply blast
+   apply (simp add: CleanQ_RB_deq_x_no_change CleanQ_RB_deq_y_possible_def)
+   apply (simp add: CleanQ_RB_deq_y_all_inv)
+   apply (simp add: CleanQ_RB_deq_y_deq_x_possible)
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   using CleanQ_RB_deq_x_all_inv apply blast
+   using CleanQ_RB_deq_y_all_inv apply blast
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   using CleanQ_RB_deq_x_all_inv apply blast
+   using CleanQ_RB_deq_y_all_inv apply blast
+   apply (meson CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   using CleanQ_RB_deq_y_all_inv apply blast
+   using CleanQ_RB_deq_x_all_inv apply blast
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   using CleanQ_RB_deq_y_all_inv apply blast
+   by (simp add: CleanQ_RB_deq_x_all_inv)
+   
+(* Different order of operations *) 
+
+lemma CleanQ_RB_loop_all2:
+     "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
+      COBEGIN
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         DO \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+           (True,\<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bx \<rbrace>) \<longmapsto> 
+           \<lbrace>  CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_enq_x bx \<acute>CRB;;
+           \<lbrace>  CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB bx \<rbrace>
+           (True,\<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB bx \<rbrace>) \<longmapsto> 
+           \<lbrace>  CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_deq_x \<acute>CRB
+         OD
+         \<lbrace>  CleanQ_RB_deq_x_R \<acute>uni \<acute>CRB bx \<rbrace>, \<lbrace>True\<rbrace>  
+         \<parallel> 
+         \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+         DO
+        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+          (True, \<lbrace>  CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB by \<rbrace>) \<longmapsto> 
+            \<lbrace>  CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB by \<rbrace>
+            \<acute>CRB := CleanQ_RB_enq_y by \<acute>CRB ;;
+           \<lbrace>  CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB by \<rbrace>
+           (True,\<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB bx \<rbrace>) \<longmapsto> 
+           \<lbrace>  CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_deq_y \<acute>CRB
+         OD
+         \<lbrace>  CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB by \<rbrace>, \<lbrace>True\<rbrace>
+      COEND
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
+  apply(oghoare, auto)
+   apply (meson CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   using CleanQ_RB_deq_x_all_inv apply blast
+   using CleanQ_RB_deq_y_all_inv apply blast
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_x_def CleanQ_RB_enq_y_possible_def)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_enq_x_possible)
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_x_deq_y_possible)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_deq_x_possible)
+   apply (simp add: CleanQ_RB_deq_x_all_inv)
+   apply (simp add: CleanQ_RB_deq_x_enq_y_possible)
+   using CleanQ_RB_deq_y_all_inv apply blast
+   using CleanQ_RB_deq_y_enq_x_possible apply blast
+   using CleanQ_RB_deq_x_all_inv apply blast
+   apply (simp add: CleanQ_RB_deq_x_no_change CleanQ_RB_deq_y_possible_def)
+   using CleanQ_RB_deq_y_all_inv apply blast
+   using CleanQ_RB_deq_y_deq_x_possible apply blast
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   using CleanQ_RB_deq_x_all_inv apply blast
+   using CleanQ_RB_deq_y_all_inv apply blast
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   using CleanQ_RB_deq_x_all_inv apply blast
+   using CleanQ_RB_deq_y_all_inv apply blast
+   apply (meson CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_y_result)
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   apply (simp add: CleanQ_RB_enq_x_result)
+   using CleanQ_RB_deq_y_all_inv apply blast
+   using CleanQ_RB_deq_x_all_inv apply blast
+   apply (simp add: CleanQ_RB_enq_y_inv_all)
+   apply (simp add: CleanQ_RB_enq_x_inv_all)
+   using CleanQ_RB_deq_y_all_inv apply blast
+   using CleanQ_RB_deq_x_all_inv by blast
+
+
 end 
