@@ -976,11 +976,13 @@ text \<open>
   the ring must not be empty. 
 \<close>
 
-abbreviation "CleanQ_RB_deq_x_P K rb \<equiv> CleanQ_RB_Invariants K rb \<and> 
-                                        CleanQ_RB_deq_x_possible rb"
+abbreviation "CleanQ_RB_deq_x_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
+                                        CleanQ_RB_deq_x_possible rb \<and>
+                                        b = CleanQ_RB_read_tail_x rb"
 
-abbreviation "CleanQ_RB_deq_y_P K rb \<equiv> CleanQ_RB_Invariants K rb \<and> 
-                                          CleanQ_RB_deq_y_possible rb"
+abbreviation "CleanQ_RB_deq_y_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
+                                          CleanQ_RB_deq_y_possible rb \<and>
+                                          b = CleanQ_RB_read_tail_y rb"
 
 
 paragraph \<open>Dequeue Q\<close>
@@ -1005,7 +1007,7 @@ paragraph \<open>Dequeue R\<close>
 text \<open>
   The R predicate is the post-condition of the \verb+dequeue+ operation in big step
   semantics, as well as the post condition of the increment tail part. We now know
-  that the buffer is in the ownership of the subjects i.e. an eleemnt of SX or SY 
+  that the buffer is in the ownership of the subjects i.e. an element of SX or SY 
   respectively. We now do not know whether we can dequeue again. 
 \<close>
 

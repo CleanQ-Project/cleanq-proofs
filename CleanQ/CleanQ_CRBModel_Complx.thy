@@ -261,7 +261,7 @@ definition
    \<lbrace> CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB b \<rbrace>"
 *)
 
-lemma CleanQ_RB_concurent:
+lemma CleanQ_RB_read_concurent:
      "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/F\<^esub>   
       COBEGIN
          \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
@@ -281,7 +281,7 @@ lemma CleanQ_RB_concurent:
   four combinations. Then continue with splitting up *)
 
 
-lemma CleanQ_RB_test:
+lemma CleanQ_RB_enq_enq:
      "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/F\<^esub>   
       COBEGIN
          \<lbrace>  CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
@@ -300,7 +300,71 @@ lemma CleanQ_RB_test:
   apply (simp add: CleanQ_RB_enq_y_enq_x_possible)
   apply (simp add: CleanQ_RB_enq_y_result)
   by (simp add: CleanQ_RB_enq_x_result)
-  
 
+lemma CleanQ_RB_enq_deq:
+     "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/F\<^esub>   
+      COBEGIN
+         \<lbrace>  CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_enq_x bx \<acute>CRB
+         \<lbrace>  CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB bx \<rbrace>, \<lbrace>True\<rbrace>
+         \<parallel> 
+         \<lbrace>  CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB by \<rbrace>
+          \<acute>CRB := CleanQ_RB_deq_y \<acute>CRB 
+         \<lbrace>  CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB by \<rbrace>, \<lbrace>True\<rbrace>
+      COEND
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>"
+  apply(oghoare, auto)
+  apply(simp_all add :CleanQ_RB_enq_x_inv_all) 
+  apply(simp_all add :CleanQ_RB_deq_y_all_inv)
+  apply (simp add: CleanQ_RB_enq_x_deq_y_possible)
+  apply (simp add: CleanQ_RB_deq_y_enq_x_possible)
+  by (simp add: CleanQ_RB_enq_x_result)
   
+lemma CleanQ_RB_deq_enq:
+     "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/F\<^esub>   
+      COBEGIN
+         \<lbrace>  CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_deq_x \<acute>CRB
+         \<lbrace>  CleanQ_RB_deq_x_R \<acute>uni \<acute>CRB bx \<rbrace>, \<lbrace>True\<rbrace>
+         \<parallel> 
+         \<lbrace>  CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB by \<rbrace>
+          \<acute>CRB := CleanQ_RB_enq_y by \<acute>CRB
+         \<lbrace>  CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB by \<rbrace>, \<lbrace>True\<rbrace>
+      COEND
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>"
+  apply(oghoare, auto)
+  apply (simp add: CleanQ_RB_enq_y_inv_all)
+  apply (simp add: CleanQ_RB_enq_y_deq_x_possible)
+  using CleanQ_RB_deq_x_all_inv apply blast
+  using CleanQ_RB_deq_x_enq_y_possible apply blast
+  apply (simp add: CleanQ_RB_enq_y_inv_all)
+  using CleanQ_RB_deq_x_all_inv apply blast
+  apply (simp add: CleanQ_RB_enq_y_inv_all)
+  apply (simp add: CleanQ_RB_enq_y_result)
+  using CleanQ_RB_deq_x_all_inv by auto
+
+lemma CleanQ_RB_deq_deq:
+     "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/F\<^esub>   
+      COBEGIN
+         \<lbrace>  CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB bx \<rbrace>
+           \<acute>CRB := CleanQ_RB_deq_x \<acute>CRB
+         \<lbrace>  CleanQ_RB_deq_x_R \<acute>uni \<acute>CRB bx \<rbrace>, \<lbrace>True\<rbrace>
+         \<parallel> 
+         \<lbrace>  CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB by \<rbrace>
+          \<acute>CRB := CleanQ_RB_deq_y \<acute>CRB
+         \<lbrace>  CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB by \<rbrace>, \<lbrace>True\<rbrace>
+      COEND
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>"
+    apply(oghoare, auto)
+  using CleanQ_RB_deq_x_all_inv apply blast
+  apply (simp add: CleanQ_RB_deq_x_no_change CleanQ_RB_deq_y_possible_def)
+  using CleanQ_RB_deq_y_all_inv apply blast
+  using CleanQ_RB_deq_y_deq_x_possible apply blast
+  using CleanQ_RB_deq_x_all_inv apply blast
+  using CleanQ_RB_deq_y_all_inv apply blast
+  using CleanQ_RB_deq_y_all_inv apply blast
+  using CleanQ_RB_deq_x_all_inv by blast
+
+
+
 end 
