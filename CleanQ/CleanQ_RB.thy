@@ -1754,10 +1754,7 @@ assumes rw: "rb' = rb_write_head b rb"
  shows " the ((ring rb') (head rb')) = b"
   using rw unfolding rb_write_head_def by(auto)
 
-
  
-
-
 (* ==================================================================================== *)
 subsection \<open>Enqueue Operation\<close>
 (* ==================================================================================== *)
@@ -1938,6 +1935,20 @@ lemma rb_deq_buf:
   shows "fst (rb_deq rb) \<longleftrightarrow> rb_read_tail rb"
   by(simp add: rb_deq_def)
 
+lemma rb_read_tail_write_element[simp]:
+  "rb_can_deq rb \<Longrightarrow> rb_read_tail (rb_write_head b rb) = rb_read_tail rb"
+  by (simp add: rb_read_tail_def rb_write_head_def rb_can_deq_def rb_empty_def)
+
+lemma rb_read_tail_incr_head[simp]:
+  "rb_can_deq rb \<Longrightarrow> rb_read_tail (rb_incr_head rb) = rb_read_tail rb"
+  by (simp add: rb_read_tail_def rb_incr_head_def rb_can_deq_def rb_empty_def)
+
+lemma rb_read_head_enq[simp]:
+  "rb_can_deq rb \<Longrightarrow> rb_read_tail (rb_enq b rb) = rb_read_tail rb"
+  unfolding rb_enq_def 
+  by (metis rb_incr_head_1 rb_incr_head_n_tail rb_incr_head_ring rb_read_tail_def 
+            rb_read_tail_write_element)
+  
 
 (* ==================================================================================== *)
 subsection \<open>Other Lemmas\<close>

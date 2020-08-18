@@ -545,16 +545,14 @@ text \<open>
 \<close>
 
 lemma CleanQ_RB_write_head_x_equiv[simp]:
-assumes notnone: "\<not>CleanQ_RB_head_none_x rb"  and buf: "b = (CleanQ_RB_read_head_x rb)"
-  shows "CleanQ_RB_write_head_x b rb = rb"
-  using assms 
+  "\<not>CleanQ_RB_head_none_x rb \<Longrightarrow> b = (CleanQ_RB_read_head_x rb) \<Longrightarrow>
+      CleanQ_RB_write_head_x b rb = rb"
   unfolding CleanQ_RB_write_head_x_def CleanQ_RB_head_none_x_def CleanQ_RB_read_head_x_def
   by (simp add: rb_write_head_same)
 
 lemma CleanQ_RB_write_head_y_equiv[simp]:
-assumes notnone: "\<not>CleanQ_RB_head_none_y rb"  and buf: "b = (CleanQ_RB_read_head_y rb)"
-  shows "CleanQ_RB_write_head_y b rb = rb"
-  using assms 
+  "\<not>CleanQ_RB_head_none_y rb \<Longrightarrow> b = (CleanQ_RB_read_head_y rb) \<Longrightarrow> 
+      CleanQ_RB_write_head_y b rb = rb"
   unfolding CleanQ_RB_write_head_y_def CleanQ_RB_head_none_y_def CleanQ_RB_read_head_y_def
   by (simp add: rb_write_head_same)
 
@@ -565,14 +563,14 @@ text \<open>
 \<close>
 
 lemma CleanQ_RB_enq_x_equiv_incr_head[simp]:
-assumes notnone: "\<not>CleanQ_RB_head_none_x rb"  and buf: "b = (CleanQ_RB_read_head_x rb)"
-  shows "CleanQ_RB_incr_head_x b rb = CleanQ_RB_enq_x b rb"
-  by (metis CleanQ_RB_enq_x_split_equal CleanQ_RB_write_head_x_equiv buf notnone)
+  "\<not>CleanQ_RB_head_none_x rb \<Longrightarrow> b = (CleanQ_RB_read_head_x rb) \<Longrightarrow>
+      CleanQ_RB_incr_head_x b rb = CleanQ_RB_enq_x b rb"
+  by (metis CleanQ_RB_enq_x_split_equal CleanQ_RB_write_head_x_equiv)
 
 lemma CleanQ_RB_enq_y_equiv_incr_head[simp]:
-assumes notnone: "\<not>CleanQ_RB_head_none_y rb"  and buf: "b = (CleanQ_RB_read_head_y rb)"
-  shows "CleanQ_RB_incr_head_y b rb = CleanQ_RB_enq_y b rb"
-  by (metis CleanQ_RB_enq_y_split_equal CleanQ_RB_write_head_y_equiv buf notnone)
+  "\<not>CleanQ_RB_head_none_y rb \<Longrightarrow> b = (CleanQ_RB_read_head_y rb) \<Longrightarrow>
+      CleanQ_RB_incr_head_y b rb = CleanQ_RB_enq_y b rb"
+  by (metis CleanQ_RB_enq_y_split_equal CleanQ_RB_write_head_y_equiv)
 
 
 text \<open>
@@ -889,24 +887,23 @@ lemma CleanQ_RB_head_non_y_deq_x[simp]:
             CleanQ_RB_head_none_y_def rb_head_none_def
   by(auto)
 
+
 text \<open>
   The head element is not changed by the dequeue operation, thus the head element remains
   the same, either it is Some or it is None.
 \<close>
 
-(* TODO: add a few lemmas to avoid unfolidng rb_* *)
-
 lemma CleanQ_RB_read_tail_x_write_head_x[simp]:
- " CleanQ_RB_deq_x_possible rb \<Longrightarrow>
-  CleanQ_RB_read_tail_x (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_tail_x rb"
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow>
+     CleanQ_RB_read_tail_x (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_tail_x rb"
   unfolding CleanQ_RB_read_tail_x_def CleanQ_RB_write_head_y_def CleanQ_RB_deq_x_possible_def
-  by (simp add: rb_can_deq_def rb_empty_def rb_read_tail_def rb_write_head_def)
+  by(auto)
 
 lemma CleanQ_RB_read_tail_y_write_head_x[simp]:
- " CleanQ_RB_deq_y_possible rb \<Longrightarrow>
-  CleanQ_RB_read_tail_y (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_tail_y rb"
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow>
+     CleanQ_RB_read_tail_y (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_tail_y rb"
   unfolding CleanQ_RB_read_tail_y_def CleanQ_RB_write_head_x_def CleanQ_RB_deq_y_possible_def
-  by (simp add: rb_can_deq_def rb_empty_def rb_read_tail_def rb_write_head_def)
+  by(auto)
 
 text \<open>
   Reading the tail after an enqueue yeilds the same result
@@ -914,17 +911,16 @@ text \<open>
 
 lemma CleanQ_RB_read_tail_x_enq_y[simp]:
   "CleanQ_RB_deq_x_possible rb \<Longrightarrow> 
-   CleanQ_RB_read_tail_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_tail_x rb"
-  unfolding CleanQ_RB_read_tail_x_def CleanQ_RB_write_head_y_def CleanQ_RB_enq_y_def
-  unfolding rb_read_tail_def rb_write_head_def rb_enq_def rb_incr_head_def
-  by (simp add: CleanQ_RB_deq_x_possible_def rb_can_deq_def rb_empty_def)
+    CleanQ_RB_read_tail_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_tail_x rb"
+  unfolding CleanQ_RB_read_tail_x_def CleanQ_RB_enq_y_def CleanQ_RB_deq_x_possible_def
+  by(auto)
 
 lemma CleanQ_RB_read_tail_y_enq_x[simp]:
   "CleanQ_RB_deq_y_possible rb \<Longrightarrow> 
-   CleanQ_RB_read_tail_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_tail_y rb"
-  unfolding CleanQ_RB_read_tail_y_def CleanQ_RB_write_head_x_def CleanQ_RB_enq_x_def
-  unfolding rb_read_tail_def rb_write_head_def rb_enq_def rb_incr_head_def
-  by (simp add: CleanQ_RB_deq_y_possible_def rb_can_deq_def rb_empty_def)
+    CleanQ_RB_read_tail_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_tail_y rb"
+  unfolding CleanQ_RB_read_tail_y_def CleanQ_RB_enq_x_def CleanQ_RB_deq_y_possible_def
+  by(auto)
+
 
 
 text \<open>
@@ -1017,17 +1013,7 @@ abbreviation "CleanQ_RB_deq_x_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and>
 abbreviation "CleanQ_RB_deq_y_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<in> rSY rb"
 
 
-
-
-
-
-
-(* ==================================================================================== *)
-subsection \<open>Integration in COMPLEX\<close>
-(* ==================================================================================== *)
-
-text \<open>
-  Next, we can formulate the \verb+enqueue+ and \verb+dequeue+ operations in COMPLEX.
-\<close>
-
+(*<*)
 end 
+
+(*>*)
