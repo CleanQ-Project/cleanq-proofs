@@ -114,4 +114,21 @@ lemma list_take_drop_union:
   "set L = set (take n L) \<union> set (drop n L)"
   using list_take_drop_cons by (metis set_append)
 
+
+lemma singleton_set_list:
+  "distinct L \<Longrightarrow> set (L) = {e} \<longleftrightarrow> L = [e]"
+  by (metis Diff_Diff_Int Diff_empty empty_set hd_Cons_tl inf_bot_right insert_iff 
+            list.set_cases list.simps(15) list.simps(3) list_set_hd_tl_subtract)
+
+
+lemma list_length_1:
+  "\<exists>e. (length L =  1) = (L = [e])"
+  by (metis One_nat_def length_0_conv length_Suc_conv)
+
+
+lemma list_distinct_tail_subset:
+  "distinct L \<Longrightarrow> L \<noteq> [] \<Longrightarrow>  set (tl L) \<subset> set L"
+  using list_set_hd_tl_subtract by fastforce
+
+
 end

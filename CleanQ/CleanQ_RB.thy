@@ -128,7 +128,12 @@ definition rb_valid :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_valid rb \<longleftrightarrow> rb_valid_ptr rb
                                  \<and> (\<forall>i \<in> set (rb_valid_entries rb). ring rb i \<noteq> None)"
 
-lemma rb_valid_implies_ptr_valid:
+
+text \<open>
+  We add a lemma to the simpset to help with the proofs later on.
+\<close>
+
+lemma rb_valid_implies_ptr_valid[simp]:
   "rb_valid rb \<Longrightarrow> rb_valid_ptr rb"
   unfolding rb_valid_def by(auto)
 
@@ -144,6 +149,7 @@ text \<open>
 
 definition rb_full :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_full rb = ((((head rb) + 1) mod (size rb)) = (tail rb))"
+
 
 text \<open>
   We can show that this is the same as taking the case distinction explicitly at the
@@ -179,7 +185,7 @@ lemma rb_empty_not_full:
 
 
 (* ==================================================================================== *)
-subsection \<open>Reasoning about valid entries\<close>
+subsection \<open>Reasoning about valid and invalid entries\<close>
 (* ==================================================================================== *)
 
 text \<open>
@@ -188,49 +194,88 @@ text \<open>
   empty intersection, as both are distinct from one another. 
 \<close>
 
-lemma rb_valid_invalid_entries_union:
-assumes valid: "rb_valid_ptr rb"
-  shows "set (rb_valid_entries rb) \<union> set (rb_invalid_entries rb) = {0..<(size rb)}"
-  using valid unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_ptr_def
+lemma rb_valid_invalid_entries_union[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> 
+      set (rb_valid_entries rb) \<union> set (rb_invalid_entries rb) = {0..<(size rb)}"
+  unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_ptr_def
   by auto
 
-lemma rb_valid_invalid_entries_inter:
+lemma rb_valid_invalid_entries_inter[simp]:
   "set (rb_valid_entries rb) \<inter> set (rb_invalid_entries rb) = {}"
   unfolding rb_valid_entries_def rb_invalid_entries_def
   by auto
+
 
 text \<open>
   Taking the set difference between the set of all entries and the valid or invalid
   set we can obtain the respective other set.
 \<close>
 
-lemma rb_valid_invalid_entries_diff1:
-assumes valid: "rb_valid_ptr rb"
-  shows "set (rb_valid_entries rb) = {0..<(size rb)} - set (rb_invalid_entries rb)"
-  using rb_valid_invalid_entries_union rb_valid_invalid_entries_inter valid by blast
+lemma rb_valid_invalid_entries_diff1[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> 
+     {0..<(size rb)} - set (rb_invalid_entries rb) =  set (rb_valid_entries rb)"
+  using rb_valid_invalid_entries_union rb_valid_invalid_entries_inter  by blast
+
+lemma rb_valid_invalid_entries_diff2[simp]:
+  "rb_valid_ptr rb \<Longrightarrow>
+     {0..<(size rb)} - set (rb_valid_entries rb) = set (rb_invalid_entries rb)"
+  using rb_valid_invalid_entries_union rb_valid_invalid_entries_inter by blast
 
 
-lemma rb_valid_invalid_entries_diff2:
-assumes valid: "rb_valid_ptr rb"
-  shows "set (rb_invalid_entries rb) = {0..<(size rb)} - set (rb_valid_entries rb)"
-  using rb_valid_invalid_entries_union rb_valid_invalid_entries_inter valid by blast
+text \<open>
+  We can use subset relations to expres what happens when we take elements from the
+  different sets.
+\<close>
+
+lemma rb_valid_entries_tail_subseteq:
+  "set (tl (rb_valid_entries rb))  \<subseteq>  set ((rb_valid_entries rb))"
+  by (metis list.set_sel(2) subsetI tl_Nil)
+
+lemma rb_valid_entries_tail_subset:
+  "rb_valid_entries rb \<noteq> [] \<Longrightarrow> 
+      set (tl (rb_valid_entries rb)) \<subset> set ((rb_valid_entries rb))"
+  using list_set_hd_tl_subtract rb_valid_entries_distinct by fastforce
+
+lemma rb_valid_entries_head_subseteq:
+  "set (rb_valid_entries rb)  \<subseteq>  set ((rb_valid_entries rb) @ [x])"
+  by(auto)
 
 
 text \<open>
   The length of the lists sums up to the number of entries.
 \<close>
 
-lemma rb_valid_invalid_entries_lengths:
-assumes valid: "rb_valid_ptr rb"
-  shows "length (rb_valid_entries rb) + length (rb_invalid_entries rb) = (size rb)"
-  using valid unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_ptr_def
+lemma rb_valid_invalid_entries_lengths[simp]:
+  "rb_valid_ptr rb \<Longrightarrow>
+    length (rb_valid_entries rb) + length (rb_invalid_entries rb) = (size rb)"
+  unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_ptr_def
   by(auto)
 
 lemma rb_valid_invalid_entries_lengths2:
-assumes valid: "rb_valid_ptr rb"
-  shows "length (rb_valid_entries rb) + length (rb_invalid_entries rb) = length [0..< size rb]"
-  using valid unfolding rb_valid_entries_def rb_invalid_entries_def rb_valid_ptr_def
+  "rb_valid_ptr rb \<Longrightarrow>
+    length (rb_valid_entries rb) + length (rb_invalid_entries rb) = length [0..< size rb]"
+  by(simp)
+
+text \<open>
+  The length of the valid and invalid lists is bounded by the size and 0
+\<close>
+
+lemma rb_valid_entries_size_max[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> length (rb_valid_entries rb) < size rb"
+  unfolding rb_valid_ptr_def rb_valid_entries_def  by(auto)
+
+lemma rb_valid_entries_size_min[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> 0 \<le> length (rb_valid_entries rb)"
   by(auto)
+
+lemma rb_invalid_entries_size_max[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> length (rb_invalid_entries rb) \<le> size rb"
+  unfolding rb_valid_ptr_def rb_invalid_entries_def  by(auto)
+
+lemma rb_invalid_entries_size_min[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> 0 < length (rb_invalid_entries rb)"
+  unfolding rb_valid_ptr_def rb_invalid_entries_def  by(auto)
+
 
 
 text \<open>
@@ -252,215 +297,160 @@ lemma rb_inalid_entries_notin_valid:
 subsubsection \<open>List and Set of Valid Entries\<close>
 (* ------------------------------------------------------------------------------------ *)
 
+text \<open>
+  The set of invalid entries is never empty. Likewise, the set of valid entries is never
+  covering all slots. 
+\<close>
 
-lemma rb_invalid_entries_never_empty_list :
+lemma rb_invalid_entries_never_empty_list:
   "rb_valid_ptr rb \<Longrightarrow> rb_invalid_entries rb \<noteq> []"
    unfolding rb_valid_ptr_def rb_invalid_entries_def by(simp)
 
+lemma rb_valid_entries_never_everything :
+  "rb_valid_ptr rb \<Longrightarrow> set (rb_valid_entries rb) \<noteq> {0..<size rb}"
+  using rb_invalid_entries_never_empty_list rb_valid_invalid_entries_diff2 by force
+
+
+paragraph \<open>Empty Ring\<close>
 
 text \<open>
   If the ring buffer is empty, then there are no valid entries, and thus the list of
   valid entries or the set thereof does not contain any elements. 
 \<close>
 
-lemma rb_valid_entries_empty_list[simp] :
+lemma rb_empty_valid_entries[simp] :
   "rb_empty rb \<Longrightarrow> rb_valid_entries rb = []"
    unfolding rb_empty_def rb_valid_entries_def by(simp)
 
-lemma rb_valid_entries_empty_list2 :
+lemma rb_valid_entries_empty_set[simp] :
+  "rb_empty rb \<Longrightarrow> set (rb_valid_entries rb) = {}"
+  by(auto)
+
+
+text \<open>
+  Similarly, if the ring is empty then all entries are invalid and thus the list of 
+  invalid entries covers all possible slots. Note, currently we need to take the set
+  here, as the definition will return a barrel-shifted list [0..<size]
+\<close>
+
+lemma rb_empty_invalid_entries[simp]: 
+  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<Longrightarrow> set (rb_invalid_entries rb) = {0..< size rb}"
+  using rb_valid_invalid_entries_union by force
+
+(* would be nice if this were to work *)
+(* < *)
+lemma rb_empty_invalid_entries: 
+  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<Longrightarrow> rb_invalid_entries rb = [0..< size rb]"
+  oops
+(* > *)
+
+
+text \<open>
+  The implications goes both ways and we effectively have an equality.
+\<close>
+
+lemma rb_empty_valid_entries_equiv_list:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> rb_valid_entries rb = []"
    unfolding rb_empty_def rb_valid_entries_def rb_valid_ptr_def by(auto)
 
-lemma rb_valid_entries_empty_list_length:
-  "rb_valid_ptr rb \<Longrightarrow> length (rb_valid_entries rb) = 0 \<longleftrightarrow> rb_empty rb"
-  apply(subst rb_valid_entries_empty_list2)
-  by(auto)
-
-lemma rb_valid_entries_empty_set[simp] :
-  "rb_empty rb \<Longrightarrow> set (rb_valid_entries rb) = {}"
-   unfolding rb_empty_def rb_valid_entries_def by(simp)
-
-lemma rb_valid_entries_empty_set2 :
+lemma rb_empty_valid_entries_equiv_set:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> set (rb_valid_entries rb) = {}"
-  unfolding rb_empty_def rb_valid_entries_def rb_valid_ptr_def by(auto)
+  by(auto simp:rb_empty_valid_entries_equiv_list)
 
-
-text \<open>
-  Similarly, if the ring buffer is empty, then the set of in valid entries
-  is exactly the elements 0..<size. Note, this is not exactly the list [0..<size],
-  but a permutation.
-\<close>
-
-lemma rb_invalid_entries_empty: 
-  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<Longrightarrow> set (rb_invalid_entries rb) = {0..< size rb}"
-  unfolding rb_valid_ptr_def rb_empty_def rb_invalid_entries_def by(auto)
-
-lemma rb_invalid_entries_empty2: 
+lemma rb_empty_invalid_entries_equiv:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> set (rb_invalid_entries rb) = {0..< size rb}"
-  using rb_valid_invalid_entries_inter rb_valid_invalid_entries_union
-  by (metis inf_sup_absorb rb_invalid_entries_empty rb_valid_entries_empty_set2)
+  using rb_valid_invalid_entries_diff1 rb_empty_valid_entries_equiv_set by fastforce
 
 
 text \<open>
-  If the ring buffer is not empty, then the list of valid entries is not empty.
+  We can now also formulate this while reasoning about the number of entries in the 
+  set of valid or invalid entries
 \<close>
 
-lemma rb_valid_entries_not_empty_list :
-  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> rb_valid_entries rb \<noteq> []"
-  unfolding rb_empty_def rb_valid_entries_def rb_valid_ptr_def by auto
+lemma rb_empty_valid_entries_equiv_length:
+  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> length (rb_valid_entries rb) = 0"
+  by (simp add: rb_empty_valid_entries_equiv_list)  
 
-lemma rb_valid_entries_not_empty_set :
-  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> set (rb_valid_entries rb) \<noteq> {}"
-  using rb_valid_entries_not_empty_list by(auto)
+lemma rb_empty_invalid_entries_equiv_length:
+  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> length (rb_invalid_entries rb) = size rb"
+  using rb_empty_valid_entries_equiv_length rb_valid_invalid_entries_lengths by force
+
+
+paragraph \<open>Full Ring\<close>
 
 
 text \<open>
-  If the ring buffer is full, then the set of valid entries contains all slots but
-  the head.
+  If the ring is full, then the invalid entries just contain the head element, 
+  as this is never part of the valid set.  
 \<close>
 
-lemma rb_invalid_entries_full:
+lemma rb_full_invalid_entries[simp] :
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> rb_invalid_entries rb = [head rb]"
+  by (simp add: rb_full_no_modulo rb_invalid_entries_def rb_valid_ptr_def upt_rec)
+
+lemma rb_full_invalid_entries_set[simp] :
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> set (rb_invalid_entries rb) = {head rb}"
+  by(simp)
+
+
+text \<open>
+  Similarly, if the ring is full then the set of valid entries is the set of all
+  slots minus the head element. 
+\<close>
+
+lemma rb_full_entries_empty_set[simp] :
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> 
+      {0..< size rb} - {head rb} = set (rb_valid_entries rb)"
+  using rb_valid_invalid_entries_diff1 by fastforce
+
+
+text \<open>
+  Again, the implication goes both ways and we have equality. 
+\<close>
+
+lemma rb_full_invalid_entries_equiv_list:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> rb_invalid_entries rb = [head rb]"
   unfolding rb_invalid_entries_def rb_full_def 
   by (simp add: le_Suc_eq not_less rb_valid_ptr_def upt_rec)
 
-lemma rb_invalid_entries_full2:
-  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> rb_invalid_entries rb = [head rb]"
-  unfolding rb_invalid_entries_def rb_full_def 
-  by (metis rb_full_def rb_invalid_entries_def rb_invalid_entries_full)
+lemma rb_full_invalid_entries_equiv_set:
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> set (rb_invalid_entries rb) = {head rb}"
+  by (simp add: rb_full_invalid_entries_equiv_list singleton_set_list)
 
-lemma rb_valid_entries_full2:
-  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> set (rb_valid_entries rb) = {0..< size rb} - {head rb}"
-  apply(subst rb_valid_invalid_entries_diff1, simp)
-  apply(subst rb_invalid_entries_full2, auto)
-  done
-
-lemma rb_valid_entries_full:
-  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> set (rb_valid_entries rb) = {0..< size rb} - {head rb}"
-  apply(rule iffI, simp add:rb_valid_entries_full2)
-proof -
-  assume p1: "rb_valid_ptr rb"
-  assume p2: "set (rb_valid_entries rb) = {0..<CleanQ_RB.size rb} - {head rb}"
-
-  have X0:
-    "{0..<CleanQ_RB.size rb} - {head rb} = {0..< (head rb)} \<union> {((head rb) + 1)..< size rb}"
-    using p1 unfolding rb_valid_ptr_def by(auto)
-
-  have X1:
-    "{tail rb..<CleanQ_RB.size rb} = {Suc (head rb)..<CleanQ_RB.size rb}
-       \<Longrightarrow> tail rb = Suc (head rb)"
-    by (metis atLeastLessThan_empty_iff atLeastLessThan_inj(1) p1 rb_valid_ptr_def)
-
-  have inter0: "tail rb > head rb \<Longrightarrow> {0..<head rb} \<inter> {tail rb..<CleanQ_RB.size rb} = {}"
-    by(simp)
-  have inter1: "{0..<head rb} \<inter> {Suc (head rb)..<CleanQ_RB.size rb} = {}"
-    by simp
-
-  from inter0 inter1 have X2:
-    "tail rb > head rb
-      \<Longrightarrow> {0..<head rb} \<union> {tail rb..<size rb} = {0..<head rb} \<union> {Suc (head rb)..<size rb} 
-      \<Longrightarrow> {tail rb..<size rb} = {Suc (head rb)..<size rb} "
-    by blast
-
-  have X3:
-    " \<not> tail rb \<le> head rb \<longleftrightarrow> tail rb > head rb"
-    by(auto)
-
-  have eq: "(head rb + 1) mod CleanQ_RB.size rb = tail rb"
-    using p1 p2 unfolding X0  rb_valid_entries_def 
-    apply(cases "tail rb \<le> head rb", simp_all add:rb_valid_ptr_def)
-    apply (metis atLeastLessThan_empty atLeast_eq_iff ivl_disj_un_one(8) ivl_subset le0 
-                 leD le_SucE mod_Suc mod_if  sup.cobounded2 sup_commute)
-    apply (metis X1 X2 X3 sup_commute)
-    done
- 
-  show "rb_full rb"
-    using eq by(simp add:rb_full_def)
-qed
-
-
+lemma rb_full_valid_entries_equiv:
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> {0..< size rb} - {head rb} = set (rb_valid_entries rb)"
+  apply(rule iffI, simp)
+  by (metis Diff_Diff_Int Diff_empty Diff_insert0 inf_sup_absorb inf_sup_aci(1) 
+            insert_Diff insert_is_Un rb_full_invalid_entries_equiv_set 
+            rb_valid_entries_never_everything rb_valid_invalid_entries_diff2)
 
 text \<open>
-  Last we show that the number of valid entries is less than the size of the ring and
-  the total number of valid and invalid entries is the size of the ring.
+  We can now do the reasoning about the number of valid and invalid entries when the 
+  ring is full.
 \<close>
 
-lemma rb_valid_entries_less_size:
-  "rb_valid_ptr rb \<Longrightarrow> length (rb_valid_entries rb) < size rb"
-  unfolding rb_valid_ptr_def rb_valid_entries_def  by(auto)
-
-lemma rb_valid_entries_gt_zero:
-  "length (rb_valid_entries rb) \<ge> 0"
-   by(auto)
-
-lemma rb_valid_entries_full_num:
-  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> length (rb_valid_entries rb) = size rb - 1"
-  apply(rule iffI)
-  using rb_invalid_entries_full rb_valid_invalid_entries_lengths apply fastforce
-  unfolding rb_valid_entries_def rb_valid_ptr_def rb_full_def
-  apply(cases " tail rb \<le> head rb ", auto)
-  by (smt One_nat_def Suc_le_eq diff_0_eq_0 diff_Suc_1 diff_commute diff_diff_cancel 
-          le_add_diff_inverse2 le_less mod_self)
-
-lemma rb_valid_entries_empty_num:
-  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> length (rb_valid_entries rb) = 0"
-  using rb_valid_entries_empty_list rb_valid_invalid_entries_lengths
-        rb_valid_entries_empty_list_length
-  by auto
-
-lemma rb_valid_entries_not_full_num:
-  "rb_valid_ptr rb \<Longrightarrow> \<not> rb_full rb \<longleftrightarrow> length (rb_valid_entries rb) < size rb - 1"
-  using rb_valid_entries_full_num rb_valid_entries_less_size by fastforce
-
-lemma rb_valid_entries_not_empty_num:
-  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> length (rb_valid_entries rb) > 0"
-  using less_le rb_valid_entries_empty_list_length by fastforce
-
-lemma rb_invalid_entries_less_size:
-  "rb_valid_ptr rb \<Longrightarrow> length (rb_invalid_entries rb) \<le> size rb"
-  unfolding rb_valid_ptr_def rb_invalid_entries_def by(auto)
-
-lemma rb_invalid_entries_gt_zero:
-  "rb_valid_ptr rb \<Longrightarrow> length (rb_invalid_entries rb) > 0"
-  unfolding rb_valid_ptr_def rb_invalid_entries_def by(auto)
-
-lemma rb_invalid_entries_full_num:
+lemma rb_full_invalid_entries_equiv_length:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> length (rb_invalid_entries rb) = 1"
-  using rb_invalid_entries_full rb_valid_entries_full_num rb_valid_invalid_entries_lengths 
-  by fastforce
+  apply(subst rb_full_invalid_entries_equiv_list, simp)
+  by (simp add: rb_invalid_entries_def rb_valid_ptr_def upt_rec)
   
+lemma rb_full_valid_entries_equiv_length:
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> length (rb_valid_entries rb) = (size rb - 1)"
+  using rb_full_invalid_entries_equiv_length rb_valid_invalid_entries_lengths rb_valid_ptr_def 
+  by force
 
-lemma rb_invalid_entries_empty_num:
-  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> length (rb_invalid_entries rb) = size rb"
-  using rb_valid_entries_empty_list rb_valid_invalid_entries_lengths 
-  using rb_valid_entries_empty_list_length by fastforce
 
-lemma rb_invalid_entries_not_full_num:
-  "rb_valid_ptr rb \<Longrightarrow> \<not> rb_full rb \<longleftrightarrow> length (rb_invalid_entries rb) > 1"
-  apply(auto simp:rb_valid_ptr_def rb_full_def rb_invalid_entries_def)
-  using less_diff_conv nat_neq_iff apply fastforce
-  by (metis Nat.add_0_right Suc_lessI less_Suc_eq_le less_diff_conv less_irrefl_nat 
-            mod_if mod_self plus_1_eq_Suc)
-
-lemma rb_invalid_entries_not_empty_num:
-  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> length (rb_invalid_entries rb) < size rb"
-  using less_le rb_valid_entries_empty_list_length rb_valid_invalid_entries_lengths by fastforce
+paragraph \<open>Ring with Elements\<close>
 
 text \<open>
-  We can express this as subset relations
+  If the ring buffer is empty, then there are no valid entries, and thus the list of
+  valid entries or the set thereof does not contain any elements. 
 \<close>
 
-lemma rb_valid_entries_tail_subseteq:
-  "set (tl (rb_valid_entries rb))  \<subseteq>  set ((rb_valid_entries rb))"
-  by (metis list.set_sel(2) subsetI tl_Nil)
+lemma rb_not_empty_valid_entries :
+  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow> rb_valid_entries rb \<noteq> []"
+  using rb_empty_valid_entries_equiv_list by blast
 
-lemma rb_valid_entries_tail_subset:
-  "rb_valid_entries rb \<noteq> [] \<Longrightarrow> set (tl (rb_valid_entries rb)) \<subset> set ((rb_valid_entries rb))"
-  using list_set_hd_tl_subtract rb_valid_entries_distinct by fastforce
-
-lemma rb_valid_entries_head_subseteq:
-  "set (rb_valid_entries rb)  \<subseteq>  set ((rb_valid_entries rb) @ [x])"
-  by(auto)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -474,40 +464,37 @@ text \<open>
   element thereof.
 \<close>
 
-lemma rb_valid_entries_head :
+lemma rb_valid_entries_head_not_member[simp] :
   "(head rb) \<notin> set (rb_valid_entries rb)"
   unfolding rb_valid_entries_def by(auto)
 
-lemma rb_invalid_entries_head1 :
-  "rb_valid_ptr rb \<Longrightarrow> head rb \<in> set (rb_invalid_entries rb)"
-  unfolding rb_valid_ptr_def rb_invalid_entries_def by(auto)
+lemma rb_invalid_entries_head_element[simp] :
+  "rb_valid_ptr rb \<Longrightarrow> hd (rb_invalid_entries rb) = head rb"
+  unfolding rb_invalid_entries_def rb_valid_ptr_def by(simp)
 
-lemma rb_invalid_entries_head2 :
-  "rb_valid_ptr rb \<Longrightarrow> head rb = hd (rb_invalid_entries rb)"
-  unfolding rb_valid_ptr_def rb_invalid_entries_def by(auto)
+lemma rb_invalid_entries_head_member[simp] :
+  "rb_valid_ptr rb \<Longrightarrow> head rb \<in> set (rb_invalid_entries rb)"
+  using hd_in_set rb_invalid_entries_never_empty_list by force
+
 
 text \<open>
-  Next, if the ring buffer is emtpy, then the tail is also not part of the set of
+  Next, if the ring buffer is empty, then the tail is also not part of the set of
   valid entries. In fact, the set is the empty set.
 \<close>
 
-lemma rb_valid_entries_tail_empty1 :
+lemma rb_valid_entries_empty_tail_not_member:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb  \<longleftrightarrow> (tail rb) \<notin> set (rb_valid_entries rb)"
   unfolding rb_empty_def rb_valid_entries_def rb_valid_ptr_def
   by(auto)
-  
-lemma rb_valid_entries_tail_empty2 :
-  "rb_valid_ptr rb \<Longrightarrow> head rb = tail rb \<longleftrightarrow> (tail rb) \<notin> set (rb_valid_entries rb)"
-  using rb_valid_entries_tail_empty1 unfolding rb_empty_def by(auto)
 
-lemma rb_invalid_entries_tail_empty1 :
+lemma rb_invalid_entries_empty_tail_element:
+  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> hd (rb_invalid_entries rb) = tail rb"
+  by (simp add: rb_empty_def)
+
+lemma rb_invalid_entries_empty_tail_member:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> (tail rb) \<in> set (rb_invalid_entries rb)"
-  unfolding rb_empty_def rb_invalid_entries_def
-  by (simp add: rb_valid_ptr_def)
-
-lemma rb_invalid_entries_tail_empty2 :
-  "rb_valid_ptr rb \<Longrightarrow> head rb = tail rb \<longleftrightarrow> (tail rb) \<in> set (rb_invalid_entries rb)"
-  using rb_invalid_entries_tail_empty1 unfolding rb_empty_def by(auto)
+  apply(auto,  simp add:rb_valid_ptr_def)
+  using rb_valid_entries_notin_invalid rb_valid_entries_empty_tail_not_member by blast
 
 
 text \<open>
@@ -516,50 +503,36 @@ text \<open>
    The same applies if the ring buffer is full. 
 \<close>
 
-lemma rb_valid_entries_tail_not_empty1:
+
+lemma rb_valid_entries_not_empty_tail[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow> hd (rb_valid_entries rb) = (tail rb)"
+  unfolding rb_valid_entries_def rb_valid_ptr_def rb_empty_def by(simp)
+
+lemma rb_valid_entries_not_empty_tail_com[simp]:
+  "rb_valid_entries rb \<noteq> [] \<Longrightarrow> hd (rb_valid_entries rb) = (tail rb) \<Longrightarrow> \<not>rb_empty rb "
+  unfolding rb_empty_def rb_valid_entries_def by(auto)
+
+lemma rb_valid_entries_full_tail[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> hd (rb_valid_entries rb) = (tail rb)"
+  by (simp add: rb_full_not_empty)
+
+lemma rb_valid_entries_not_empty_tail_member:
   "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> (tail rb) \<in> set (rb_valid_entries rb)"
   unfolding rb_valid_entries_def rb_valid_ptr_def rb_empty_def  by auto
 
-lemma rb_valid_entries_tail_not_empty2 :
-  "rb_valid_ptr rb \<Longrightarrow> head rb \<noteq> tail rb \<longleftrightarrow> (tail rb) \<in> set (rb_valid_entries rb)"
-  using rb_valid_entries_tail_not_empty1 unfolding rb_empty_def by(auto)
-
-lemma rb_valid_entries_tail_not_empty3:
+lemma rb_valid_entries_full_tail_member[simp]:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> (tail rb) \<in> set (rb_valid_entries rb)"
-  using rb_full_not_empty rb_valid_entries_tail_not_empty1 
-  by blast
-
-lemma rb_invalid_entries_tail_not_empty1:
-  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> (tail rb) \<notin> set (rb_invalid_entries rb)"
-  unfolding rb_invalid_entries_def rb_valid_ptr_def rb_empty_def 
-  by (simp add: rb_invalid_entries_def)
+  using rb_empty_not_full rb_valid_entries_not_empty_tail_member by blast
 
 
-lemma rb_invalid_entries_tail_not_empty2:
-  "rb_valid_ptr rb \<Longrightarrow>  head rb \<noteq> tail rb \<longleftrightarrow> (tail rb) \<notin> set (rb_invalid_entries rb)"
-  unfolding rb_invalid_entries_def rb_valid_ptr_def rb_empty_def by(simp)
-
-lemma rb_invalid_entries_tail_not_empty3:
+lemma rb_invalid_entries_full_tail_not_member[simp]:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> (tail rb) \<notin> set (rb_invalid_entries rb)"
-  using rb_full_not_empty rb_invalid_entries_tail_not_empty1 by(auto)
+  using rb_full_not_empty rb_invalid_entries_empty_tail_member by blast
 
+lemma rb_invalid_entries_not_empty_not_member:
+  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<longleftrightarrow> (tail rb) \<notin> set (rb_invalid_entries rb)"
+  using rb_invalid_entries_empty_tail_member by blast
 
-text \<open>
-  Moreover, we can show that if there are valid elements in the ring buffer, 
-  then the tail is the first element (head) of the list of valid entries.
-\<close>
-
-lemma rb_valid_entries_tail_first1:
-  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow>(tail rb) = hd (rb_valid_entries rb)"
-  unfolding rb_valid_ptr_def rb_empty_def rb_valid_entries_def by(auto)
-
-lemma rb_valid_entries_tail_first2:
-  "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<Longrightarrow> (tail rb) = hd (rb_valid_entries rb)"
-  using rb_full_not_empty rb_valid_entries_tail_first1 by(auto)
-
-lemma rb_valid_entries_tail_first3:
-  "rb_valid_entries rb \<noteq> [] \<Longrightarrow> (tail rb) = hd (rb_valid_entries rb) \<Longrightarrow> \<not>rb_empty rb "
-  unfolding rb_empty_def rb_valid_entries_def by(auto)
 
 
 (* ==================================================================================== *)
@@ -585,14 +558,14 @@ subsubsection \<open>The Ring is not Changed\<close>
 
 text \<open>
   First, the incrementing the head or tail pointers does not change the contents of 
-  the ring. 
+  the ring. So we can keep on reasoning about the ring contents.
 \<close>
 
-lemma rb_incr_head_ring: 
+lemma rb_incr_head_ring[simp]: 
   "(ring (rb_incr_head rb)) = ring rb"
   unfolding rb_incr_head_def by(auto)
 
-lemma rb_incr_tail_ring: 
+lemma rb_incr_tail_ring[simp]: 
   "(ring (rb_incr_tail rb)) = ring rb"
   unfolding rb_incr_tail_def by(auto)
 
@@ -608,9 +581,8 @@ text \<open>
 \<close>
 
 lemma rb_incr_tail_valid_entries:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-  shows "rb_valid_entries rb = (tail rb) # rb_valid_entries (rb_incr_tail rb)"
-  using notempty valid
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+       rb_valid_entries rb = (tail rb) # rb_valid_entries (rb_incr_tail rb)"
   unfolding rb_valid_entries_def rb_incr_tail_def rb_empty_def rb_valid_ptr_def
   by (simp add: mod_Suc  upt_conv_Cons) 
 
@@ -619,14 +591,14 @@ text \<open>
 \<close>
 
 lemma rb_incr_tail_valid_entries_tail:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-  shows "rb_valid_entries (rb_incr_tail rb) = tl (rb_valid_entries rb)"
-  using valid notempty by (simp add:rb_incr_tail_valid_entries)
-
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      rb_valid_entries (rb_incr_tail rb) = tl (rb_valid_entries rb)"
+  by(subst rb_incr_tail_valid_entries, auto)
+  
 lemma rb_incr_tail_valid_entries_drop:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-  shows "rb_valid_entries (rb_incr_tail rb) = drop 1 (rb_valid_entries rb)"
-  using valid notempty by (simp add:rb_incr_tail_valid_entries)
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      rb_valid_entries (rb_incr_tail rb) = drop 1 (rb_valid_entries rb)"
+  by (simp add: drop_Suc rb_incr_tail_valid_entries_tail)
 
 
 text \<open>
@@ -634,12 +606,11 @@ text \<open>
 \<close>
 
 lemma rb_incr_tail_invalid_entries:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-  shows "rb_invalid_entries (rb_incr_tail rb) = rb_invalid_entries rb @ [tail rb]"
-  using notempty valid mod_Suc
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      rb_invalid_entries (rb_incr_tail rb) = rb_invalid_entries rb @ [tail rb]"
   unfolding rb_incr_tail_def rb_invalid_entries_def rb_empty_def rb_valid_ptr_def
-  by (auto, metis less_Suc_eq_le upt_Suc)
-
+  by(auto simp:mod_Suc, metis less_Suc_eq_le upt_Suc)
+  
 
 text\<open>
   The set of valid entries after the tail increment is a strict subset of the original
@@ -648,50 +619,43 @@ text\<open>
 \<close>
 
 lemma rb_incr_tail_valid_entries_subset:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-  shows "set (rb_valid_entries (rb_incr_tail rb)) \<subset> set (rb_valid_entries rb)"
-  using notempty valid 
-  by(simp add: rb_incr_tail_valid_entries_tail rb_valid_entries_not_empty_list 
-               rb_valid_entries_tail_subset)
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      set (rb_valid_entries (rb_incr_tail rb)) \<subset> set (rb_valid_entries rb)"
+  by (metis rb_incr_tail_valid_entries_tail rb_not_empty_valid_entries 
+            rb_valid_entries_tail_subset)
 
 lemma rb_incr_tail_invalid_entries_superset:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-  shows "set (rb_invalid_entries rb) \<subset> set (rb_invalid_entries (rb_incr_tail rb))"
-  apply(subst rb_incr_tail_invalid_entries)
-  using notempty valid rb_invalid_entries_distinct rb_invalid_entries_tail_not_empty1
-  by auto
-
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      set (rb_invalid_entries rb) \<subset> set (rb_invalid_entries (rb_incr_tail rb))"
+  apply(subst rb_incr_tail_invalid_entries, simp_all) 
+  using rb_invalid_entries_not_empty_not_member by fastforce
 
 text \<open>
   The length of the list of valid entries decrements by one when the tail pointer is
   increased. And vice versa, the length list of invalid entries is increased by one. 
 \<close>
 
-lemma rb_incr_tail_valid_entries_length1:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-shows "length (rb_valid_entries (rb_incr_tail rb)) + 1 = length (rb_valid_entries rb)"
-  apply(subst rb_incr_tail_valid_entries_tail)
-  apply(simp_all add:notempty valid)
-  using notempty valid rb_valid_entries_not_empty_list 
-  by fastforce
+lemma rb_incr_tail_valid_entries_length[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      length (rb_valid_entries (rb_incr_tail rb)) + 1 = length (rb_valid_entries rb)"
+  using rb_incr_tail_valid_entries by force
+  
+lemma rb_incr_tail_valid_entries_length_alt:
+   "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      length (rb_valid_entries (rb_incr_tail rb)) = length (rb_valid_entries rb) - 1"
+  by (simp add: rb_incr_tail_valid_entries_tail)
 
-lemma rb_incr_tail_valid_entries_length2:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-shows "length (rb_valid_entries (rb_incr_tail rb)) = length (rb_valid_entries rb) - 1"
-  using notempty valid rb_incr_tail_valid_entries_length1 
-  by fastforce
 
-lemma rb_incr_tail_invalid_entries_length:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-shows "length (rb_invalid_entries (rb_incr_tail rb)) = length (rb_invalid_entries rb) + 1"
-  apply(subst rb_incr_tail_invalid_entries)
-  by(auto simp:notempty valid)
+lemma rb_incr_tail_invalid_entries_length[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      length (rb_invalid_entries (rb_incr_tail rb)) = length (rb_invalid_entries rb) + 1"
+  using rb_incr_tail_invalid_entries by fastforce
 
-lemma rb_incr_tail_invalid_entries_length2:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb"  
-shows "length (rb_invalid_entries (rb_incr_tail rb)) - 1 = length (rb_invalid_entries rb)"
-  apply(subst rb_incr_tail_invalid_entries)
-  by(auto simp:notempty valid)
+lemma rb_incr_tail_invalid_entries_length_alt:
+  "\<not>rb_empty rb \<Longrightarrow>rb_valid_ptr rb \<Longrightarrow> 
+      length (rb_invalid_entries (rb_incr_tail rb)) - 1 = length (rb_invalid_entries rb)"
+  by(auto)
+
 
 
 text \<open>
@@ -700,53 +664,39 @@ text \<open>
   pointer is added to the set of invalid entries.
 \<close>
 
-lemma rb_incr_tail_valid_entries_notin1:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-  shows "(tail rb) \<notin> set (rb_valid_entries (rb_incr_tail rb))"
-  using notempty valid 
-  apply(simp add:rb_incr_tail_valid_entries_tail)
-  unfolding rb_valid_ptr_def rb_empty_def rb_valid_entries_def by(auto)
+lemma rb_incr_tail_valid_entries_tail_notin[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      (tail rb) \<notin> set (rb_valid_entries (rb_incr_tail rb))"
+  by (metis in_set_conv_decomp rb_incr_tail_invalid_entries rb_valid_entries_notin_invalid)
 
-lemma rb_incr_tail_valid_entries_notin2:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-  shows "hd (rb_valid_entries rb) \<notin> set (rb_valid_entries (rb_incr_tail rb))"
-  using notempty valid rb_valid_entries_tail_first1 rb_incr_tail_valid_entries_notin1
-  by fastforce
+lemma rb_incr_tail_valid_entries_notin[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      hd (rb_valid_entries rb) \<notin> set (rb_valid_entries (rb_incr_tail rb))"
+  by(simp)
 
+lemma rb_incr_tail_invalid_entries_member1[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      tail rb \<in> set (rb_invalid_entries (rb_incr_tail rb))"
+  by (simp add: rb_incr_tail_invalid_entries)
 
-lemma rb_incr_tail_invalid_entries_member:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-  shows "(tail rb) \<in> set (rb_invalid_entries (rb_incr_tail rb))"
-  using notempty valid 
-  by(simp add:rb_incr_tail_invalid_entries)
+lemma rb_incr_tail_invalid_entries_member2[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+      hd (rb_valid_entries rb) \<in> set (rb_invalid_entries (rb_incr_tail rb))"
+  by(auto)
 
-lemma rb_incr_tail_valid_entries_member:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-  shows "hd (rb_valid_entries rb) \<in> set (rb_invalid_entries (rb_incr_tail rb))"
-  using notempty valid  rb_incr_tail_invalid_entries_member rb_valid_entries_tail_first1 
-  by fastforce
 
 
 text \<open>
   Incrementing the tail pointer is preserving the validity invariant of the ring buffer
 \<close>
 
+lemma rb_incr_tail_valid_ptr[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_incr_tail rb)"
+  unfolding  rb_incr_tail_def rb_valid_ptr_def by(auto)
 
-lemma rb_incr_tail_valid_ptr:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-  shows "rb_valid_ptr (rb_incr_tail rb)"
-  using valid notempty
-  unfolding  rb_incr_tail_def rb_valid_ptr_def
-  by(auto)
-
-lemma rb_incr_tail_valid:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb" 
-shows "rb_valid (rb_incr_tail rb)"
-  using valid notempty unfolding  rb_incr_tail_def rb_valid_def
-  apply(simp add:rb_incr_tail_valid_ptr)
-  by (metis Suc_eq_plus1 list.sel(2) list.set_sel(2) rb_incr_tail_def 
-            rb_incr_tail_valid_entries_tail rb_incr_tail_valid_ptr)
-
+lemma rb_incr_tail_valid[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail rb)"
+  unfolding rb_valid_def by (auto, meson psubsetD rb_incr_tail_valid_entries_subset)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -760,9 +710,8 @@ text \<open>
 \<close>
 
 lemma rb_incr_head_valid_entries:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "rb_valid_entries (rb_incr_head rb) = (rb_valid_entries rb) @ [(head rb)]"
-  using notfull valid 
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      rb_valid_entries (rb_incr_head rb) = (rb_valid_entries rb) @ [(head rb)]"
   unfolding rb_valid_entries_def rb_incr_head_def rb_full_def rb_valid_ptr_def
   apply(simp add: mod_Suc upt_Suc_append  upt_conv_Cons, auto)
   by (metis le_imp_less_Suc upt_Suc_append upt_rec)
@@ -774,17 +723,15 @@ text \<open>
 \<close>
 
 lemma rb_incr_head_invalid_entries_tail:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "rb_invalid_entries (rb_incr_head rb) = tl (rb_invalid_entries rb)"
-  using notfull valid mod_Suc
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      rb_invalid_entries (rb_incr_head rb) = tl (rb_invalid_entries rb)"
   unfolding rb_invalid_entries_def rb_incr_head_def rb_full_def rb_valid_ptr_def
-  by auto
+  using  mod_Suc  by auto
 
 lemma rb_incr_head_invalid_entries_drop:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "rb_invalid_entries (rb_incr_head rb) = drop 1 (rb_invalid_entries rb)"
-  using notfull valid rb_incr_head_invalid_entries_tail
-  by (simp add: rb_incr_head_invalid_entries_tail drop_Suc)
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      rb_invalid_entries (rb_incr_head rb) = drop 1 (rb_invalid_entries rb)"
+  by (simp add: drop_Suc rb_incr_head_invalid_entries_tail)
 
 
 text \<open>
@@ -792,9 +739,9 @@ text \<open>
 \<close>
 
 lemma rb_incr_head_valid_entries_butlast:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "(rb_valid_entries rb) = butlast (rb_valid_entries (rb_incr_head rb))"
-  using notfull valid by (metis butlast_snoc rb_incr_head_valid_entries)
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+       butlast (rb_valid_entries (rb_incr_head rb)) = (rb_valid_entries rb)"
+  by (metis butlast_snoc rb_incr_head_valid_entries)
 
 
 text \<open>
@@ -803,49 +750,43 @@ text \<open>
 \<close>
 
 lemma rb_incr_head_valid_entries_superset:
-assumes notempty: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "set (rb_valid_entries rb) \<subset> set (rb_valid_entries (rb_incr_head rb))"
-  using notempty valid 
-  by(simp add:rb_incr_head_valid_entries psubset_insert_iff rb_valid_entries_head)
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      set (rb_valid_entries rb) \<subset> set (rb_valid_entries (rb_incr_head rb))"
+  by(subst rb_incr_head_valid_entries, simp_all add:psubset_insert_iff)
 
 lemma rb_incr_head_invalid_entries_superset:
-assumes notempty: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-shows "set (rb_invalid_entries (rb_incr_head rb)) \<subset> set (rb_invalid_entries rb)"
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      set (rb_invalid_entries (rb_incr_head rb)) \<subset> set (rb_invalid_entries rb)"
   apply(subst rb_incr_head_invalid_entries_tail)
-  apply(simp_all add:notempty valid)
-  using notempty valid rb_invalid_entries_distinct rb_invalid_entries_never_empty_list
-  by (metis distinct.simps(2) list.exhaust_sel list.set_sel(1) psubsetI set_subset_Cons)
-
+  by (simp_all add: list_distinct_tail_subset rb_invalid_entries_never_empty_list)
+  
 
 text \<open>
   The length of the list of valid entries decrements by one when the tail pointer is
   increased.
 \<close>
 
-lemma rb_incr_head_valid_entries_length1:
-assumes notempty: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "length (rb_valid_entries rb) = length (rb_valid_entries (rb_incr_head rb)) - 1"
-  using notempty valid 
-  by(simp add:rb_incr_head_valid_entries psubset_insert_iff rb_valid_entries_head)
+lemma rb_incr_head_valid_entries_length_1:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      length (rb_valid_entries rb) = length (rb_valid_entries (rb_incr_head rb)) - 1"
+  by (metis length_butlast rb_incr_head_valid_entries_butlast)
 
-lemma rb_incr_head_valid_entries_length2:
-assumes notempty: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "length (rb_valid_entries (rb_incr_head rb)) = length (rb_valid_entries rb) + 1"
-  apply(subst rb_incr_head_valid_entries)
-  by(simp_all add: notempty valid)
-
+lemma rb_incr_head_valid_entries_length_2[simp]:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+      length (rb_valid_entries (rb_incr_head rb)) = length (rb_valid_entries rb) + 1"
+  by(subst rb_incr_head_valid_entries, simp_all)
+  
 
 lemma rb_incr_head_invalid_entries_length1:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "length (rb_invalid_entries rb) = length (rb_invalid_entries (rb_incr_head rb)) + 1"
-  using notfull valid rb_incr_head_invalid_entries_tail
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+    length (rb_invalid_entries rb) = length (rb_invalid_entries (rb_incr_head rb)) + 1"
+  apply(subst rb_incr_head_invalid_entries_drop, simp_all) 
   using rb_invalid_entries_never_empty_list by force
-
-lemma rb_incr_head_invalid_entries_length2:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb"  
-  shows "length (rb_invalid_entries (rb_incr_head rb)) = length (rb_invalid_entries rb) - 1"
-  apply(subst rb_incr_head_invalid_entries_tail)
-  by(simp_all add: notfull valid)
+  
+lemma rb_incr_head_invalid_entries_length2[simp]:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+    length (rb_invalid_entries (rb_incr_head rb)) = length (rb_invalid_entries rb) - 1"
+  by (simp add: rb_incr_head_invalid_entries_length1)
 
 
 text \<open>
@@ -853,23 +794,19 @@ text \<open>
   list. 
 \<close>
   
-lemma rb_incr_head_valid_entries_last:
-assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid_ptr rb"  
-  shows "head rb  = last (rb_valid_entries (rb_incr_head rb))"
-  using notfull valid apply(subst rb_incr_head_valid_entries)
-  by(auto)
+lemma rb_incr_head_valid_entries_last[simp]:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> last (rb_valid_entries (rb_incr_head rb)) = head rb"
+  by(subst rb_incr_head_valid_entries, auto)
 
 
 text \<open>
   The original head pointer is now part of the set of valid entries.
 \<close>
 
-lemma rb_incr_head_valid_entries_headin:
-assumes notfull: "\<not> rb_full rb" and  valid: "rb_valid_ptr rb"  
-  shows "head rb \<in> set (rb_valid_entries (rb_incr_head rb))"
-  using notfull valid apply(subst rb_incr_head_valid_entries)
-  by(auto)
-
+lemma rb_incr_head_valid_entries_headin[simp]:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> head rb \<in> set (rb_valid_entries (rb_incr_head rb))"
+  by (metis in_set_conv_decomp rb_incr_head_valid_entries)
+  
 
 text \<open>
   Incrementing the head pointer preserves the validity invariant of the ring buffer.
@@ -877,17 +814,14 @@ text \<open>
   In an enqueue operation this holds, as the element is written then the pointer updated.
 \<close>
 
-lemma rb_incr_head_valid_ptr:
-assumes notfull: "\<not>rb_full rb"   and  valid: "rb_valid_ptr rb" 
-  shows "rb_valid_ptr (rb_incr_head rb)"
-  using notfull valid  unfolding rb_valid_ptr_def rb_incr_head_def by(simp)
-  
+lemma rb_incr_head_valid_ptr[simp]:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_incr_head rb)"
+  unfolding rb_valid_ptr_def rb_incr_head_def by(auto)
 
 lemma rb_incr_head_valid:
-assumes notfull: "\<not>rb_full rb"   and  valid: "rb_valid rb" 
-  shows "(ring rb) (head rb) \<noteq> None \<Longrightarrow> rb_valid (rb_incr_head rb)"
-  using notfull valid unfolding rb_valid_def
-  by(simp add:rb_incr_head_valid_ptr rb_incr_head_valid_entries rb_incr_head_ring)
+  "\<not>rb_full rb \<Longrightarrow> rb_valid rb \<Longrightarrow> 
+      (ring rb) (head rb) \<noteq> None \<Longrightarrow> rb_valid (rb_incr_head rb)"
+  unfolding rb_valid_def by(subst rb_incr_head_valid_entries, auto)
 
 
 
@@ -943,17 +877,13 @@ text \<open>
 \<close>
 
 lemma rb_incr_head_n_req_equiv:
-assumes valid : "rb_valid_ptr rb"
-  shows "rb_incr_head_n_rec n rb = rb_incr_head_n n rb"
-  apply(induct n)
-  using valid apply(simp add: rb_incr_head_n_rec_def rb_incr_head_n_def rb_valid_ptr_def)
+  "rb_valid_ptr rb \<Longrightarrow> rb_incr_head_n_rec n rb = rb_incr_head_n n rb"
+  apply(induct n, simp add: rb_incr_head_n_rec_def rb_incr_head_n_def rb_valid_ptr_def)
   by (simp add: rb_incr_head_n_ind)
 
 lemma rb_incr_tail_n_req_equiv:
-assumes valid : "rb_valid_ptr rb"
-  shows "rb_incr_tail_n_rec n rb = rb_incr_tail_n n rb"
-  apply(induct n)
-  using valid apply(simp add: rb_incr_tail_n_rec_def rb_incr_tail_n_def rb_valid_ptr_def)
+  "rb_valid_ptr rb \<Longrightarrow> rb_incr_tail_n_rec n rb = rb_incr_tail_n n rb"
+  apply(induct n, simp add: rb_incr_tail_n_rec_def rb_incr_tail_n_def rb_valid_ptr_def)
   by (simp add: rb_incr_tail_n_ind)
 
 
@@ -1004,19 +934,19 @@ text \<open>
   Like with the single increment, the ring is not changed at all.
 \<close>
 
-lemma rb_incr_head_n_ring: 
+lemma rb_incr_head_n_ring[simp]: 
   "(ring (rb_incr_head_n n rb)) = ring rb"
   unfolding rb_incr_head_n_def by(auto)
 
-lemma rb_incr_tail_n_ring: 
+lemma rb_incr_tail_n_ring[simp]: 
   "(ring (rb_incr_tail_n n rb)) = ring rb"
   unfolding rb_incr_tail_n_def by(auto)
 
-lemma rb_incr_head_n_size: 
+lemma rb_incr_head_n_size[simp]: 
   "(size (rb_incr_head_n n rb)) = size rb"
   unfolding rb_incr_head_n_def by(auto)
 
-lemma rb_incr_tail_n_size: 
+lemma rb_incr_tail_n_size[simp]: 
   "(size (rb_incr_tail_n n rb)) = size rb"
   unfolding rb_incr_tail_n_def by(auto)
 
@@ -1025,11 +955,11 @@ lemma rb_incr_tail_n_size:
 subsubsection \<open>The Head/Tail is not Changed\<close>
 (* ------------------------------------------------------------------------------------ *)
 
-lemma rb_incr_head_n_tail: 
+lemma rb_incr_head_n_tail[simp]: 
   "(tail (rb_incr_head_n n rb)) = tail rb"
   unfolding rb_incr_head_n_def by(auto)
 
-lemma rb_incr_tail_n_head: 
+lemma rb_incr_tail_n_head[simp]: 
   "(head (rb_incr_tail_n n rb)) = head rb"
   unfolding rb_incr_tail_n_def by(auto)
 
@@ -1044,11 +974,11 @@ text \<open>
   a valid range, otherwise the modulo operator will change the state.
 \<close>
 
-lemma rb_incr_head_0:
+lemma rb_incr_head_0[simp]:
   "rb_valid_ptr rb \<Longrightarrow> rb_incr_head_n 0 rb = rb"
   unfolding rb_incr_head_n_def rb_incr_tail_def rb_valid_ptr_def by(auto)
 
-lemma rb_incr_tail_0:
+lemma rb_incr_tail_0[simp]:
   "rb_valid_ptr rb \<Longrightarrow> rb_incr_tail_n 0 rb = rb"
   unfolding rb_incr_tail_n_def rb_incr_tail_def rb_valid_ptr_def by(auto)
 
@@ -1058,13 +988,14 @@ text \<open>
    state of the ring.
 \<close>
 
-lemma rb_can_incr_tail_0:
+lemma rb_can_incr_tail_0[simp]:
   "rb_can_incr_tail_n 0 rb"
   unfolding rb_can_incr_tail_n_def by(auto)
 
-lemma rb_can_incr_head_0:
+lemma rb_can_incr_head_0[simp]:
   "rb_valid_ptr rb \<Longrightarrow> rb_can_incr_head_n 0 rb"
-  unfolding rb_can_incr_head_n_def using rb_invalid_entries_gt_zero by(auto)
+  unfolding rb_can_incr_head_n_def 
+  using rb_invalid_entries_size_min by blast
 
 
 text \<open>
@@ -1074,11 +1005,12 @@ text \<open>
 
 lemma rb_can_incr_tail_max_0_empty:
   "rb_valid_ptr rb \<Longrightarrow> rb_can_incr_tail_n_max rb = 0 \<longleftrightarrow> rb_empty rb"
-  by (simp add: rb_valid_entries_empty_num rb_can_incr_tail_n_max_def)
+  by (metis length_0_conv rb_can_incr_tail_n_max_def rb_empty_valid_entries_equiv_list)
 
 lemma rb_can_incr_head_max_0_full:
   "rb_valid_ptr rb \<Longrightarrow> rb_can_incr_head_n_max rb = 0 \<longleftrightarrow> rb_full rb"
-  unfolding rb_can_incr_head_n_max_def using rb_invalid_entries_not_full_num by fastforce
+  unfolding rb_can_incr_head_n_max_def 
+  using rb_full_invalid_entries_equiv_length rb_incr_head_invalid_entries_length1 by force
 
 
 text \<open>
@@ -1086,11 +1018,11 @@ text \<open>
   increments above. 
 \<close>
 
-lemma rb_incr_head_1:
+lemma rb_incr_head_1[simp]:
   "rb_incr_head_n 1 rb = rb_incr_head rb"
   unfolding rb_incr_head_n_def rb_incr_head_def by(auto)
 
-lemma rb_incr_tail_1:
+lemma rb_incr_tail_1[simp]:
   "rb_incr_tail_n 1 rb = rb_incr_tail rb"
   unfolding rb_incr_tail_n_def rb_incr_tail_def by(auto)
 
@@ -1101,14 +1033,14 @@ text \<open>
 
 lemma rb_can_incr_tail_1:
   "rb_valid_ptr rb \<Longrightarrow> rb_can_incr_tail_n 1 rb \<longleftrightarrow> \<not> rb_empty rb"
-  unfolding rb_can_incr_tail_n_def using rb_valid_entries_not_empty_list less_Suc_eq_le 
-  by auto
-
+  unfolding rb_can_incr_tail_n_def 
+  using Suc_le_eq rb_empty_valid_entries_equiv_list by auto
+  
 lemma rb_can_incr_head_1:
   "rb_valid_ptr rb \<Longrightarrow> rb_can_incr_head_n 1 rb \<longleftrightarrow> \<not> rb_full rb"
   unfolding rb_can_incr_head_n_def
-  using rb_invalid_entries_full_num rb_invalid_entries_not_full_num by auto
-
+  using nat_neq_iff rb_full_invalid_entries_equiv_length rb_invalid_entries_size_min 
+  by fastforce
 
 text \<open>
   In fact, if the maximum to increase the tail and head pointers is bigger than 
@@ -1117,58 +1049,51 @@ text \<open>
 
 lemma rb_can_incr_max_not_empty:
   "rb_valid_ptr rb \<Longrightarrow> 0 < rb_can_incr_tail_n_max rb \<Longrightarrow> \<not> rb_empty rb"
-  by (metis not_less_zero rb_can_incr_tail_n_max_def rb_valid_entries_empty_num)
+  using rb_can_incr_tail_max_0_empty by fastforce
 
 lemma rb_can_incr_max_not_full:
   "rb_valid_ptr rb \<Longrightarrow> 0 < rb_can_incr_head_n_max rb \<Longrightarrow> \<not> rb_full rb"
-  by (simp add: rb_can_incr_head_n_max_def rb_invalid_entries_full_num)
+  using rb_can_incr_head_max_0_full by fastforce
 
 
 text \<open>
   They also satisfy the validity constraints. As they are in fact the same as above.
 \<close>
 
-lemma rb_incr_head_zero_valid_ptr:
+lemma rb_incr_head_zero_valid_ptr[simp]:
   "rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_incr_head_n 0 rb)"
   by(subst rb_incr_head_0, auto)
 
-lemma rb_incr_head_zero_valid:
+lemma rb_incr_head_zero_valid[simp]:
   "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_head_n 0 rb)"
   by(subst rb_incr_head_0, auto simp:rb_valid_def)
 
-lemma rb_incr_tail_zero_valid_ptr:
-  "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_n 0 rb)"
+lemma rb_incr_tail_zero_valid_ptr[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_incr_tail_n 0 rb)"
   by(subst rb_incr_tail_0, auto simp:rb_valid_def)
 
-lemma rb_incr_tail_zero_valid:
+lemma rb_incr_tail_zero_valid[simp]:
   "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_n 0 rb)"
   by(subst rb_incr_tail_0, auto simp:rb_valid_def)
   
 
-lemma rb_incr_head_one_valid_ptr:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid_ptr rb" 
-  shows "rb_valid_ptr (rb_incr_head_n 1 rb)"
-  apply(subst rb_incr_head_1)
-  using valid notfull rb_incr_head_valid_ptr by blast 
+lemma rb_incr_head_one_valid_ptr[simp]:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_incr_head_n 1 rb)"
+  by(subst rb_incr_head_1, auto)
 
-lemma rb_incr_head_one_valid:
-assumes notfull: "\<not>rb_full rb"  and  valid: "rb_valid rb" 
-    and nextvalid: "(ring rb) (head rb) \<noteq> None"
-shows "rb_valid (rb_incr_head_n 1 rb)"
-  apply(subst rb_incr_head_1)
-  using valid  using  nextvalid notfull rb_incr_head_valid rb_valid_def by blast
+lemma rb_incr_head_one_valid[simp]:
+  "\<not>rb_full rb \<Longrightarrow> rb_valid rb \<Longrightarrow> (ring rb) (head rb) \<noteq> None \<Longrightarrow> 
+    rb_valid (rb_incr_head_n 1 rb)"
+  by(subst rb_incr_head_1, simp add: rb_incr_head_valid)
 
-lemma rb_incr_tail_one_valid_ptr:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid_ptr rb" 
-shows "rb_valid_ptr (rb_incr_tail_n 1 rb)"
-  apply(subst rb_incr_tail_1)
-  using notempty valid rb_incr_tail_valid_ptr by auto
 
-lemma rb_incr_tail_one_valid:
-assumes notempty: "\<not>rb_empty rb"  and  valid: "rb_valid rb" 
-shows "rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_n 1 rb)"
-  apply(subst rb_incr_tail_1)
-  using notempty valid rb_incr_tail_valid  by(auto)
+lemma rb_incr_tail_one_valid_ptr[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_incr_tail_n 1 rb)"
+  by(subst rb_incr_tail_1, auto)
+
+lemma rb_incr_tail_one_valid[simp]:
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_valid (rb_incr_tail_n 1 rb)"
+  by(subst rb_incr_tail_1, auto)
 
 
 text \<open>
@@ -1178,19 +1103,19 @@ text \<open>
 
 lemma rb_incr_tail_0_preserves_empty:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> rb_empty (rb_incr_tail_n 0 rb)"
-  by (simp add: rb_incr_tail_0)
+  by(simp)
 
 lemma rb_incr_tail_0_preserves_full:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> rb_full (rb_incr_tail_n 0 rb)" 
-  by (simp add: rb_incr_tail_0)
+  by(simp)
 
 lemma rb_incr_head_0_preserves_empty:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> rb_empty (rb_incr_head_n 0 rb)" 
-  by (simp add: rb_incr_head_0)
+  by(simp)
 
 lemma rb_incr_head_0_preserves_full:
   "rb_valid_ptr rb \<Longrightarrow> rb_full rb \<longleftrightarrow> rb_full (rb_incr_head_n 0 rb)" 
-  by (simp add: rb_incr_head_0)
+  by(simp)
 
 
 text \<open>
@@ -1198,20 +1123,20 @@ text \<open>
   or just the tail or head pointers.
 \<close>
 
-lemma rb_incr_head_n_delta_0:
+lemma rb_incr_head_n_delta_0[simp]:
   "rb_incr_head_n_delta 0 rb = []"
   by(auto simp:rb_incr_head_n_delta_def)
 
-lemma rb_incr_tail_n_delta_0:
+lemma rb_incr_tail_n_delta_0[simp]:
   "rb_incr_tail_n_delta 0 rb = []"
   by(auto simp:rb_incr_tail_n_delta_def)
 
 
-lemma rb_incr_head_n_delta_1:
+lemma rb_incr_head_n_delta_1[simp]:
   "rb_valid_ptr rb \<Longrightarrow> \<not>rb_full rb \<Longrightarrow> rb_incr_head_n_delta 1 rb = [head rb]"
   unfolding rb_incr_head_n_delta_def rb_invalid_entries_def rb_valid_ptr_def by simp
 
-lemma rb_incr_tail_n_delta_1:
+lemma rb_incr_tail_n_delta_1[simp]:
   "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow> rb_incr_tail_n_delta 1 rb = [tail rb]"
   unfolding rb_incr_tail_n_delta_def rb_valid_entries_def rb_valid_ptr_def rb_empty_def
   by simp
@@ -1225,15 +1150,14 @@ lemma rb_incr_head_n_delta_valid_1:
 lemma rb_incr_head_n_delta_invalid_1:
  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_full rb \<Longrightarrow>
   rb_incr_head_n_delta 1 rb @ rb_invalid_entries (rb_incr_head_n 1 rb) = rb_invalid_entries rb"
-  by (metis append_Cons append_Nil list.collapse rb_incr_head_1 rb_incr_head_invalid_entries_tail
-            rb_incr_head_n_delta_1 rb_invalid_entries_head2 rb_invalid_entries_never_empty_list)
+  by (metis append_take_drop_id rb_incr_head_1 rb_incr_head_invalid_entries_drop 
+            rb_incr_head_n_delta_def)
 
 lemma rb_incr_tail_n_delta_valid_1:
  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow>
   rb_incr_tail_n_delta 1 rb @ rb_valid_entries (rb_incr_tail_n 1 rb) = rb_valid_entries rb"
-  by (metis append_Cons append_Nil list.exhaust_sel rb_incr_tail_1 rb_incr_tail_n_delta_1 
-            rb_incr_tail_valid_entries_tail rb_valid_entries_empty_list2 
-            rb_valid_entries_tail_first1)
+  by (metis append_take_drop_id rb_incr_tail_1 rb_incr_tail_n_delta_def 
+            rb_incr_tail_valid_entries_drop)
 
 lemma rb_incr_tail_n_delta_invalid_1:
  "rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty rb \<Longrightarrow>
@@ -1274,7 +1198,7 @@ subsubsection \<open>Increments by N > 1\<close>
 
 text \<open>
   If we can increment it (N+1) times, then it also goes for N times, of in fact any
-  n < N.
+  n < N. We show this for bumping the head and tail pointers. 
 \<close>
 
 lemma rb_can_incr_tail_n_suc:
@@ -1302,23 +1226,21 @@ text \<open>
 
 lemma rb_can_incr_tail_n_large:
   "rb_valid_ptr rb \<Longrightarrow> n \<ge> size rb \<Longrightarrow> \<not> rb_can_incr_tail_n n rb"
-  unfolding rb_can_incr_tail_n_def
-  using rb_valid_entries_less_size by fastforce
+  unfolding rb_can_incr_tail_n_def  by (meson leD le_trans rb_valid_entries_size_max)
 
 lemma rb_can_incr_head_n_large:
   "rb_valid_ptr rb \<Longrightarrow> n \<ge> size rb \<Longrightarrow> \<not> rb_can_incr_head_n n rb"
-  unfolding rb_can_incr_head_n_def
-  using rb_invalid_entries_less_size by fastforce
+  unfolding rb_can_incr_head_n_def by (simp add: dual_order.trans leD)
 
 lemma rb_can_incr_tail_n_exceeds:
   "rb_valid_ptr rb \<Longrightarrow> n > rb_can_incr_tail_n_max rb \<longleftrightarrow> \<not> rb_can_incr_tail_n n rb"
   unfolding rb_can_incr_tail_n_def rb_can_incr_tail_n_max_def
-  using rb_valid_entries_less_size by fastforce
+  by linarith
 
 lemma rb_can_incr_head_n_exceeds:
   "rb_valid_ptr rb \<Longrightarrow> n > rb_can_incr_head_n_max rb \<longleftrightarrow> \<not> rb_can_incr_head_n n rb"
   unfolding rb_can_incr_head_n_def rb_can_incr_head_n_max_def
-  by (metis One_nat_def Suc_pred not_less_eq rb_invalid_entries_gt_zero)
+  by (metis One_nat_def Suc_pred not_less_eq rb_invalid_entries_size_min)
   
 
 text \<open>
@@ -1329,39 +1251,38 @@ text \<open>
 lemma rb_can_incr_tail_n_lt_max:
   "n \<le> rb_can_incr_tail_n_max rb \<longleftrightarrow> rb_can_incr_tail_n n rb"
   unfolding rb_can_incr_tail_n_def rb_can_incr_tail_n_max_def
-  using rb_valid_entries_less_size by fastforce
+  by blast
 
 lemma rb_can_incr_head_n_lt_max:
   "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_head_n_max rb \<longleftrightarrow> rb_can_incr_head_n n rb"
   unfolding rb_can_incr_head_n_def rb_can_incr_head_n_max_def
-  using order_trans rb_invalid_entries_gt_zero by fastforce
+  using not_less_eq_eq rb_invalid_entries_size_min by fastforce
 
-lemma rb_can_incr_tail_max_implies_can_incr: 
+lemma rb_can_incr_tail_max_implies_can_incr[simp]: 
   "n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow> rb_can_incr_tail_n n rb"
   by (simp add: rb_can_incr_tail_n_lt_max)
 
-lemma rb_can_incr_head_max_implies_can_incr: 
-  assumes "rb_valid_ptr rb"
-  shows"n \<le> rb_can_incr_head_n_max rb \<Longrightarrow> rb_can_incr_head_n n rb"
-  by (simp add: assms rb_can_incr_head_n_lt_max)
-  
+lemma rb_can_incr_head_max_implies_can_incr[simp]: 
+  "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_head_n_max rb \<Longrightarrow> rb_can_incr_head_n n rb"
+  by (simp add: rb_can_incr_head_n_lt_max)
+
+
+paragraph \<open>Interaction with Empty/Full \<close>
+
+
 text \<open>
   If we increment the tail or head pointer to the maximum possible, the resulting
   state is either empty or full.
 \<close>
 
-lemma rb_incr_tail_n_max_empty:
-  assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-  shows "rb_empty (rb_incr_tail_n N rb)"
-  using incrtail valid 
+lemma rb_incr_tail_n_max_empty[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> rb_empty (rb_incr_tail_n N rb)"
   unfolding rb_incr_tail_n_def rb_empty_def rb_can_incr_tail_n_max_def rb_valid_entries_def
   by(auto simp:rb_valid_ptr_def)
   
 
-lemma rb_incr_head_n_max_full:
-  assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
-  shows "rb_full (rb_incr_head_n N rb)"
-  using incrhead valid 
+lemma rb_incr_head_n_max_full[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> rb_full (rb_incr_head_n N rb)"
   unfolding rb_incr_head_n_def rb_full_def rb_can_incr_head_n_max_def rb_invalid_entries_def
   by(auto simp:rb_valid_ptr_def mod_Suc_eq)
 
@@ -1371,89 +1292,74 @@ text \<open>
   empty  or full.
 \<close>
 
-lemma rb_incr_tail_n_not_empty:
-assumes valid: "rb_valid_ptr rb"
-  shows "n < rb_can_incr_tail_n_max rb \<Longrightarrow>  \<not>rb_empty (rb_incr_tail_n n rb)"
-  using valid 
+lemma rb_incr_tail_n_not_empty[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> n < rb_can_incr_tail_n_max rb \<Longrightarrow> \<not>rb_empty (rb_incr_tail_n n rb)"
   unfolding rb_can_incr_tail_n_max_def rb_empty_def rb_incr_tail_n_def rb_valid_entries_def
   apply(cases " tail rb \<le> head rb")
-  apply (simp_all add: add.commute leD le_diff_conv rb_valid_ptr_def)
+   apply (simp_all add: add.commute leD le_diff_conv rb_valid_ptr_def)
   apply (metis leD less_diff_conv mod_less_eq_dividend)
   using less_diff_conv mod_if by auto
 
-lemma rb_incr_head_n_not_full:
-assumes valid: "rb_valid_ptr rb"
-  shows "n < rb_can_incr_head_n_max rb \<Longrightarrow>  \<not>rb_full (rb_incr_head_n n rb)"
-  using valid 
+lemma rb_incr_head_n_not_full[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> n < rb_can_incr_head_n_max rb \<Longrightarrow> \<not>rb_full (rb_incr_head_n n rb)" 
   unfolding rb_can_incr_head_n_max_def rb_full_def rb_incr_head_n_def rb_invalid_entries_def
-  apply(cases " tail rb \<le> head rb")
-  apply (simp_all add:  rb_valid_ptr_def)
+  apply(cases " tail rb \<le> head rb", simp_all add: rb_valid_ptr_def)
   using less_diff_conv mod_if apply(auto)
   using less_diff_conv mod_if apply(auto)
   done
+
+
 
 
 text \<open>
   For any increase in the tail or head pointer which is less or equal to the maximum, 
   the resulting ring buffer state remains valid. We do the proof by induction over n.
 \<close>
-lemma rb_incr_tail_n_valid_ptr:
-assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-shows "n \<le> N \<Longrightarrow> rb_valid_ptr (rb_incr_tail_n n rb)"
-  apply(induct n, simp add: rb_incr_tail_0 valid)
-  by (simp add: incrtail rb_incr_tail_n_ind rb_incr_tail_n_not_empty 
-                rb_incr_tail_valid_ptr valid)
+lemma rb_incr_tail_n_valid_ptr[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+      rb_valid_ptr (rb_incr_tail_n n rb)"
+  by(induct n, simp_all add:rb_incr_tail_n_ind)
 
-lemma rb_incr_head_n_valid_ptr:
-assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
-  shows "n \<le> N \<Longrightarrow> rb_valid_ptr (rb_incr_head_n n rb)"
-  apply(induct n, simp add: rb_incr_head_zero_valid_ptr valid)
-  by (simp add: incrhead rb_incr_head_n_ind rb_incr_head_n_not_full 
-                rb_incr_head_valid_ptr valid)
+lemma rb_incr_head_n_valid_ptr[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+     rb_valid_ptr (rb_incr_head_n n rb)"
+  by(induct n, simp_all add:rb_incr_head_n_ind)
 
 
-
-
+paragraph \<open>Increment N and Maximum Possible Increment \<close>
 
 text \<open>
   Incrementing the tail or head pointer by a fixed amount of 0 or 1 keeps the number
   of maximum values the same or it decrements by one.  
 \<close>
 
-lemma rb_incr_tail_n_max_0:
-assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-  shows "rb_can_incr_tail_n_max (rb_incr_tail_n 0 rb) = N"
-  by (simp add: incrtail rb_incr_tail_0 valid)
+lemma rb_incr_tail_n_max_0[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> 
+      rb_can_incr_tail_n_max (rb_incr_tail_n 0 rb) = N"
+  by(simp)
 
-lemma rb_incr_head_n_max_0:
-assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_head_n_max rb"
-  shows "rb_can_incr_head_n_max (rb_incr_head_n 0 rb) = N"
-  by (simp add: incrtail rb_incr_head_0 valid)
+lemma rb_incr_head_n_max_0[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow>
+      rb_can_incr_head_n_max (rb_incr_head_n 0 rb) = N"
+  by(simp)
 
 
-lemma rb_incr_tail_n_max_1:
-assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-    and ngeq0: "N > 0"
-  shows "rb_can_incr_tail_n_max (rb_incr_tail_n 1 rb) = N - 1"
-  apply(subst rb_incr_tail_1)
-  unfolding rb_can_incr_tail_n_max_def
-  apply(subst rb_incr_tail_valid_entries_length2)
-  using ngeq0 incrtail
-  apply (metis neq0_conv rb_can_incr_tail_n_max_def rb_valid_entries_empty_num valid)
-  apply(simp add:valid)
-  apply(simp add:incrtail rb_can_incr_tail_n_max_def)
-  done
+text \<open>
+  Likewise, if we increment the pointers by one, the maximum is decremeted by one.
+\<close>
 
-lemma rb_incr_head_n_max_1:
-assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
-    and ngeq0: "N > 0"
-  shows "rb_can_incr_head_n_max (rb_incr_head_n 1 rb) = N - 1"
-  apply(subst rb_incr_head_1)
-  unfolding rb_can_incr_head_n_max_def
-  apply(subst rb_incr_head_invalid_entries_length2)
-  using incrhead ngeq0 rb_can_incr_head_1 rb_can_incr_head_n_lt_max valid apply fastforce
-  using valid apply simp
-  using incrhead unfolding rb_can_incr_head_n_max_def by(auto)
+lemma rb_incr_tail_n_max_1[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> N > 0 \<Longrightarrow> 
+      rb_can_incr_tail_n_max (rb_incr_tail_n 1 rb) = N - 1"
+  by (metis length_tl rb_can_incr_max_not_empty rb_can_incr_tail_n_max_def 
+            rb_incr_tail_1 rb_incr_tail_valid_entries_tail)
+
+lemma rb_incr_head_n_max_1[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> N > 0 \<Longrightarrow>
+      rb_can_incr_head_n_max (rb_incr_head_n 1 rb) = N - 1"
+  by (metis rb_can_incr_head_n_max_def rb_can_incr_max_not_full 
+            rb_incr_head_1 rb_incr_head_invalid_entries_length2)
+
 
 text \<open>
   Incrementing the tail or head pointer by a variable amount n < N, reduces the 
@@ -1461,27 +1367,48 @@ text \<open>
 \<close>
 
 lemma rb_incr_tail_n_max_n:
-assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-  shows "n \<le> N \<Longrightarrow> rb_can_incr_tail_n_max (rb_incr_tail_n n rb) = N - n"
-  apply(induct n, simp add: incrtail rb_incr_tail_0 valid)
-  using valid incrtail
-  by (metis Suc_eq_plus1 Suc_leD diff_diff_left not_le_imp_less not_less_eq_eq 
-            rb_can_incr_tail_n_max_def rb_incr_tail_n_ind rb_incr_tail_n_not_empty 
-            rb_incr_tail_n_valid_ptr rb_incr_tail_valid_entries_length2)
-
-
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+      rb_can_incr_tail_n_max (rb_incr_tail_n n rb) = N - n"
+  apply(induct n, simp_all add:rb_incr_tail_n_ind )
+  by (metis Suc_eq_plus1 Suc_leD Suc_le_lessD diff_diff_add rb_can_incr_tail_n_max_def 
+            rb_incr_tail_n_not_empty rb_incr_tail_n_valid_ptr 
+            rb_incr_tail_valid_entries_length_alt)
+  
 lemma rb_incr_head_n_max_n:
-assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
-    and leq: "n \<le> N"
-  shows "n \<le> N \<Longrightarrow> rb_can_incr_head_n_max (rb_incr_head_n n rb) = N - n"
-  apply(induct n, simp add: incrhead rb_incr_head_0 valid)
-  by (metis (no_types, lifting) Suc_diff_le Suc_leD Suc_le_lessD diff_Suc_Suc 
-            diff_add_inverse incrhead plus_1_eq_Suc rb_incr_head_1 rb_incr_head_n_ind 
-            rb_incr_head_n_max_1 rb_incr_head_n_valid_ptr valid zero_less_diff)
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+      rb_can_incr_head_n_max (rb_incr_head_n n rb) = N - n"
+  by(induct n, simp_all add:rb_incr_head_n_ind rb_can_incr_head_n_max_def)
 
 
+text \<open>
+  Incrementing the tail by N increases the maximum possible head increases by N,
+  and vice versa.
+\<close>
+
+lemma rb_incr_tail_n_max_head:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+      rb_can_incr_head_n_max (rb_incr_tail_n n rb) = rb_can_incr_head_n_max rb + n" 
+  apply(induct n, simp_all add:rb_incr_tail_n_ind rb_can_incr_head_n_max_def)
+  by (metis Suc_leD Suc_pred rb_incr_tail_n_valid_ptr rb_invalid_entries_size_min)
+
+lemma rb_incr_tail_n_max_tail:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+      rb_can_incr_tail_n_max (rb_incr_tail_n n rb) = rb_can_incr_tail_n_max rb - n" 
+  by(induct n, simp_all add:rb_incr_tail_n_max_n)
+  
+lemma rb_incr_head_n_max_tail:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+    rb_can_incr_tail_n_max (rb_incr_head_n n rb) = rb_can_incr_tail_n_max rb + n"
+  by(induct n, simp_all add:rb_incr_head_n_ind rb_can_incr_tail_n_max_def)
+
+lemma rb_incr_head_n_max_head:
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+    rb_can_incr_head_n_max (rb_incr_head_n n rb) = rb_can_incr_head_n_max rb - n"
+  by(induct n, simp_all add:rb_incr_head_n_ind rb_can_incr_head_n_max_def)
+  
 
 
+paragraph \<open>Valid/Invalid Sets\<close>
 
 text \<open>
   Next we can talk about the effects on the set of valid and invalid entries when we 
@@ -1489,178 +1416,124 @@ text \<open>
 \<close>
 
 lemma rb_incr_tail_n_valid_drop:
-assumes valid: "rb_valid_ptr rb"  and  canincr: "N = rb_can_incr_tail_n_max rb"
-shows "n\<le> N \<Longrightarrow> rb_valid_entries (rb_incr_tail_n n rb) = drop n (rb_valid_entries rb)"
-  apply(induct n, simp add: rb_incr_tail_0 valid)
-  using valid canincr
-  by (simp add: drop_Suc rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_n_valid_ptr 
-                rb_incr_tail_valid_entries_tail tl_drop)
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> n\<le> N \<Longrightarrow> 
+      rb_valid_entries (rb_incr_tail_n n rb) = drop n (rb_valid_entries rb)"
+  apply(induct n, simp_all)
+  by (metis Suc_leD Suc_le_lessD drop_Suc rb_incr_tail_n_ind rb_incr_tail_n_not_empty 
+            rb_incr_tail_n_valid_ptr rb_incr_tail_valid_entries_tail tl_drop)
 
 
 lemma rb_incr_tail_n_invalid_drop:
-assumes valid: "rb_valid_ptr rb"  and  canincr: "N = rb_can_incr_tail_n_max rb"
-    and len: "l = length (rb_invalid_entries rb)"
-  shows  "n \<le> N \<Longrightarrow>  take (l) (rb_invalid_entries (rb_incr_tail_n n rb)) = (rb_invalid_entries rb)"
-  apply(induct n, simp add: len rb_incr_tail_0 rb_valid_implies_ptr_valid valid)
-  using valid canincr len  
-  apply(subst rb_incr_tail_n_ind)
-  apply(subst rb_incr_tail_invalid_entries)
-  using Suc_le_lessD rb_incr_tail_n_not_empty apply blast  
-  using Suc_leD rb_incr_tail_n_valid_ptr apply blast
-  using take_all by force
-
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> l = length (rb_invalid_entries rb) 
+  \<Longrightarrow> n \<le> N \<Longrightarrow> take (l) (rb_invalid_entries (rb_incr_tail_n n rb)) = (rb_invalid_entries rb)"
+  apply(induct n, simp_all add:rb_incr_tail_n_ind)
+  by (metis Suc_leD Suc_le_lessD append_Nil2 append_take_drop_id length_append length_upt 
+            list.size(3) not_add_less1 rb_incr_tail_invalid_entries rb_incr_tail_n_not_empty
+            rb_incr_tail_n_valid_ptr take0 take_append upt_rec)
 
 lemma rb_incr_head_n_valid_drop:
-assumes valid: "rb_valid_ptr rb"  and  canincr: "N = rb_can_incr_head_n_max rb"
-   and len : "l = length (rb_valid_entries rb)"   
- shows  "n \<le> N \<Longrightarrow> take (l) (rb_valid_entries (rb_incr_head_n n rb)) = (rb_valid_entries rb)"
-  apply(induct n, simp add: len rb_incr_head_0 valid)
-  using valid canincr len 
-  by (metis (no_types, lifting) Suc_eq_plus1 Suc_le_lessD less_Suc_eq not_less
-            rb_incr_head_n_ind rb_incr_head_n_not_full rb_incr_head_n_valid_ptr 
-            rb_incr_head_valid_entries_butlast rb_incr_head_valid_entries_length2 
-            take_all take_butlast)
+  "rb_valid_ptr rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> l = length (rb_valid_entries rb)
+  \<Longrightarrow> n \<le> N \<Longrightarrow> take (l) (rb_valid_entries (rb_incr_head_n n rb)) = (rb_valid_entries rb)"
+  apply(induct n, simp_all add:rb_incr_head_n_ind)
+  by (metis (no_types, lifting) Suc_leD Suc_le_lessD add_leD1 butlast_conv_take not_less
+                                rb_incr_head_n_not_full rb_incr_head_n_valid_ptr
+                                rb_incr_head_valid_entries_butlast
+                                rb_incr_head_valid_entries_length_1
+                                rb_incr_head_valid_entries_length_2 take_all take_butlast)
 
 lemma rb_incr_head_n_invalid_drop:
-assumes valid: "rb_valid_ptr rb"  and  canincr: "N = rb_can_incr_head_n_max rb"
-  shows "n \<le> N \<Longrightarrow> rb_invalid_entries (rb_incr_head_n n rb) = drop n (rb_invalid_entries rb)"
-  apply(induct n, simp add:rb_incr_head_0 rb_valid_implies_ptr_valid valid)  
-  using valid canincr
-  by (simp add: drop_Suc rb_incr_head_invalid_entries_tail rb_incr_head_n_ind 
-                rb_incr_head_n_not_full rb_incr_head_n_valid_ptr rb_valid_implies_ptr_valid tl_drop)
+  "rb_valid_ptr rb \<Longrightarrow>  N = rb_can_incr_head_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+      rb_invalid_entries (rb_incr_head_n n rb) = drop n (rb_invalid_entries rb)"
+  apply(induct n, simp_all)
+  by (simp add: drop_Suc rb_incr_head_invalid_entries_tail rb_incr_head_n_ind tl_drop)
 
 
-  
-lemma rb_incr_head_n_delta_valid_entries:
- "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_head_n_max rb \<Longrightarrow>
-  rb_valid_entries (rb_incr_head_n n rb) = rb_valid_entries rb @ rb_incr_head_n_delta n rb"
-  apply(induct n, simp add: rb_incr_head_0 rb_incr_head_n_delta_0)
-  apply(subst rb_incr_head_n_ind)
-  apply(subst rb_incr_head_valid_entries)
-  apply (simp add: rb_incr_head_n_not_full)
-  apply (simp add: rb_incr_head_n_valid_ptr)
-  unfolding rb_incr_head_n_delta_def
-  by (metis Suc_leD append_eq_append_conv2 length_append less_imp_not_less not_less 
-            rb_incr_head_n_invalid_drop rb_incr_head_n_size rb_incr_head_n_valid_ptr 
-            rb_invalid_entries_head2 rb_valid_entries_less_size rb_valid_invalid_entries_lengths
-            take_all take_hd_drop)
+paragraph \<open>Reasoning about Deltas\<close>
 
-lemma rb_incr_head_n_delta_invalid_entries:
- "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_head_n_max rb \<Longrightarrow>
-  rb_incr_head_n_delta n rb @ rb_invalid_entries (rb_incr_head_n n rb) = rb_invalid_entries rb"
-  apply(induct n, simp add: rb_incr_head_0 rb_incr_head_n_delta_0)
-  unfolding rb_incr_head_n_delta_def
-  by (metis Suc_leD Suc_le_lessD append_take_drop_id drop_Suc rb_incr_head_invalid_entries_tail 
-            rb_incr_head_n_ind rb_incr_head_n_not_full rb_incr_head_n_valid_ptr 
-            same_append_eq tl_drop)
+text \<open>
+  Next we show how increments of the head and tail pointers influence the valid and 
+  invalid sets of the ring buffer. We first show that the delta sets are in fact a 
+  subset of the valid and invalid sets.
+\<close>
 
-lemma rb_incr_tail_n_delta_valid_entries:
- "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
-  rb_incr_tail_n_delta n rb @ rb_valid_entries (rb_incr_tail_n n rb) = rb_valid_entries rb"
-  apply(induct n, simp add: rb_incr_tail_0 rb_incr_tail_n_delta_0)
-  unfolding rb_incr_tail_n_delta_def
-  by (simp add: rb_incr_tail_n_valid_drop)
-
-lemma rb_incr_tail_n_delta_invalid_entries:
- "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
-  rb_invalid_entries (rb_incr_tail_n n rb) = rb_invalid_entries rb @ rb_incr_tail_n_delta n rb"
-  apply(induct n, simp add: rb_incr_tail_0 rb_incr_tail_n_delta_0)
-  unfolding rb_incr_tail_n_delta_def
-  by (metis (no_types, hide_lams)  Suc_leD Suc_le_lessD add.commute 
-      append_eq_append_conv2 plus_1_eq_Suc rb_can_incr_tail_n_max_def
-      rb_incr_tail_1 rb_incr_tail_n_delta_def rb_incr_tail_n_delta_invalid_1 
-      rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_n_valid_drop 
-      rb_incr_tail_n_valid_ptr take_add)
 
 lemma rb_incr_tail_n_delta_subset:
   "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
-  set (rb_incr_tail_n_delta n rb) \<subseteq> set (rb_valid_entries rb)"
+      set (rb_incr_tail_n_delta n rb) \<subseteq> set (rb_valid_entries rb)"
   unfolding rb_incr_tail_n_delta_def
   by (simp add: set_take_subset)  
 
 lemma rb_incr_tail_n_delta_intersect:
   "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
-  set (rb_incr_tail_n_delta n rb) \<inter> set (rb_invalid_entries rb) = {}"
+      set (rb_incr_tail_n_delta n rb) \<inter> set (rb_invalid_entries rb) = {}"
   unfolding rb_incr_tail_n_delta_def
   by (meson Int_emptyI in_set_takeD rb_inalid_entries_notin_valid)
 
-lemma rb_incr_head_n_delta_intersect:
-  "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
-  set (rb_incr_head_n_delta n rb) \<inter> set (rb_valid_entries rb) = {}"
-  unfolding rb_incr_head_n_delta_def
-  by (meson Int_emptyI in_set_takeD rb_inalid_entries_notin_valid)
-  
 lemma rb_incr_head_n_delta_subset:
   "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
-  set (rb_incr_head_n_delta n rb) \<subseteq> set (rb_invalid_entries rb)"
+      set (rb_incr_head_n_delta n rb) \<subseteq> set (rb_invalid_entries rb)"
   unfolding rb_incr_head_n_delta_def
   by (meson set_take_subset)
 
+lemma rb_incr_head_n_delta_intersect:
+  "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
+      set (rb_incr_head_n_delta n rb) \<inter> set (rb_valid_entries rb) = {}"
+  unfolding rb_incr_head_n_delta_def
+  by (meson Int_emptyI in_set_takeD rb_inalid_entries_notin_valid)
+
+
 text \<open>
-  Incrementing the tail by N increases the maximum possible head increases by N,
-  and vice versa
+  We can now express how the valid and invalid sets change using the delta sets.
 \<close>
 
-
-lemma rb_incr_tail_n_max_head:
-assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-  shows "n \<le> N \<Longrightarrow> rb_can_incr_head_n_max (rb_incr_tail_n n rb) = rb_can_incr_head_n_max rb + n" 
-  apply(induct n, simp add: rb_incr_tail_0 valid)
-  using valid incrtail unfolding rb_can_incr_head_n_max_def
-  by (metis Nat.add_diff_assoc2 Suc_eq_plus1 Suc_leD Suc_le_lessD Suc_pred add_Suc_right 
-            le_add2 rb_incr_tail_invalid_entries_length rb_incr_tail_n_ind 
-            rb_incr_tail_n_not_empty rb_incr_tail_n_valid_ptr rb_invalid_entries_gt_zero)
-
-lemma rb_incr_tail_n_max_tail:
-assumes valid: "rb_valid_ptr rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-  shows "n \<le> N \<Longrightarrow> rb_can_incr_tail_n_max (rb_incr_tail_n n rb) = rb_can_incr_tail_n_max rb - n" 
-  apply(induct n, simp add: rb_incr_tail_0 valid)
-  using valid incrtail unfolding rb_can_incr_tail_n_max_def
-  by (simp add: incrtail rb_incr_tail_n_valid_drop)
   
-lemma rb_incr_head_n_max_tail:
-assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
-  shows "n \<le> N \<Longrightarrow> rb_can_incr_tail_n_max (rb_incr_head_n n rb) = rb_can_incr_tail_n_max rb + n"
-  apply(induct n, simp add: rb_incr_head_0 valid)
-  using valid incrhead unfolding rb_can_incr_head_n_max_def
-  by (simp add: rb_can_incr_head_n_max_def rb_can_incr_tail_n_max_def rb_incr_head_n_ind 
-                rb_incr_head_n_not_full rb_incr_head_n_valid_ptr 
-                rb_incr_head_valid_entries_length2)
+lemma rb_incr_head_n_delta_valid_entries:
+ "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_head_n_max rb \<Longrightarrow>
+  rb_valid_entries (rb_incr_head_n n rb) = rb_valid_entries rb @ rb_incr_head_n_delta n rb"
+  apply(induct n, simp_all add:rb_incr_head_n_ind)
+  by (metis Suc_diff_1 Suc_leD Suc_le_eq append_assoc length_tl less_SucI 
+            rb_can_incr_head_n_max_def rb_incr_head_n_delta_def 
+            rb_incr_head_n_invalid_drop rb_incr_head_n_not_full rb_incr_head_n_valid_ptr 
+            rb_incr_head_valid_entries rb_invalid_entries_head_element 
+            rb_invalid_entries_size_min take_hd_drop)
 
-lemma rb_incr_head_n_max_head:
-assumes valid: "rb_valid_ptr rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
-  shows "n \<le> N \<Longrightarrow> rb_can_incr_head_n_max (rb_incr_head_n n rb) = rb_can_incr_head_n_max rb - n"
-  apply(induct n, simp add: rb_incr_head_0 valid)
-  using valid incrhead unfolding rb_can_incr_head_n_max_def
-  by (metis diff_Suc_eq_diff_pred  length_drop rb_can_incr_head_n_max_def 
-            rb_incr_head_n_max_n)
+lemma rb_incr_head_n_delta_invalid_entries:
+ "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_head_n_max rb \<Longrightarrow>
+  rb_incr_head_n_delta n rb @ rb_invalid_entries (rb_incr_head_n n rb) = rb_invalid_entries rb"
+  by(induct n, simp_all add:rb_incr_head_n_delta_def rb_incr_head_n_invalid_drop)
 
- 
+lemma rb_incr_tail_n_delta_valid_entries:
+ "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
+  rb_incr_tail_n_delta n rb @ rb_valid_entries (rb_incr_tail_n n rb) = rb_valid_entries rb"
+  by(induct n, simp_all add:rb_incr_tail_n_delta_def rb_incr_tail_n_valid_drop)
+
+lemma rb_incr_tail_n_delta_invalid_entries:
+ "rb_valid_ptr rb \<Longrightarrow> n \<le> rb_can_incr_tail_n_max rb \<Longrightarrow>
+  rb_invalid_entries (rb_incr_tail_n n rb) = rb_invalid_entries rb @ rb_incr_tail_n_delta n rb"
+  apply(induct n, simp_all add:rb_incr_tail_n_ind)
+  by (metis Suc_eq_plus1 Suc_leD Suc_le_lessD append_assoc rb_incr_tail_1 rb_incr_tail_n_delta_def 
+            rb_incr_tail_n_delta_invalid_1 rb_incr_tail_n_not_empty rb_incr_tail_n_valid_drop 
+            rb_incr_tail_n_valid_ptr take_add)
+
+
+paragraph \<open>Validity is Preserved\<close>
 
 text \<open>
   Finally, we can show that increasing the head or tail pointer several times 
 \<close>
 
-
 lemma rb_incr_tail_n_valid:
-assumes valid: "rb_valid rb"  and  incrtail: "N = rb_can_incr_tail_n_max rb"
-shows "n \<le> N \<Longrightarrow> rb_valid (rb_incr_tail_n n rb)"
-  apply(induct n, simp add: rb_incr_tail_zero_valid_ptr valid)
-  by (simp add: incrtail rb_incr_tail_n_ind rb_incr_tail_n_not_empty rb_incr_tail_valid 
-                rb_valid_implies_ptr_valid valid)
+  "rb_valid rb \<Longrightarrow> N = rb_can_incr_tail_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+      rb_valid (rb_incr_tail_n n rb)"
+  by(induct n, simp_all add:rb_incr_tail_n_ind)
 
 lemma rb_incr_head_n_valid:
-assumes valid: "rb_valid rb"  and  incrhead: "N = rb_can_incr_head_n_max rb"
- shows "n \<le> N \<Longrightarrow> \<forall>i \<in> set (rb_incr_head_n_delta n rb). ring rb (i) = Some y \<Longrightarrow> rb_valid (rb_incr_head_n n rb)"
-  apply(induct n, simp add: rb_incr_head_zero_valid valid)
-  using valid incrhead unfolding rb_valid_def 
-  apply(auto simp:incrhead rb_incr_head_n_valid_ptr rb_valid_implies_ptr_valid valid)
-  apply(subst rb_incr_head_n_ind)
-  by (metis Un_iff rb_incr_head_n_delta_valid_entries rb_incr_head_n_ind rb_incr_head_n_ring 
-            rb_valid_implies_ptr_valid set_append valid)
-
-
-
+  "rb_valid rb \<Longrightarrow> N = rb_can_incr_head_n_max rb \<Longrightarrow> n \<le> N \<Longrightarrow> 
+    \<forall>i \<in> set (rb_incr_head_n_delta n rb). ring rb (i) = Some y \<Longrightarrow> 
+    rb_valid (rb_incr_head_n n rb)"
+  apply(induct n, simp_all add: rb_incr_head_n_ind)
+  unfolding rb_valid_def
+  by (simp, metis Un_iff rb_incr_head_n_delta_valid_entries rb_incr_head_n_ind set_append)
 
 
 
@@ -1700,59 +1573,52 @@ text \<open>
   the ring buffer, as the head / tail pointers are not changed.
 \<close>
 
-lemma rb_write_perserves_valid_entries:
-  "rb_valid_entries rb = rb_valid_entries (rb_write_head b rb)"
+lemma rb_write_perserves_valid_entries[simp]:
+  "rb_valid_entries (rb_write_head b rb) = rb_valid_entries rb"
   unfolding rb_write_head_def rb_valid_entries_def by(auto)
 
-lemma rb_write_preserves_valid:
+lemma rb_write_perserves_invalid_entries[simp]:
+  "rb_invalid_entries (rb_write_head b rb) = rb_invalid_entries rb"
+  unfolding rb_write_head_def rb_invalid_entries_def by(auto)
+
+lemma rb_write_preserves_valid_ptr[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_write_head b rb)"
+  unfolding rb_valid_ptr_def rb_write_head_def by(auto)
+
+lemma rb_write_preserves_valid[simp]:
   "rb_valid rb \<Longrightarrow> rb_valid (rb_write_head b rb)"
-  apply(auto simp: rb_valid_def rb_write_head_def rb_valid_ptr_def)
-  by (metis rb_write_head_def rb_write_perserves_valid_entries)
+  unfolding rb_valid_def by(simp, simp add:rb_write_head_def)
 
 lemma rb_write_head_valid:
   "rb_valid rb \<longleftrightarrow> rb_valid (rb_write_head b rb)"
-  apply(auto simp:rb_write_preserves_valid)
-  unfolding rb_valid_def
-  apply(simp only: rb_write_perserves_valid_entries[symmetric])
-  apply(auto)
-  apply(simp add:rb_valid_ptr_def rb_write_head_def rb_valid_def)
-  unfolding rb_write_head_def
-  by (metis fun_upd_apply rb_valid_entries_head select_convs(1) surjective update_convs(1))
+  apply(rule iffI, simp, simp only: rb_valid_def, auto)
+  apply (simp add: rb_valid_ptr_def rb_write_head_def)
+  by (metis fun_upd_apply rb_valid_entries_head_not_member rb_write_head_def 
+              select_convs(1) surjective update_convs(1))
 
+text \<open>
+  Writing the head means that the entry at head is not none.
+\<close>
 
-lemma rb_write_head_not_none:
+lemma rb_write_head_not_none[simp]:
   "\<not>rb_head_none (rb_write_head b rb)"
   unfolding rb_head_none_def rb_write_head_def by simp
 
-lemma rb_write_head_same:
+
+text \<open>
+  Reading the head after it is written yields the same element, and likewise writing
+  the element thats already at the head again, yields the same ring buffer. Note, 
+  due to the definitions, we require that the head is not none.
+\<close>
+
+lemma rb_write_head_read_written[simp]:
+  "rb_read_head (rb_write_head b rb) = b"
+  by (simp add: rb_read_head_def rb_write_head_def)
+
+lemma rb_write_head_same[simp]:
  "\<not>rb_head_none rb \<Longrightarrow> b = rb_read_head rb \<Longrightarrow> rb_write_head (rb_read_head rb) rb = rb"
   by (simp add: rb_head_none_def rb_read_head_def rb_write_head_def)
 
-lemma rb_write_head_element_not_none:
-assumes rw: "rb' = rb_write_head b rb"
- shows " (ring rb') (head rb') \<noteq> None"
-  using rw unfolding rb_write_head_def by(auto)
-
-lemma rb_write_head_element:
-assumes rw: "rb' = rb_write_head b rb"
- shows " (ring rb') (head rb') = Some b"
-  using rw unfolding rb_write_head_def by(auto)
-
-lemma rb_write_head_element_notin_valid:
- shows "head rb \<notin> (set (rb_valid_entries rb))"
-  unfolding rb_write_head_def
-  by (simp add: rb_valid_entries_head)  
-
-lemma rb_write_head_element_notin_valid2:
-assumes rw: "rb' = rb_write_head b rb \<and> b \<notin> set (map (the o ring rb) (rb_valid_entries rb))"
- shows "b \<notin> set (map (the o ring rb) (rb_valid_entries rb))"
-  using rw unfolding rb_write_head_def
-  by blast
-
-lemma rb_write_head_element_read:
-assumes rw: "rb' = rb_write_head b rb"
- shows " the ((ring rb') (head rb')) = b"
-  using rw unfolding rb_write_head_def by(auto)
 
  
 (* ==================================================================================== *)
@@ -1806,78 +1672,48 @@ lemma rb_enq_equiv_fun:
 
 
 text \<open>
-  The enqueue function preserves the validity predicate of the ring buffer. 
-\<close>
-
-lemma rb_enq_remains_valid:
-assumes  valid: "rb_valid rb"  and  notfull: "rb_can_enq rb"
-  shows "rb_valid (rb_enq b rb)"
-  using valid rb_write_preserves_valid notfull rb_incr_head_valid rb_write_head_element_not_none
-  unfolding rb_can_enq_def rb_enq_def
-  by (metis ext_inject rb_full_def rb_write_head_def surjective update_convs(1))
-  
-
-text \<open>
-  We can now show that the enqueue operation leaves the buffer in the old head 
-  element. 
-\<close>
-
-lemma rb_enq_buf_ring :
-  "rb' = rb_enq b rb \<Longrightarrow> (ring (rb'))((head rb)) = Some b"
-  by(simp add:rb_enq_equiv rb_enq_alt_def)
-
-lemma rb_enq_buf_ring2 :
-  "rb' = rb_enq b rb \<Longrightarrow> the ((ring (rb'))(head rb)) = b"
-  by(simp add:rb_enq_equiv rb_enq_alt_def)
-
-
-(* 
-lemma rb_enq_buf:
- "rb' = rb_enq b rb \<Longrightarrow> rb_read_tail (head rb) rb' = Some b"
-  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_tail_def)
-
-lemma rb_enq_buf2:
- "rb' = rb_enq b rb \<Longrightarrow> the (rb_read_tail (head rb) rb') = b"
-  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_tail_def)
-
-lemma rb_enq_buf3:
-  "rb_read (head rb) (rb_enq b rb) = Some b"
-  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
-
-lemma rb_enq_buf4:
-  "the (rb_read (head rb) (rb_enq b rb)) = b"
-  by (simp add: rb_enq_alt_def rb_enq_equiv rb_read_def)
-
-*)
-
-text \<open>
   Next we can talk about the effects on the set of valid entries in the ring buffer, 
   when we enqueue a new element to the ring buffer.
 \<close>
 
 lemma rb_enq_valid_entries_incr_head:
-assumes notfull: "rb_can_enq rb" and valid: "rb_valid_ptr rb"  
-shows "rb_valid_entries (rb_enq b rb) =  rb_valid_entries (rb_incr_head rb)"
-  apply(subst rb_enq_equiv_fun)
-  apply(subst rb_enq_fun_def)
-  unfolding rb_write_head_def using notfull valid rb_write_perserves_valid_entries 
-  by (simp add: rb_incr_head_def rb_valid_entries_def rb_enq_equiv_fun)
-
+  "rb_can_enq rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+    rb_valid_entries (rb_enq b rb) = rb_valid_entries (rb_incr_head rb)"
+  by(simp add:rb_enq_equiv rb_enq_alt_def rb_incr_head_def rb_valid_entries_def)
 
 lemma rb_enq_valid_entries :
-assumes notfull: "rb_can_enq rb" and valid: "rb_valid_ptr rb"   
-shows "rb_valid_entries (rb_enq b rb) = rb_valid_entries (rb) @ [(head rb)]"
-  using notfull valid rb_write_perserves_valid_entries rb_enq_valid_entries_incr_head
-  by (simp add: rb_enq_valid_entries_incr_head rb_can_enq_def rb_incr_head_valid_entries)
+  "rb_can_enq rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow>
+    rb_valid_entries (rb_enq b rb) = rb_valid_entries rb @ [head rb]"
+  using rb_can_enq_def rb_enq_valid_entries_incr_head rb_incr_head_valid_entries by fastforce
+
+lemma rb_enq_ring_write_head:
+  "ring (rb_enq b rb) = ring (rb_write_head b rb)"
+  unfolding rb_enq_def rb_write_head_def rb_incr_head_def by auto
+
 
 text \<open>
   The enqueue operation preserves the already existing entries in the ring.
 \<close>
 
 lemma rb_enq_preserves_valid_entries:
-  assumes notfull: "rb_can_enq rb"  and valid: "rb_valid rb"   
-  shows "\<forall>i \<in> set(rb_valid_entries rb). (ring (rb_enq b rb)) i = (ring rb) i"
-  by (simp add: rb_enq_def rb_incr_head_ring rb_valid_entries_head rb_write_head_def)
+  "rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow>
+      \<forall>i \<in> set(rb_valid_entries rb). (ring (rb_enq b rb)) i = (ring rb) i"
+  by (simp add: rb_enq_def rb_write_head_def)
+
+text \<open>
+  The enqueue function preserves the validity predicate of the ring buffer. 
+\<close>
+
+lemma rb_enq_remains_valid_ptr[simp]:
+  "rb_valid_ptr rb \<Longrightarrow> rb_can_enq rb \<Longrightarrow> rb_valid_ptr (rb_enq b rb)"
+  by (simp add: rb_enq_def rb_can_enq_def rb_full_invalid_entries_equiv_length)
+
+lemma rb_enq_remains_valid[simp]:
+  "rb_valid rb \<Longrightarrow> rb_can_enq rb \<Longrightarrow> rb_valid (rb_enq b rb)"
+  apply(simp add:rb_valid_def rb_enq_ring_write_head)
+  by(subst rb_enq_valid_entries, simp_all add:rb_write_head_def)
+
+
 
 
 (* ==================================================================================== *)
@@ -1924,15 +1760,11 @@ text \<open>
 \<close>
 
 lemma rb_deq_remains_valid:
-  assumes valid: "rb_valid rb" and notempty: "rb_can_deq rb"
-  shows "rb_valid (snd (rb_deq rb))"
-  unfolding rb_deq_def using rb_incr_tail_valid valid notempty rb_can_deq_def
-  by(auto)
+  "rb_valid rb \<Longrightarrow> rb_can_deq rb \<Longrightarrow> rb_valid (snd (rb_deq rb))"
+  unfolding rb_deq_def using rb_incr_tail_valid rb_can_deq_def by(auto)
   
-
-lemma rb_deq_buf:
-  assumes valid: "rb_valid rb" and notempty: "rb_can_deq rb"
-  shows "fst (rb_deq rb) \<longleftrightarrow> rb_read_tail rb"
+lemma rb_deq_buf[simp]:
+  "rb_valid rb \<Longrightarrow> rb_can_deq rb \<Longrightarrow> fst (rb_deq rb) = rb_read_tail rb"
   by(simp add: rb_deq_def)
 
 lemma rb_read_tail_write_element[simp]:
@@ -1954,16 +1786,34 @@ lemma rb_read_head_enq[simp]:
 subsection \<open>Other Lemmas\<close>
 (* ==================================================================================== *)
 
-lemma rb_enq_can_deq:
-  "rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_can_deq (rb_enq b rb)"
-  using rb_can_deq_def rb_enq_valid_entries rb_valid_entries_empty_list 
-        rb_valid_implies_ptr_valid by fastforce
+lemma rb_enq_can_deq_incr_head:
+  "rb_can_deq (rb_enq b rb) = rb_can_deq (rb_incr_head rb)"
+  unfolding rb_can_deq_def rb_enq_def rb_incr_head_def rb_write_head_def rb_empty_def
+  by(auto)
 
-lemma rb_deq_can_enq:
+lemma rb_enq_can_enq_incr_head:
+  "rb_can_enq (rb_enq b rb) = rb_can_enq (rb_incr_head rb)"
+  unfolding rb_can_enq_def rb_enq_def rb_incr_head_def rb_write_head_def rb_full_def
+  by(auto)
+
+lemma rb_incr_head_not_empty: 
+  "\<not>rb_full rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> \<not>rb_empty (rb_incr_head rb)"
+  unfolding rb_full_def rb_valid_ptr_def rb_empty_def rb_incr_head_def
+  by auto
+
+lemma rb_incr_tail_not_full: 
+  "\<not>rb_empty rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> \<not>rb_full (rb_incr_tail rb)"
+  unfolding rb_full_def rb_valid_ptr_def rb_empty_def rb_incr_tail_def
+  using mod_if by auto
+
+lemma rb_enq_can_deq[simp]:
+  "rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_can_deq (rb_enq b rb)"
+  unfolding rb_enq_can_deq_incr_head 
+  by (simp add: rb_can_deq_def rb_can_enq_def rb_incr_head_not_empty)
+
+lemma rb_deq_can_enq[simp]:
   "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> rb_can_enq (snd (rb_deq rb))"
-  by (simp add: rb_can_deq_def rb_can_enq_def rb_deq_def rb_incr_tail_invalid_entries 
-                rb_incr_tail_valid_ptr rb_invalid_entries_full 
-                rb_invalid_entries_never_empty_list rb_valid_implies_ptr_valid)
+  by (simp add: rb_can_deq_def rb_can_enq_def rb_deq_def rb_incr_tail_not_full)
 
 lemma rb_write_can_enq[simp]:
   "rb_can_enq (rb_write_head b rb) = rb_can_enq rb"
@@ -1972,6 +1822,7 @@ lemma rb_write_can_enq[simp]:
 lemma rb_write_can_deq[simp]:
   "rb_can_deq (rb_write_head b rb) = rb_can_deq rb "
   by (simp add: rb_can_deq_def rb_empty_def rb_write_head_def)
+
 
 (* ==================================================================================== *)
 subsection \<open>Lifting Ring Buffers to Lists\<close>
@@ -1988,11 +1839,6 @@ definition CleanQ_RB_list_opt :: "'a CleanQ_RB \<Rightarrow> ('a option) list"
 definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
   where "CleanQ_RB_list rb = map (the o ring rb) (rb_valid_entries rb)"
 
-lemma rb_list_opt_elements_not_none:
-  assumes valid : "rb_valid rb"
-  shows "\<forall>e \<in> set (CleanQ_RB_list_opt rb). e \<noteq> None"
-  using valid unfolding CleanQ_RB_list_opt_def rb_valid_def
-  by(auto)
 
 text \<open>
   If the ring is valid, then the list is bounded by the size of the ring.
@@ -2003,6 +1849,18 @@ lemma rb_list_size:
   unfolding CleanQ_RB_list_def rb_valid_entries_def rb_valid_ptr_def
   by auto
 
+text \<open>
+  We can show that forall elements in the list, it is not None.
+\<close>
+
+lemma rb_list_opt_elements_not_none:
+  "rb_valid rb \<Longrightarrow> \<forall>e \<in> set (CleanQ_RB_list_opt rb). e \<noteq> None"
+  unfolding CleanQ_RB_list_opt_def rb_valid_def  by(auto)
+
+lemma rb_list_opt_list_equiv:
+  "CleanQ_RB_list rb = map the (CleanQ_RB_list_opt rb)"
+  unfolding CleanQ_RB_list_def CleanQ_RB_list_opt_def by(auto)
+
 
 text \<open>
  We can now show that the list of valid entries is empty, when the predicate 
@@ -2010,9 +1868,16 @@ text \<open>
 \<close>
 
 lemma rb_list_empty:
-  assumes valid: "rb_valid_ptr rb"
-  shows "rb_empty rb \<longleftrightarrow> CleanQ_RB_list rb = []"
-  unfolding  CleanQ_RB_list_def using valid rb_valid_entries_empty_list2 by(auto)
+  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> CleanQ_RB_list rb = []"
+  by (metis CleanQ_RB_list_def map_is_Nil_conv rb_empty_valid_entries_equiv_list)
+
+lemma rb_list_empty2:
+  "rb_valid rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> CleanQ_RB_list rb = []"
+  using rb_list_empty rb_valid_implies_ptr_valid by blast
+
+lemma rb_deq_not_empty:
+  "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> CleanQ_RB_list rb \<noteq> []"
+  using rb_can_deq_def rb_list_empty2 by blast
 
 
 text \<open>
@@ -2020,65 +1885,47 @@ text \<open>
   of the list.
 \<close>
 
-lemma rb_enq_list_add:
-assumes notfull: "rb_can_enq rb" and valid: "rb_valid rb"   
-  shows "CleanQ_RB_list (rb_enq b rb) = (CleanQ_RB_list rb) @ [b]"
-  using notfull valid unfolding CleanQ_RB_list_def
-  by (simp add: rb_enq_buf_ring rb_enq_preserves_valid_entries rb_enq_valid_entries 
-                rb_valid_def)
-
+lemma rb_enq_list_add[simp]:
+  "rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> 
+     CleanQ_RB_list (rb_enq b rb) = (CleanQ_RB_list rb) @ [b]"
+  unfolding CleanQ_RB_list_def rb_enq_ring_write_head
+  by(subst rb_enq_valid_entries, simp_all add: rb_write_head_def)
+  
 
 text \<open>
   The dequeue operation returns an element which is in the list of the original state,
   and the element is the head of this list.
 \<close>
 
-lemma rb_deq_list_was_head :
-  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid_ptr rb"  
-     and res: "rb' = rb_deq rb" 
-   shows "(fst rb') = hd (CleanQ_RB_list rb)"
-  using notempty valid unfolding  CleanQ_RB_list_def res
-  by(simp add:rb_deq_alt_def rb_deq_equiv rb_can_deq_def rb_incr_tail_valid_entries 
-              rb_read_tail_def)
-  
-  
+lemma rb_deq_list_was_head[simp]:
+  "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> fst (rb_deq rb) = hd (CleanQ_RB_list rb)"
+  apply(simp add:CleanQ_RB_list_def rb_can_deq_def rb_valid_def, subst hd_map)
+  using rb_empty_valid_entries_equiv_list apply blast
+  by (simp add: rb_read_tail_def)
+
 
 lemma rb_deq_list_was_in :
-  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
-     and res: "rb' = rb_deq rb" 
-   shows "(fst rb') \<in> set (CleanQ_RB_list rb)"
-  using res notempty valid rb_deq_list_was_head rb_can_deq_def rb_list_empty rb_valid_def
-  by fastforce
+   "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> fst  (rb_deq rb) \<in> set (CleanQ_RB_list rb)"
+  using rb_can_deq_def rb_deq_list_was_head rb_list_empty2 by fastforce
+
 
 text \<open>
   Likewise, the remainder of the state will be the tail of the original list. 
 \<close>
 
 lemma rb_deq_list_tail :
-  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid_ptr rb"   
-  and  res: "rb' = rb_deq rb"
-shows "CleanQ_RB_list (snd (rb')) = tl (CleanQ_RB_list rb)"
-  using  res notempty valid unfolding rb_deq_def CleanQ_RB_list_def 
-  by (simp add: map_tl rb_can_deq_def rb_incr_tail_ring rb_incr_tail_valid_entries_tail)
+  "rb_can_deq rb \<Longrightarrow> rb_valid_ptr rb \<Longrightarrow> 
+    CleanQ_RB_list (snd ( rb_deq rb)) = tl (CleanQ_RB_list rb)"
+  unfolding rb_deq_def CleanQ_RB_list_def 
+  by (simp add: map_tl rb_can_deq_def  rb_incr_tail_valid_entries_tail)
 
 
 lemma rb_deq_list_not_in :
-  assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
-     and res: "rb' = rb_deq rb" and dist: "distinct (CleanQ_RB_list rb)"
-   shows "(fst rb') \<notin> set (CleanQ_RB_list (snd rb')) "
-  using notempty valid res  
+  "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> distinct (CleanQ_RB_list rb) \<Longrightarrow>
+      fst (rb_deq rb) \<notin> set (CleanQ_RB_list (snd (rb_deq rb)))"
   apply(subst rb_deq_list_tail, simp_all)
-  using rb_deq_list_was_head dist  rb_valid_def
-  apply blast  
-  by (metis dist distinct.simps(2) equals0D hd_Cons_tl rb_deq_list_was_head 
-            rb_valid_implies_ptr_valid set_empty tl_Nil)
-  
-
-lemma rb_deq_not_empty:
-assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb" 
-  shows "CleanQ_RB_list rb \<noteq> []"
-  unfolding CleanQ_RB_list_def
-  using valid notempty rb_can_deq_def rb_valid_entries_tail_not_empty1 rb_valid_def by fastforce
+  by (metis distinct.simps(2) list.exhaust_sel rb_can_deq_def rb_deq_buf 
+            rb_deq_list_was_head rb_list_empty2)
 
 lemma rb_deq_subset :
   assumes notempty: "rb_can_deq rb" and  valid: "rb_valid rb"  
@@ -2090,17 +1937,18 @@ lemma rb_deq_subset :
         rb_deq_list_tail rb_deq_list_was_in rb_valid_def
   by fastforce
 
+
 text \<open>
   A head write does not change the \verb+CleanQ_RB_list+.
 \<close>
 
 lemma rb_enq_write_same :
-  shows "CleanQ_RB_list rb = CleanQ_RB_list (rb_write_head b rb)"
+  "CleanQ_RB_list rb = CleanQ_RB_list (rb_write_head b rb)"
   unfolding CleanQ_RB_list_def rb_write_head_def
   by (simp add: rb_valid_entries_def)
 
 lemma rb_enq_write_can_enq :
-  shows "rb_can_enq rb \<Longrightarrow> rb_can_enq (rb_write_head b rb)"
+  "rb_can_enq rb \<Longrightarrow> rb_can_enq (rb_write_head b rb)"
   unfolding CleanQ_RB_list_def rb_write_head_def
   by (simp add: rb_can_enq_def rb_full_def)
   
@@ -2188,10 +2036,11 @@ lemma rb_take_tail2:
   assumes tail: "rb_can_incr_tail_n n st' \<and> tail st' \<le> head st'" and
           frame: "frame_rb_weak_left st' st" and
           valid: "rb_valid_ptr st'"
-   shows "take n [tail st' ..< head st'] = take n ([tail st'] @ ([tail (rb_incr_tail_n 1 st') ..< head st']))"
-  by (metis eq_iff frame le0 list.size(3) rb_can_incr_tail_1 rb_can_incr_tail_n_lt_max 
-            rb_can_incr_tail_n_max_def rb_take_tail rb_valid_entries_empty_list2 tail
-            take_eq_Nil valid)
+        shows "take n [tail st' ..< head st'] = take n ([tail st'] @ ([tail (rb_incr_tail_n 1 st') ..< head st']))"
+  by (metis frame list.size(3) neq0_conv not_le rb_can_incr_tail_1 rb_can_incr_tail_n_lt_max 
+            rb_can_incr_tail_n_max_def rb_empty_def rb_take_tail rb_valid_entries_def tail 
+            take0 upt_rec valid)
+
 
 lemma rb_delta_helper :
   assumes valid: "rb_valid rb" and
@@ -2256,8 +2105,7 @@ lemma rb_delta_tail_one:
   shows "(rb_incr_tail_n_delta 1 st') = [tail st']"
   using tail
   unfolding rb_incr_tail_n_delta_def rb_valid_def
-  by (metis One_nat_def list.size(3) not_less_eq_eq order_refl rb_can_incr_tail_1 
-      rb_can_incr_tail_n_def rb_valid_entries_tail_first1 take0 take_Suc valid rb_valid_def)
+  by (metis rb_can_incr_tail_1 rb_incr_tail_n_delta_1 rb_incr_tail_n_delta_def rb_valid_def valid)
 
 
 lemma rb_weak_list_delta_tail_one:
@@ -2327,9 +2175,9 @@ lemma rb_delta_head_inv_helper2:
 proof -
   from assms have core: "rb_invalid_entries rb = [head rb] @ rb_invalid_entries (rb_incr_head_n 1 rb)"
     unfolding rb_incr_head_1
-    by (simp add: rb_can_incr_head_n_def rb_incr_head_invalid_entries_tail 
-                  rb_invalid_entries_head2 rb_invalid_entries_never_empty_list 
-                  rb_invalid_entries_not_full_num rb_valid_def)
+    by (metis One_nat_def Suc_lessI append_take_drop_id less_one rb_can_incr_head_1 
+              rb_can_incr_head_n_def rb_delta_head_inv_helper rb_incr_head_invalid_entries_drop 
+              rb_invalid_entries_size_min rb_valid_implies_ptr_valid zero_neq_numeral)
     
 
   from core have core2: "take 1 (rb_invalid_entries rb) = [head rb]"
@@ -2381,16 +2229,19 @@ proof -
     qed
 qed
 
+(*
 lemma rb_delta_head_inv_helper3: 
   assumes frame: "frame_rb_weak_right st' st" and
           head: "head st = head (rb_incr_head_n n st')" and
           enq: "rb_can_incr_head_n n st'"
         shows "rb_incr_head_n_delta (Suc n) st' = [head st'] @ rb_incr_head_n_delta n (rb_incr_head_n 1 st')" 
+  sledgehammer
   by (metis (no_types, lifting) One_nat_def Suc_eq_plus1 append_Cons append_Nil diff_Suc_1 enq 
       frame frame_rb_weak_right_def less_eq_Suc_le list.size(3) list.size(4) not_add_less1 
       order.order_iff_strict plus_1_eq_Suc rb_can_incr_head_n_def rb_incr_head_1 
-      rb_incr_head_invalid_entries_tail rb_incr_head_n_delta_def rb_invalid_entries_full2 
-      rb_invalid_entries_head2 rb_invalid_entries_never_empty_list rb_valid_def take_Suc take_eq_Nil)
+      rb_incr_head_invalid_entries_tail rb_incr_head_n_delta_def  
+       rb_invalid_entries_never_empty_list rb_valid_def take_Suc take_eq_Nil)
+*)
 
 text \<open>
   This next lemma shows properties about the definition of rb delta head
@@ -2437,11 +2288,8 @@ lemma rb_incr_head_wrap:
   assumes "rb_valid rb"
   shows "head rb = (size rb -1) \<Longrightarrow> head (rb_incr_head_n 1 rb) = 0" 
   unfolding rb_incr_head_n_def
-  by (metis (no_types, lifting) One_nat_def Suc_leI append_Nil2 assms diff_is_0_eq' 
-      diff_zero ext_inject le_add_diff_inverse2 less_imp_le_nat mod_self not_le_imp_less 
-      rb_incr_tail_valid_entries rb_invalid_entries_def rb_invalid_entries_never_empty_list 
-      rb_valid_def rb_valid_entries_def rb_valid_entries_tail_empty2 rb_valid_entries_tail_not_empty1 
-      surjective update_convs(2) upt_0 upt_eq_Cons_conv)
+  by (metis assms le_add_diff_inverse2 less_imp_le_nat mod_self rb_valid_def 
+            rb_valid_ptr_def select_convs(2) surjective update_convs(2))
 
 text \<open>
   Similarly we show the influence of the tail moving on the valid entries in the ring buffer
@@ -2473,8 +2321,8 @@ lemma rb_weak_list_delta_head_one:
           enq: "rb_can_enq st'"
   shows  "rb_valid_entries st' @ rb_incr_head_n_delta 1 st = (rb_valid_entries st)"
   using enq
-  by (metis frame frame_rb_weak_left_def head rb_can_enq_def 
-      rb_incr_head_1 rb_incr_head_valid_entries_headin rb_valid_def rb_valid_entries_head)
+  by (metis frame frame_rb_weak_left_def head rb_can_enq_def rb_incr_head_1 
+            rb_incr_head_valid_entries_headin rb_valid_def rb_valid_entries_head_not_member)
 
 
 text \<open>
@@ -2583,7 +2431,7 @@ next
 
     from assms hd tl3 have core2: "\<not> tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> 
               map (the \<circ> ring rb') [\<delta>tl - (size rb' - tail rb')..<head rb'] = map (the \<circ> ring rb) [0..<head rb]"
-      by (simp add: rb_incr_tail_n_ring)
+      by (metis rb_incr_tail_n_ring)
 
     show  "\<not> tail rb' \<le> head rb' \<Longrightarrow>
           \<not> tail rb \<le> head rb \<Longrightarrow> 

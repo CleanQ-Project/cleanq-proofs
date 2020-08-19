@@ -464,22 +464,22 @@ text \<open>
 lemma CleanQ_RB_head_write_x_not_none[simp]:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_x b rb)"
   unfolding CleanQ_RB_head_none_x_def CleanQ_RB_write_head_x_def
-  by (simp add: rb_write_head_not_none)
+  by(simp)
 
 lemma CleanQ_RB_head_write_y_not_none[simp]:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_y b rb)"
   unfolding CleanQ_RB_head_none_y_def CleanQ_RB_write_head_y_def
-  by (simp add: rb_write_head_not_none)
+  by(simp)
 
 lemma CleanQ_RB_write_head_read_head_x[simp]:
   "b = CleanQ_RB_read_head_x (CleanQ_RB_write_head_x b rb)"
   unfolding CleanQ_RB_read_head_x_def CleanQ_RB_write_head_x_def
-  by (simp add: rb_read_head_def rb_write_head_element_read)
+  by(simp)
 
 lemma CleanQ_RB_write_head_read_head_y[simp]:
   "b = CleanQ_RB_read_head_y (CleanQ_RB_write_head_y b rb)"
   unfolding CleanQ_RB_read_head_y_def CleanQ_RB_write_head_y_def
-  by (simp add: rb_read_head_def rb_write_head_element_read)
+  by(simp)
 
 
 text \<open>
@@ -548,13 +548,13 @@ lemma CleanQ_RB_write_head_x_equiv[simp]:
   "\<not>CleanQ_RB_head_none_x rb \<Longrightarrow> b = (CleanQ_RB_read_head_x rb) \<Longrightarrow>
       CleanQ_RB_write_head_x b rb = rb"
   unfolding CleanQ_RB_write_head_x_def CleanQ_RB_head_none_x_def CleanQ_RB_read_head_x_def
-  by (simp add: rb_write_head_same)
+  by(simp)
 
 lemma CleanQ_RB_write_head_y_equiv[simp]:
   "\<not>CleanQ_RB_head_none_y rb \<Longrightarrow> b = (CleanQ_RB_read_head_y rb) \<Longrightarrow> 
       CleanQ_RB_write_head_y b rb = rb"
   unfolding CleanQ_RB_write_head_y_def CleanQ_RB_head_none_y_def CleanQ_RB_read_head_y_def
-  by (simp add: rb_write_head_same)
+  by (simp)
 
 
 text \<open>
