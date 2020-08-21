@@ -1780,7 +1780,13 @@ lemma rb_read_head_enq[simp]:
   unfolding rb_enq_def 
   by (metis rb_incr_head_1 rb_incr_head_n_tail rb_incr_head_ring rb_read_tail_def 
             rb_read_tail_write_element)
-  
+
+lemma rb_read_tail_in_valid:
+  "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow>
+      rb_read_tail rb \<in> set (map (the o ring rb) (rb_valid_entries rb))"
+  unfolding rb_valid_entries_def rb_read_tail_def
+  by (smt comp_apply list.set_intros(1) list.simps(9) rb_can_deq_def rb_incr_tail_valid_entries 
+      rb_valid_entries_def rb_valid_implies_ptr_valid) 
 
 (* ==================================================================================== *)
 subsection \<open>Other Lemmas\<close>

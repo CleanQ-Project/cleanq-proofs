@@ -975,12 +975,10 @@ text \<open>
 \<close>
 
 abbreviation "CleanQ_RB_deq_x_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
-                                        CleanQ_RB_deq_x_possible rb \<and>
-                                        b = CleanQ_RB_read_tail_x rb"
+                                        CleanQ_RB_deq_x_possible rb"
 
 abbreviation "CleanQ_RB_deq_y_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
-                                          CleanQ_RB_deq_y_possible rb \<and>
-                                          b = CleanQ_RB_read_tail_y rb"
+                                          CleanQ_RB_deq_y_possible rb "
 
 
 paragraph \<open>Dequeue Q\<close>
@@ -993,11 +991,11 @@ text \<open>
 \<close>
 
 abbreviation "CleanQ_RB_deq_x_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
-                                          CleanQ_RB_deq_x_possible rb \<and> 
+                                          CleanQ_RB_deq_x_possible rb \<and>
                                           b = CleanQ_RB_read_tail_x rb"
 
 abbreviation "CleanQ_RB_deq_y_Q K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
-                                          CleanQ_RB_deq_y_possible rb \<and> 
+                                          CleanQ_RB_deq_y_possible rb \<and>
                                           b = CleanQ_RB_read_tail_y rb"
 
 paragraph \<open>Dequeue R\<close>
@@ -1012,7 +1010,23 @@ text \<open>
 abbreviation "CleanQ_RB_deq_x_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<in> rSX rb"
 abbreviation "CleanQ_RB_deq_y_R K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> b \<in> rSY rb"
 
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Other Lemmas\<close>
+(* ------------------------------------------------------------------------------------ *)
+(*
+lemma CleanQ_RB_can_deq_x_implies[simp]:
+  assumes valid: "CleanQ_RB_Invariants rb"
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> \<exists>b. (b = CleanQ_RB_read_tail_x rb)"
+  by simp
 
+lemma CleanQ_RB_can_deq_y_implies[simp]:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> \<exists>b. (b = CleanQ_RB_read_tail_y rb)"
+  by simp
+
+lemma CleanQ_RB_can_deq_y_implies2[simp]:
+  "rb_can_deq (rTXY rb) \<Longrightarrow> \<exists>b. (b = CleanQ_RB_read_tail_y rb)"
+  by simp
+*) 
 (*<*)
 end 
 
