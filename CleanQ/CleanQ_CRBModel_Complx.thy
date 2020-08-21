@@ -607,8 +607,8 @@ lemma CleanQ_RB_concurrent_all:
   apply (simp_all add: CleanQ_RB_enq_y_def)
   apply (simp_all add: CleanQ_RB_enq_x_def CleanQ_RB_enq_y_possible_def)
   apply (simp_all add: CleanQ_RB_enq_x_possible_def)
-  apply (simp_all add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_enq_can_deq)
-  apply (simp_all add: CleanQ_RB_deq_x_possible_def rb_enq_can_deq)
+  apply (simp_all add: CleanQ_RB_Invariants_def I4_rb_valid_def)
+  apply (simp_all add: CleanQ_RB_deq_x_possible_def)
   apply (meson CleanQ_RB_Invariants_def CleanQ_RB_deq_x_enq_y_possible CleanQ_RB_deq_x_possible_def CleanQ_RB_enq_y_possible_def I4_rb_valid_def)
   using CleanQ_RB_Invariants_def CleanQ_RB_deq_y_enq_x_possible CleanQ_RB_deq_y_possible_def CleanQ_RB_enq_x_possible_def I4_rb_valid_def apply blast
   using CleanQ_RB_Invariants_def CleanQ_RB_deq_x_enq_y_possible CleanQ_RB_deq_x_possible_def CleanQ_RB_enq_y_possible_def I4_rb_valid_def apply blast
