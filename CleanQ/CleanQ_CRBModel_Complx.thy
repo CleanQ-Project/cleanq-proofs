@@ -68,124 +68,70 @@ text \<open>
 \<close>
 
 
-definition CleanQ_RB_read_tail_region_x :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer"
-  where "CleanQ_RB_read_tail_region_x rb buf = buf \<lparr> region := region (rb_read_tail (rTYX rb)) \<rparr>"
+definition CleanQ_RB_read_tail_region_x :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer"
+  where 
+    "CleanQ_RB_read_tail_region_x rb b = b \<lparr> region := region (rb_read_tail (rTYX rb)) \<rparr>"
 
-definition CleanQ_RB_read_tail_region_y :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_region_y rb buf = buf \<lparr> region := region (rb_read_tail (rTXY rb)) \<rparr>"
+definition CleanQ_RB_read_tail_region_y :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where 
+    "CleanQ_RB_read_tail_region_y rb b = b \<lparr> region := region (rb_read_tail (rTXY rb)) \<rparr>"
 
-definition CleanQ_RB_read_tail_offset_x :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_offset_x rb buf = buf \<lparr> offset := offset (rb_read_tail (rTYX rb)) \<rparr>"
+definition CleanQ_RB_read_tail_offset_x :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where 
+    "CleanQ_RB_read_tail_offset_x rb b = b \<lparr> offset := offset (rb_read_tail (rTYX rb)) \<rparr>"
 
-definition CleanQ_RB_read_tail_offset_y :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_offset_y rb buf = buf \<lparr> offset := offset (rb_read_tail (rTXY rb)) \<rparr>"
+definition CleanQ_RB_read_tail_offset_y :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where 
+    "CleanQ_RB_read_tail_offset_y rb b = b \<lparr> offset := offset (rb_read_tail (rTXY rb)) \<rparr>"
 
-definition CleanQ_RB_read_tail_length_x :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_length_x rb buf = buf \<lparr> length := length (rb_read_tail (rTYX rb)) \<rparr>"
+definition CleanQ_RB_read_tail_length_x :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where 
+   "CleanQ_RB_read_tail_length_x rb b = b \<lparr> length := length (rb_read_tail (rTYX rb)) \<rparr>"
 
-definition CleanQ_RB_read_tail_length_y :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_length_y rb buf =  buf \<lparr> length := length (rb_read_tail (rTXY rb)) \<rparr>"
+definition CleanQ_RB_read_tail_length_y :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where 
+    "CleanQ_RB_read_tail_length_y rb b = b \<lparr> length := length (rb_read_tail (rTXY rb)) \<rparr>"
+
 (*
-definition CleanQ_RB_read_tail_valid_offset_x :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_valid_offset_x rb buf =  buf \<lparr> valid_offset := valid_offset (rb_read_tail (rTYX rb)) \<rparr>"
+definition CleanQ_RB_read_tail_valid_offset_x :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where "CleanQ_RB_read_tail_valid_offset_x rb b = 
+            b \<lparr> valid_offset := valid_offset (rb_read_tail (rTYX rb)) \<rparr>"
 
-definition CleanQ_RB_read_tail_valid_offset_y :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_valid_offset_y rb buf = buf \<lparr> valid_offset := valid_offset (rb_read_tail (rTXY rb)) \<rparr>"
-
-definition CleanQ_RB_read_tail_valid_length_x :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_valid_length_x rb buf = buf \<lparr> valid_length := valid_length (rb_read_tail (rTYX rb)) \<rparr>"
-
-definition CleanQ_RB_read_tail_valid_length_y :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_valid_length_y rb buf = buf \<lparr> valid_length := valid_length (rb_read_tail (rTXY rb)) \<rparr>"
-
-definition CleanQ_RB_read_tail_flags_x :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_flags_x rb buf = buf \<lparr> flags := flags (rb_read_tail (rTYX rb)) \<rparr>"
-
-definition CleanQ_RB_read_tail_flags_y :: "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_read_tail_flags_y rb buf = buf \<lparr> flags := flags (rb_read_tail (rTXY rb)) \<rparr>"
+definition CleanQ_RB_read_tail_valid_offset_y :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where "CleanQ_RB_read_tail_valid_offset_y rb b = 
+            b \<lparr> valid_offset := valid_offset (rb_read_tail (rTXY rb)) \<rparr>"
 *)
-(* Not really sure how to define this, currently we write the whole buffer otherwise we can not
-  reuse all the lemmas we proofed. Would like to write only a specific field*)
 (*
-definition CleanQ_RB_write_head_region_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_region_x val bu rb = (let b = bu \<lparr> region := val \<rparr> in rb \<lparr>rTXY := rb_write_head b (rTXY rb) \<rparr>)"
+definition CleanQ_RB_read_tail_valid_length_x :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where "CleanQ_RB_read_tail_valid_length_x rb b = 
+            b \<lparr> valid_length := valid_length (rb_read_tail (rTYX rb)) \<rparr>"
 
-definition CleanQ_RB_write_head_region_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_region_y val bu rb = (let b = bu \<lparr> region := val \<rparr> in rb \<lparr>rTYX := rb_write_head b (rTYX rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_offset_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_offset_x val bu rb = (let b = bu \<lparr> offset := val \<rparr> in rb \<lparr>rTXY := rb_write_head b (rTXY rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_offset_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_offset_y val bu rb = (let b = bu \<lparr> offset := val \<rparr> in rb \<lparr>rTYX := rb_write_head b (rTYX rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_length_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_length_x val bu rb = (let b = bu \<lparr> length := val \<rparr> in rb \<lparr>rTXY := rb_write_head b (rTXY rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_length_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_length_y val bu rb = (let b = bu \<lparr> length := val \<rparr> in rb \<lparr>rTYX := rb_write_head b (rTYX rb) \<rparr>)"
+definition CleanQ_RB_read_tail_valid_length_y :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where "CleanQ_RB_read_tail_valid_length_y rb b = 
+            b \<lparr> valid_length := valid_length (rb_read_tail (rTXY rb)) \<rparr>"
 *)
-
 (*
-definition CleanQ_RB_write_head_valid_offset_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_valid_offset_x val bu rb = (let b = bu \<lparr> valid_offset := val \<rparr> in rb \<lparr>rTXY := rb_write_head b (rTXY rb) \<rparr>)"
+definition CleanQ_RB_read_tail_flags_x :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where 
+   "CleanQ_RB_read_tail_flags_x rb b = b \<lparr> flags := flags (rb_read_tail (rTYX rb)) \<rparr>"
 
-definition CleanQ_RB_write_head_valid_offset_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_valid_offset_y val bu rb = (let b = bu \<lparr> valid_offset := val \<rparr> in rb \<lparr>rTYX := rb_write_head b (rTYX rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_valid_length_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_valid_length_x val bu rb = (let b = bu \<lparr> valid_length := val \<rparr> in rb \<lparr>rTXY := rb_write_head b (rTXY rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_valid_length_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_valid_length_y val bu rb = (let b = bu \<lparr> valid_length := val \<rparr> in rb \<lparr>rTYX := rb_write_head b (rTYX rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_flags_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_flags_x val bu rb = (let b = bu \<lparr> flags := val \<rparr> in rb \<lparr>rTXY := rb_write_head b (rTXY rb) \<rparr>)"
-
-definition CleanQ_RB_write_head_flags_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
-  where "CleanQ_RB_write_head_flags_y val bu rb = (let b = bu \<lparr> flags := val \<rparr> in rb \<lparr>rTYX := rb_write_head b (rTYX rb) \<rparr>)"
+definition CleanQ_RB_read_tail_flags_y :: 
+  "CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
+  where 
+    "CleanQ_RB_read_tail_flags_y rb b = b \<lparr> flags := flags (rb_read_tail (rTXY rb)) \<rparr>"
 *)
 
-
-
-(* Another way to do it?*)
-(*
-definition CleanQ_RB_write_region_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer " 
-  where "CleanQ_RB_write_region_x val bu =  bu \<lparr> region := val \<rparr> "
-
-definition CleanQ_RB_write_region_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_region_y val bu =  bu \<lparr> region := val \<rparr>"
-*) 
-definition CleanQ_RB_write_offset_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_offset_x val bu =  bu \<lparr> offset := val \<rparr>"
-
-definition CleanQ_RB_write_offset_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer " 
-  where "CleanQ_RB_write_offset_y val bu =  bu \<lparr> offset := val \<rparr> "
-
-definition CleanQ_RB_write_length_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_length_x val bu =  bu \<lparr> length := val \<rparr>"
-
-definition CleanQ_RB_write_length_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_length_y val bu =  bu \<lparr> length := val \<rparr>"
-(*
-definition CleanQ_RB_write_valid_offset_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow>  CleanQ_Buffer" 
-  where "CleanQ_RB_write_valid_offset_x val bu  =  bu \<lparr> valid_offset := val \<rparr>"
-
-definition CleanQ_RB_write_valid_offset_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_valid_offset_y val bu = bu \<lparr> valid_offset := val \<rparr>"
-
-definition CleanQ_RB_write_valid_length_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_valid_length_x val bu = bu \<lparr> valid_length := val \<rparr> "
-
-definition CleanQ_RB_write_valid_length_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow>  CleanQ_Buffer" 
-  where "CleanQ_RB_write_valid_length_y val bu =  bu \<lparr> valid_length := val \<rparr>"
-
-definition CleanQ_RB_write_flags_x :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_flags_x val bu  = bu \<lparr> flags := val \<rparr> "
-
-definition CleanQ_RB_write_flags_y :: "nat \<Rightarrow> CleanQ_Buffer \<Rightarrow> CleanQ_Buffer" 
-  where "CleanQ_RB_write_flags_y val bu =  bu \<lparr> flags := val \<rparr>"
-*)
 
 definition CleanQ_RB_write_head_region_x :: "nat \<Rightarrow> CleanQ_Buffer CleanQ_RB_State \<Rightarrow> CleanQ_Buffer CleanQ_RB_State" 
   where "CleanQ_RB_write_head_region_x val rb = rb \<lparr>rTXY := rb_write_head ((rb_read_head (rTXY rb))\<lparr>region := val\<rparr>  )  (rTXY rb) \<rparr>"
