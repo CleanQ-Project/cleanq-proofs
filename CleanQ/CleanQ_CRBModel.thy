@@ -978,7 +978,7 @@ abbreviation "CleanQ_RB_deq_x_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and>
                                         CleanQ_RB_deq_x_possible rb"
 
 abbreviation "CleanQ_RB_deq_y_P K rb b \<equiv> CleanQ_RB_Invariants K rb \<and> 
-                                          CleanQ_RB_deq_y_possible rb "
+                                          CleanQ_RB_deq_y_possible rb"
 
 
 paragraph \<open>Dequeue Q\<close>

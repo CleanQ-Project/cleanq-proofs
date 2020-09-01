@@ -37,11 +37,11 @@ record CleanQ_Buffer =
   region :: nat
   offset :: nat
   length :: nat
-(*
-  valid_offset :: nat
-  valid_length :: nat
-  flags :: nat
-*) 
+(* valid_offset :: nat *)
+(* valid_length :: nat *)
+(* flags :: nat *)
+
+
 text \<open>
   the model is exactly the same and we reuse the RB Model. 
 \<close>
