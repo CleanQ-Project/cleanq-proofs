@@ -1946,6 +1946,169 @@ lemmas CleanQ_RB_read_tail_region_x_write_y[simp] =
      CleanQ_RB_read_tail_region_x_write_valid_offset_y
      CleanQ_RB_read_tail_region_x_write_valid_length_y
 
+paragraph \<open>Read Y, Enq X\<close>
+
+lemma CleanQ_RB_read_tail_region_y_enq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+
+lemma CleanQ_RB_read_tail_offset_y_enq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+
+lemma CleanQ_RB_read_tail_length_y_enq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+
+lemma CleanQ_RB_read_tail_flags_y_enq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+
+lemma CleanQ_RB_read_tail_valid_offset_y_enq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+
+lemma CleanQ_RB_read_tail_valid_length_y_enq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+
+lemmas CleanQ_RB_read_tail__y_enq_x_simps[simp] = 
+     CleanQ_RB_read_tail_region_y_enq_x
+     CleanQ_RB_read_tail_offset_y_enq_x
+     CleanQ_RB_read_tail_length_y_enq_x
+     CleanQ_RB_read_tail_flags_y_enq_x
+     CleanQ_RB_read_tail_valid_offset_y_enq_x
+     CleanQ_RB_read_tail_valid_length_y_enq_x
+
+paragraph \<open>Read X, Enq Y\<close>
+
+lemma CleanQ_RB_read_tail_region_x_enq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_region_x rb b"
+  by (metis CleanQ_RB_read_tail_region_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+
+lemma CleanQ_RB_read_tail_offset_x_enq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+
+lemma CleanQ_RB_read_tail_length_x_enq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_length_x rb b"
+  by (metis CleanQ_RB_read_tail_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+
+lemma CleanQ_RB_read_tail_flags_x_enq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_flags_x rb b"
+  by (metis CleanQ_RB_read_tail_flags_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+
+lemma CleanQ_RB_read_tail_valid_offset_x_enq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+
+lemma CleanQ_RB_read_tail_valid_length_x_enq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+
+lemmas CleanQ_RB_read_tail_x_enq_y_simps[simp] = 
+     CleanQ_RB_read_tail_region_x_enq_y
+     CleanQ_RB_read_tail_offset_x_enq_y
+     CleanQ_RB_read_tail_length_x_enq_y
+     CleanQ_RB_read_tail_flags_x_enq_y
+     CleanQ_RB_read_tail_valid_offset_x_enq_y
+     CleanQ_RB_read_tail_valid_length_x_enq_y
+
+
+paragraph \<open>Read Y, Deq X\<close>
+
+lemma CleanQ_RB_read_tail_region_y_deq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_deq_x  rb) b = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+
+lemma CleanQ_RB_read_tail_offset_y_deq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_deq_x  rb) b = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+
+lemma CleanQ_RB_read_tail_length_y_deq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_deq_x rb) b = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+
+lemma CleanQ_RB_read_tail_flags_y_deq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_deq_x  rb) b = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+
+lemma CleanQ_RB_read_tail_valid_offset_y_deq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_deq_x rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+
+lemma CleanQ_RB_read_tail_valid_length_y_deq_x:
+  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_deq_x rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+
+lemmas CleanQ_RB_read_tail__y_deq_x_simps[simp] = 
+     CleanQ_RB_read_tail_region_y_deq_x
+     CleanQ_RB_read_tail_offset_y_deq_x
+     CleanQ_RB_read_tail_length_y_deq_x
+     CleanQ_RB_read_tail_flags_y_deq_x
+     CleanQ_RB_read_tail_valid_offset_y_deq_x
+     CleanQ_RB_read_tail_valid_length_y_deq_x
+
+
+paragraph \<open>Read X, Deq Y\<close>
+
+lemma CleanQ_RB_read_tail_region_x_deq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_deq_y rb) b = CleanQ_RB_read_tail_region_x rb b"
+  by (metis CleanQ_RB_read_tail_region_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+
+lemma CleanQ_RB_read_tail_offset_x_deq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_deq_y rb) b = CleanQ_RB_read_tail_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+
+lemma CleanQ_RB_read_tail_length_x_deq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_deq_y rb) b = CleanQ_RB_read_tail_length_x rb b"
+  by (metis CleanQ_RB_read_tail_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+
+lemma CleanQ_RB_read_tail_flags_x_deq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_deq_y  rb) b = CleanQ_RB_read_tail_flags_x rb b"
+  by (metis CleanQ_RB_read_tail_flags_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+
+lemma CleanQ_RB_read_tail_valid_offset_x_deq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_deq_y  rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+
+lemma CleanQ_RB_read_tail_valid_length_x_deq_y:
+  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_deq_y  rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+
+lemmas CleanQ_RB_read_tail_x_deq_y_simps[simp] = 
+     CleanQ_RB_read_tail_region_x_deq_y
+     CleanQ_RB_read_tail_offset_x_deq_y
+     CleanQ_RB_read_tail_length_x_deq_y
+     CleanQ_RB_read_tail_flags_x_deq_y
+     CleanQ_RB_read_tail_valid_offset_x_deq_y
+     CleanQ_RB_read_tail_valid_length_x_deq_y
+
+
+paragraph \<open>Enq Possible/Deq Possible\<close>
+
+lemma CleanQ_RB_deq_y_remains_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_deq_x rb) = CleanQ_RB_deq_y_possible rb"
+  by (simp add: CleanQ_RB_deq_x_def CleanQ_RB_deq_y_possible_def prod.case_eq_if)
+
+lemma CleanQ_RB_deq_x_remains_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_deq_y rb) = CleanQ_RB_deq_x_possible rb"
+  by (simp add: CleanQ_RB_deq_y_def CleanQ_RB_deq_x_possible_def prod.case_eq_if)
+
+lemma CleanQ_RB_enq_y_remains_possible:
+  "CleanQ_RB_enq_y_possible (CleanQ_RB_enq_x b rb) = CleanQ_RB_enq_y_possible rb"
+  by (simp add: CleanQ_RB_enq_x_def CleanQ_RB_enq_y_possible_def prod.case_eq_if)
+
+lemma CleanQ_RB_enq_x_remains_possible:
+  "CleanQ_RB_enq_x_possible (CleanQ_RB_enq_y b rb) = CleanQ_RB_enq_x_possible rb"
+  by (simp add: CleanQ_RB_enq_y_def CleanQ_RB_enq_x_possible_def prod.case_eq_if)
+
+lemmas CleanQ_RB_enq_deq_remains_possible[simp] = 
+    CleanQ_RB_deq_y_remains_possible 
+    CleanQ_RB_deq_x_remains_possible
+    CleanQ_RB_enq_y_remains_possible
+    CleanQ_RB_enq_x_remains_possible
+
 paragraph \<open>Write Y Enq Remains Possible Y\<close>
 
 lemma CleanQ_RB_write_head_length_y_enq_y_possible:
@@ -3191,9 +3354,8 @@ lemma CleanQ_RB_loop_enq_enq:
          \<lbrace>  CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB by \<rbrace>, \<lbrace>True\<rbrace>
       COEND
       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>"
-  apply(oghoare, auto)
-  apply (simp add: CleanQ_RB_enq_x_def CleanQ_RB_enq_y_possible_def)
-  using CleanQ_RB_deq_y_enq_y_possible CleanQ_RB_enq_y_possible_def by blast
+  by(oghoare, auto)
+
   
   
 lemma CleanQ_RB_loop_enq_deq:
@@ -3270,9 +3432,8 @@ lemma CleanQ_RB_loop_deq_enq:
          \<lbrace>  CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>, \<lbrace>True\<rbrace>
       COEND
       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
-   apply(oghoare, auto)
-   by(simp_all add: CleanQ_RB_deq_x_no_change CleanQ_RB_deq_y_possible_def)
-
+   by(oghoare, auto)
+   
   
   
 lemma CleanQ_RB_concurrent_all:
@@ -3313,10 +3474,7 @@ lemma CleanQ_RB_concurrent_all:
          \<lbrace>  CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>, \<lbrace>True\<rbrace>
       COEND
       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
-  apply(oghoare, auto)
-  apply (simp add: CleanQ_RB_deq_x_no_change CleanQ_RB_deq_y_possible_def)
-  apply (simp add: CleanQ_RB_Invariants_def CleanQ_RB_deq_y_possible_def CleanQ_RB_enq_x_possible_def I4_rb_valid_def)
-  by (simp add: CleanQ_RB_deq_x_no_change CleanQ_RB_deq_y_possible_def)
+  by(oghoare, auto)
 
 
 lemma " \<lbrace>CleanQ_RB_Invariants \<acute>uni \<acute>CRB\<rbrace> \<inter> \<lbrace>CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b\<rbrace> \<subseteq> \<lbrace>CleanQ_RB_Invariants \<acute>uni (CleanQ_RB_incr_head_x b \<acute>CRB)\<rbrace>"
@@ -3351,9 +3509,8 @@ lemma CleanQ_RB_concurrent_if_all:
                       apply(auto)[1]
 
 using [[simp_trace=false]]
-  apply(auto)
+  by(auto)
     
-  by (simp_all add: CleanQ_RB_deq_y_possible_def)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -3517,230 +3674,365 @@ lemma CleanQ_RB_conc_mult_if_all:
       COEND
       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
   apply(oghoare) (* 478 subgoals. Auto after this takes really really long*)
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
 
 
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-  apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-  apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-  apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-  apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-  apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-  apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
-                      apply(auto)[1]
+
+
   oops
 
 
