@@ -229,6 +229,78 @@ text \<open>
 \<close>
 
 
+paragraph \<open>Write X read Y Unchanged \<close>
+
+lemma CleanQ_RB_read_head_x_write_length_y:
+  "CleanQ_RB_read_head_x (CleanQ_RB_write_head_length_y v rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_length_y_def)
+
+lemma CleanQ_RB_read_head_x_write_offset_y:
+  "CleanQ_RB_read_head_x (CleanQ_RB_write_head_offset_y v rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_offset_y_def)
+
+lemma CleanQ_RB_read_head_x_write_region_y:
+  "CleanQ_RB_read_head_x (CleanQ_RB_write_head_region_y v rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_region_y_def)
+
+lemma CleanQ_RB_read_head_x_write_flags_y:
+  "CleanQ_RB_read_head_x (CleanQ_RB_write_head_flags_y v rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_flags_y_def)
+
+lemma CleanQ_RB_read_head_x_write_valid_length_y:
+  "CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_y v rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_length_y_def)
+
+lemma CleanQ_RB_read_head_x_write_valid_offset_y:
+  "CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_offset_y v rb) = CleanQ_RB_read_head_x rb"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_offset_y_def)
+
+lemmas CleanQ_RB_read_head_x_write_y[simp] = 
+   CleanQ_RB_read_head_x_write_length_y
+   CleanQ_RB_read_head_x_write_offset_y
+   CleanQ_RB_read_head_x_write_region_y
+   CleanQ_RB_read_head_x_write_flags_y
+   CleanQ_RB_read_head_x_write_valid_length_y
+   CleanQ_RB_read_head_x_write_valid_offset_y
+
+paragraph \<open>Write Y read X Unchanged \<close>
+
+lemma CleanQ_RB_read_head_y_write_length_x:
+  "CleanQ_RB_read_head_y (CleanQ_RB_write_head_length_x v rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_length_x_def)
+
+lemma CleanQ_RB_read_head_y_write_offset_x:
+  "CleanQ_RB_read_head_y (CleanQ_RB_write_head_offset_x v rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_offset_x_def)
+
+lemma CleanQ_RB_read_head_y_write_region_x:
+  "CleanQ_RB_read_head_y (CleanQ_RB_write_head_region_x v rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_region_x_def)
+
+lemma CleanQ_RB_read_head_y_write_flags_x:
+  "CleanQ_RB_read_head_y (CleanQ_RB_write_head_flags_x v rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_flags_x_def)
+
+lemma CleanQ_RB_read_head_y_write_valid_length_x:
+  "CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_length_x v rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_valid_length_x_def)
+
+lemma CleanQ_RB_read_head_y_write_valid_offset_x:
+  "CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_offset_x v rb) = CleanQ_RB_read_head_y rb"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_valid_offset_x_def)
+
+lemmas CleanQ_RB_read_head_y_write_x[simp] = 
+   CleanQ_RB_read_head_y_write_length_x
+   CleanQ_RB_read_head_y_write_offset_x
+   CleanQ_RB_read_head_y_write_region_x
+   CleanQ_RB_read_head_y_write_flags_x
+   CleanQ_RB_read_head_y_write_valid_length_x
+   CleanQ_RB_read_head_y_write_valid_offset_x
+
+
+
+
+
 paragraph \<open>Length Unchangend when X writes and X reads \<close>
 
 lemma CleanQ_RB_write_head_offset_x_read_x_length_unchanged:
@@ -1162,6 +1234,148 @@ lemmas CleanQ_RB_write_head_x_enq_y_possible[simp] =
 
 
 
+
+paragraph \<open>Write X Deq Remains Possible X\<close>
+
+lemma CleanQ_RB_write_head_length_x_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_length_x x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_can_deq_x CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_offset_x_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_offset_x x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_can_deq_x CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_region_x_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_region_x x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_can_deq_x CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_flags_x_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_flags_x x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_can_deq_x CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_valid_length_x_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_valid_length_x x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_can_deq_x CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_valid_offset_x_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_valid_offset_x x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_can_deq_x CleanQ_RB_write_head_x_def)
+
+lemmas CleanQ_RB_write_head_x_deq_x_possible[simp] = 
+   CleanQ_RB_write_head_length_x_deq_x_possible
+   CleanQ_RB_write_head_offset_x_deq_x_possible
+   CleanQ_RB_write_head_region_x_deq_x_possible
+   CleanQ_RB_write_head_flags_x_deq_x_possible
+   CleanQ_RB_write_head_valid_length_x_deq_x_possible
+   CleanQ_RB_write_head_valid_offset_x_deq_x_possible
+
+
+paragraph \<open>Write Y Deq Remains Possible Y\<close>
+
+lemma CleanQ_RB_write_head_length_y_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_length_y x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_length_y_def CleanQ_RB_write_head_y_can_deq_y CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_offset_y_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_offset_y x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_offset_y_def CleanQ_RB_write_head_y_can_deq_y CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_region_y_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_region_y x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_region_y_def CleanQ_RB_write_head_y_can_deq_y CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_flags_y_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_flags_y x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_flags_y_def CleanQ_RB_write_head_y_can_deq_y CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_valid_length_y_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_valid_length_y x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_valid_length_y_def CleanQ_RB_write_head_y_can_deq_y CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_valid_offset_y_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_valid_offset_y x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_valid_offset_y_def CleanQ_RB_write_head_y_can_deq_y CleanQ_RB_write_head_y_def)
+
+lemmas CleanQ_RB_write_head_y_deq_y_possible[simp] = 
+   CleanQ_RB_write_head_length_y_deq_y_possible
+   CleanQ_RB_write_head_offset_y_deq_y_possible
+   CleanQ_RB_write_head_region_y_deq_y_possible
+   CleanQ_RB_write_head_flags_y_deq_y_possible
+   CleanQ_RB_write_head_valid_length_y_deq_y_possible
+   CleanQ_RB_write_head_valid_offset_y_deq_y_possible
+
+
+paragraph \<open>Write Y Deq Remains Possible X\<close>
+
+lemma CleanQ_RB_write_head_length_y_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_length_y x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_length_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_offset_y_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_offset_y x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_offset_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_region_y_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_region_y x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_region_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_flags_y_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_flags_y x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_flags_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_valid_length_y_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_valid_length_y x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_valid_length_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_valid_offset_y_deq_x_possible:
+  "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_valid_offset_y x rb) = CleanQ_RB_deq_x_possible rb"
+  by (metis CleanQ_RB_write_head_valid_offset_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def)
+
+lemmas CleanQ_RB_write_head_y_deq_x_possible[simp] = 
+   CleanQ_RB_write_head_length_y_deq_x_possible
+   CleanQ_RB_write_head_offset_y_deq_x_possible
+   CleanQ_RB_write_head_region_y_deq_x_possible
+   CleanQ_RB_write_head_flags_y_deq_x_possible
+   CleanQ_RB_write_head_valid_length_y_deq_x_possible
+   CleanQ_RB_write_head_valid_offset_y_deq_x_possible
+
+paragraph \<open>Write X Deq Remains Possible Y\<close>
+
+lemma CleanQ_RB_write_head_length_x_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_length_x x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_offset_x_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_offset_x x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_region_x_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_region_x x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_flags_x_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_flags_x x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_valid_length_x_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_valid_length_x x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_valid_offset_x_deq_y_possible:
+  "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_valid_offset_x x rb) = CleanQ_RB_deq_y_possible rb"
+  by (metis CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def)
+
+lemmas CleanQ_RB_write_head_x_deq_y_possible[simp] = 
+   CleanQ_RB_write_head_length_x_deq_y_possible
+   CleanQ_RB_write_head_offset_x_deq_y_possible
+   CleanQ_RB_write_head_region_x_deq_y_possible
+   CleanQ_RB_write_head_flags_x_deq_y_possible
+   CleanQ_RB_write_head_valid_length_x_deq_y_possible
+   CleanQ_RB_write_head_valid_offset_x_deq_y_possible
+
+
+
+
 paragraph \<open>Write X buf in SX\<close>
 
 lemma CleanQ_RB_write_head_offset_x_SX_unchanged:
@@ -1527,96 +1741,6 @@ lemma CleanQ_RB_head_not_none_write_head_region_x [simp]:
   by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_region_x_def)
 *) 
 
-lemma CleanQ_RB_deq_y_possible_write_head_length_x [simp]:
-  assumes "CleanQ_RB_deq_y_possible(CRB x)"
-  shows "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_length_x (CleanQ_Buffer.length b) (CRB x))"
-  by (metis CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def assms)
-
-lemma CleanQ_RB_deq_x_possible_write_head_length_y [simp]:
-  assumes "CleanQ_RB_deq_x_possible(CRB x)"
-  shows "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_length_y (CleanQ_Buffer.length b) (CRB x))"
-  by (metis CleanQ_RB_write_head_length_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def assms)
-
-lemma CleanQ_RB_deq_y_possible_write_head_length_y [simp]:
-  assumes "CleanQ_RB_deq_y_possible(CRB x)"
-  shows "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_length_y (CleanQ_Buffer.length b) (CRB x))"
-  by (metis CleanQ_RB_State.ext_inject CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) 
-      CleanQ_RB_deq_y_possible_def CleanQ_RB_write_head_length_y_def assms)
-
-lemma CleanQ_RB_deq_x_possible_write_head_length_x [simp]:
-  assumes "CleanQ_RB_deq_x_possible(CRB x)"
-  shows "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_length_x (CleanQ_Buffer.length b) (CRB x))"
-  by (metis CleanQ_RB_State.select_convs(4) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(3) 
-      CleanQ_RB_deq_x_possible_def CleanQ_RB_write_head_length_x_def assms)
-
-lemma CleanQ_RB_deq_y_possible_write_head_offset_x [simp]:
-  assumes "CleanQ_RB_deq_y_possible(CRB x)"
-  shows "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_offset_x (CleanQ_Buffer.offset b) (CRB x))"
-  by (metis CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def assms)
-
-lemma CleanQ_RB_deq_x_possible_write_head_offset_y [simp]:
-  assumes "CleanQ_RB_deq_x_possible(CRB x)"
-  shows "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_offset_y (CleanQ_Buffer.offset b) (CRB x))"
-  by (metis CleanQ_RB_write_head_offset_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def assms)
-
-lemma CleanQ_RB_deq_y_possible_write_head_offset_y [simp]:
-  assumes "CleanQ_RB_deq_y_possible(CRB x)"
-  shows "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_offset_y (CleanQ_Buffer.offset b) (CRB x))"
-  by (metis CleanQ_RB_State.ext_inject CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) 
-      CleanQ_RB_deq_y_possible_def CleanQ_RB_write_head_offset_y_def assms)
-
-lemma CleanQ_RB_deq_x_possible_write_head_offset_x [simp]:
-  assumes "CleanQ_RB_deq_x_possible(CRB x)"
-  shows "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_offset_x (CleanQ_Buffer.offset b) (CRB x))"
-  by (metis CleanQ_RB_State.select_convs(4) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(3) 
-      CleanQ_RB_deq_x_possible_def CleanQ_RB_write_head_offset_x_def assms)
-
-lemma CleanQ_RB_deq_y_possible_write_head_region_x [simp]:
-  assumes "CleanQ_RB_deq_y_possible(CRB x)"
-  shows "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_region_x (CleanQ_Buffer.region b) (CRB x))"
-  by (metis CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_can_deq_y CleanQ_RB_write_head_x_def assms)
-
-lemma CleanQ_RB_deq_x_possible_write_head_region_y [simp]:
-  assumes "CleanQ_RB_deq_x_possible(CRB x)"
-  shows "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_region_y (CleanQ_Buffer.region b) (CRB x))"
-  by (metis CleanQ_RB_write_head_region_y_def CleanQ_RB_write_head_y_can_deq_x CleanQ_RB_write_head_y_def assms)
-
-lemma CleanQ_RB_deq_y_possible_write_head_region_y [simp]:
-  assumes "CleanQ_RB_deq_y_possible(CRB x)"
-  shows "CleanQ_RB_deq_y_possible (CleanQ_RB_write_head_region_y (CleanQ_Buffer.region b) (CRB x))"
-  by (metis CleanQ_RB_State.ext_inject CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) 
-      CleanQ_RB_deq_y_possible_def CleanQ_RB_write_head_region_y_def assms)
-
-lemma CleanQ_RB_deq_x_possible_write_head_region_x [simp]:
-  assumes "CleanQ_RB_deq_x_possible(CRB x)"
-  shows "CleanQ_RB_deq_x_possible (CleanQ_RB_write_head_region_x (CleanQ_Buffer.region b) (CRB x))"
-  by (metis CleanQ_RB_State.select_convs(4) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(3) 
-      CleanQ_RB_deq_x_possible_def CleanQ_RB_write_head_region_x_def assms)
-
-lemma CleanQ_RB_read_head_x_write_length_y [simp]:
-  shows "CleanQ_RB_read_head_x (CRB x) = CleanQ_RB_read_head_x (CleanQ_RB_write_head_length_y (CleanQ_Buffer.length b2) (CRB x))"
-  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_length_y_def)
-
-lemma CleanQ_RB_read_head_x_write_offset_y [simp]:
-  shows "CleanQ_RB_read_head_x (CRB x) = CleanQ_RB_read_head_x (CleanQ_RB_write_head_offset_y (CleanQ_Buffer.offset b2) (CRB x))"
-  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_offset_y_def)
-
-lemma CleanQ_RB_read_head_x_write_region_y [simp]:
-  shows "CleanQ_RB_read_head_x (CRB x) = CleanQ_RB_read_head_x (CleanQ_RB_write_head_region_y (CleanQ_Buffer.region b2) (CRB x))"
-  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_region_y_def)
-
-lemma CleanQ_RB_read_head_y_write_length_x [simp]:
-  shows "CleanQ_RB_read_head_y (CRB x) = CleanQ_RB_read_head_y (CleanQ_RB_write_head_length_x (CleanQ_Buffer.length b2) (CRB x))"
-  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_length_x_def)
-
-lemma CleanQ_RB_read_head_y_write_offset_x [simp]:
-  shows "CleanQ_RB_read_head_y (CRB x) = CleanQ_RB_read_head_y (CleanQ_RB_write_head_offset_x (CleanQ_Buffer.offset b2) (CRB x))"
-  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_offset_x_def)
-
-lemma CleanQ_RB_read_head_y_write_reigon_x [simp]:
-  shows "CleanQ_RB_read_head_y (CRB x) = CleanQ_RB_read_head_y (CleanQ_RB_write_head_region_x (CleanQ_Buffer.region b2) (CRB x))"
-
-  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_region_x_def)
 
 lemma CleanQ_RB_read_tail_offset_x_mult :
   shows "CleanQ_RB_read_tail_offset_x (CRB x) (CleanQ_RB_read_tail_offset_x (CRB x) (buf_x x)) = CleanQ_RB_read_tail_offset_x (CRB x) (buf_x x)"
