@@ -333,6 +333,7 @@ lemmas CleanQ_RB_write_head_x_read_x_length_unchanged_simps[simp] =
 
 paragraph \<open>Length Unchangend when X writes and Y reads \<close>
 
+
 lemma CleanQ_RB_write_head_offset_x_read_y_length_unchanged:
   "length (CleanQ_RB_read_head_y (CleanQ_RB_write_head_offset_x x rb)) = length (CleanQ_RB_read_head_y rb)"
   by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_offset_x_def)
@@ -444,6 +445,7 @@ lemma CleanQ_RB_write_head_valid_offset_x_read_x_offset_unchanged:
 lemma CleanQ_RB_write_head_valid_length_x_read_x_offset_unchanged:
   "offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_x x rb)) = offset (CleanQ_RB_read_head_x rb)"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_length_x_def)
+ 
 
 lemmas CleanQ_RB_write_head_x_read_x_offset_unchanged_simps[simp] = 
     CleanQ_RB_write_head_length_x_read_x_offset_unchanged
@@ -564,6 +566,7 @@ lemma CleanQ_RB_write_head_valid_offset_x_read_x_flags_unchanged:
 lemma CleanQ_RB_write_head_valid_length_x_read_x_flags_unchanged:
   "flags (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_x x rb)) = flags (CleanQ_RB_read_head_x rb)"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_length_x_def)
+  
 
 lemmas CleanQ_RB_write_head_x_read_x_flags_unchanged_simps[simp] = 
     CleanQ_RB_write_head_length_x_read_x_flags_unchanged
@@ -682,6 +685,7 @@ lemma CleanQ_RB_write_head_valid_offset_x_read_x_region_unchanged:
 lemma CleanQ_RB_write_head_valid_length_x_read_x_region_unchanged:
   "region (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_x x rb)) = region (CleanQ_RB_read_head_x rb)"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_length_x_def)
+  
 
 lemmas CleanQ_RB_write_head_x_read_x_region_unchanged_simps[simp] = 
     CleanQ_RB_write_head_length_x_read_x_region_unchanged
@@ -801,6 +805,7 @@ lemma CleanQ_RB_write_head_region_x_read_x_valid_offset_unchanged:
 lemma CleanQ_RB_write_head_valid_length_x_read_x_valid_offset_unchanged:
   "valid_offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_x x rb)) = valid_offset (CleanQ_RB_read_head_x rb)"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_length_x_def)
+ 
 
 lemmas CleanQ_RB_write_head_x_read_x_valid_offset_unchanged_simps[simp] = 
     CleanQ_RB_write_head_length_x_read_x_valid_offset_unchanged
@@ -1609,7 +1614,6 @@ proof -
     using f1 by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_region_y_def)
 qed
 
-<<<<<<< Updated upstream
 *)
 
 
@@ -1839,7 +1843,6 @@ lemma CleanQ_RB_read_tail_region_x_length [simp]:
   by (metis CleanQ_Buffer.surjective CleanQ_Buffer.update_convs(1) CleanQ_Buffer.update_convs(3) 
       CleanQ_RB_read_tail_length_x_def CleanQ_RB_read_tail_region_x_def assms)
 
-
 lemma CleanQ_RB_can_enq_deq_x :
   assumes inv: "CleanQ_RB_Invariants K rb" and
           can: "CleanQ_RB_enq_x_possible rb"
@@ -1912,109 +1915,13 @@ abbreviation "CleanQ_CRB_deq_y \<equiv>
                 \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
                 SKIP
             FI"
-(*
-abbreviation "CleanQ_CRB_enq_mult_x b \<equiv> 
-            \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
-            IF CleanQ_RB_enq_x_possible \<acute>CRB \<and> b \<in> rSX \<acute>CRB
-            THEN
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_region_x (region b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_x \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_offset_x (offset b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_x \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_length_x (length b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                length b = length (CleanQ_RB_read_head_x \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_x (valid_offset b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                length b = length (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                valid_offset b = valid_offset (CleanQ_RB_read_head_x \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_length_x (valid_length b) b \<acute>CRB) ;;
-               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                length b = length (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                valid_offset b = valid_offset (CleanQ_RB_read_head_x \<acute>CRB) \<and>
-                valid_length b = valid_length (CleanQ_RB_read_head_x \<acute>CRB)
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_flags_x (flags b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_incr_head_x b \<acute>CRB)
-            ELSE 
-                \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
-                SKIP
-            FI"
-
-abbreviation "CleanQ_CRB_enq_mult_x2 b \<equiv> 
-            \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
-            IF CleanQ_RB_enq_x_possible \<acute>CRB \<and> b \<in> rSX \<acute>CRB
-            THEN
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>local_x := (CleanQ_RB_write_region_x (region b) \<acute>local_x) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_x = region b 
-              \<rbrace>
-                \<acute>local_x := (CleanQ_RB_write_offset_x (offset b) \<acute>local_x) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_x = region b \<and>
-                offset \<acute>local_x = offset b 
-              \<rbrace>
-                \<acute>local_x := (CleanQ_RB_write_length_x (length b) \<acute>local_x) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_x = region b \<and>
-                offset \<acute>local_x = offset b \<and>
-                length \<acute>local_x = length b 
-              \<rbrace>
-                \<acute>local_x := (CleanQ_RB_write_valid_offset_x (valid_offset b) b) ;;
-              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_x = region b \<and>
-                offset \<acute>local_x = offset b \<and>
-                length \<acute>local_x = length b \<and>
-                valid_offset \<acute>local_x = valid_offset b 
-              \<rbrace>
-                \<acute>local_x := (CleanQ_RB_write_valid_length_x (valid_length b) b) ;;
-               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_x = region b \<and>
-                offset \<acute>local_x = offset b \<and>
-                length \<acute>local_x = length b \<and>
-                valid_offset \<acute>local_x = valid_offset b \<and>
-                valid_length \<acute>local_x = valid_length b
-               \<rbrace>
-                \<acute>local_x := (CleanQ_RB_write_flags_x (flags b) b) ;;
-               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_x = region b \<and>
-                offset \<acute>local_x = offset b \<and>
-                length \<acute>local_x = length b \<and>
-                valid_offset \<acute>local_x = valid_offset b \<and>
-                valid_length \<acute>local_x = valid_length b \<and>
-                flags \<acute>local_x = flags b
-              \<rbrace>
-              \<acute>CRB := (CleanQ_RB_write_head_x \<acute>local_x \<acute>CRB);;
-              \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_incr_head_x b \<acute>CRB)
-            ELSE 
-                \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
-                SKIP
-            FI"
-*) 
 
 abbreviation "CleanQ_CRB_enq_mult_x b \<equiv> 
             \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
             IF CleanQ_RB_enq_x_possible \<acute>CRB \<and> b \<in> rSX \<acute>CRB
             THEN
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_region_x (offset b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_region_x (region b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_x \<acute>CRB) = region b 
               \<rbrace>
@@ -2024,6 +1931,27 @@ abbreviation "CleanQ_CRB_enq_mult_x b \<equiv>
                 offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b 
               \<rbrace>
                 \<acute>CRB := (CleanQ_RB_write_head_length_x (length b) \<acute>CRB) ;;
+              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
+                region (CleanQ_RB_read_head_x \<acute>CRB) = region b \<and>
+                offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b \<and>
+                length (CleanQ_RB_read_head_x \<acute>CRB) = length b
+              \<rbrace>
+                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_x (valid_offset b) \<acute>CRB) ;;
+              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
+                region (CleanQ_RB_read_head_x \<acute>CRB) = region b \<and>
+                offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b \<and>
+                length (CleanQ_RB_read_head_x \<acute>CRB) = length b \<and>
+                valid_offset (CleanQ_RB_read_head_x \<acute>CRB) = valid_offset b
+              \<rbrace>
+                \<acute>CRB := (CleanQ_RB_write_head_valid_length_x (valid_length b) \<acute>CRB) ;;
+              \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
+                region (CleanQ_RB_read_head_x \<acute>CRB) = region b \<and>
+                offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b \<and>
+                length (CleanQ_RB_read_head_x \<acute>CRB) = length b \<and>
+                valid_offset (CleanQ_RB_read_head_x \<acute>CRB) = valid_offset b \<and>
+                valid_length (CleanQ_RB_read_head_x \<acute>CRB) = valid_length b
+              \<rbrace>
+                \<acute>CRB := (CleanQ_RB_write_head_flags_x (flags b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<rbrace>
                 \<acute>CRB := (CleanQ_RB_incr_head_x b \<acute>CRB)
             ELSE 
@@ -2036,7 +1964,7 @@ abbreviation "CleanQ_CRB_enq_mult_y b \<equiv>
             IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
             THEN
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_region_y (offset b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_region_y (region b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_y \<acute>CRB) = region b 
               \<rbrace>
@@ -2046,6 +1974,27 @@ abbreviation "CleanQ_CRB_enq_mult_y b \<equiv>
                 offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b 
               \<rbrace>
                 \<acute>CRB := (CleanQ_RB_write_head_length_y (length b) \<acute>CRB) ;;
+              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and>  
+                region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
+                offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
+                length (CleanQ_RB_read_head_y \<acute>CRB) = length b 
+              \<rbrace>
+                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_y (valid_offset b) \<acute>CRB) ;;
+              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and>  
+                region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
+                offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
+                length (CleanQ_RB_read_head_y \<acute>CRB) = length b \<and> 
+                valid_offset (CleanQ_RB_read_head_y \<acute>CRB) = valid_offset b
+              \<rbrace>
+                \<acute>CRB := (CleanQ_RB_write_head_valid_length_y (valid_length b) \<acute>CRB) ;;
+              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and>  
+                region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
+                offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
+                length (CleanQ_RB_read_head_y \<acute>CRB) = length b \<and> 
+                valid_offset (CleanQ_RB_read_head_y \<acute>CRB) = valid_offset b \<and>
+                valid_length (CleanQ_RB_read_head_y \<acute>CRB) = valid_length b
+              \<rbrace>
+                \<acute>CRB := (CleanQ_RB_write_head_flags_y (flags b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<rbrace>
                 \<acute>CRB := (CleanQ_RB_incr_head_y b \<acute>CRB)
             ELSE 
@@ -2068,7 +2017,28 @@ abbreviation "CleanQ_CRB_deq_mult_x \<equiv>
                 \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x
               \<rbrace>
                 \<acute>buf_x := (CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x) ;;
-              \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
+              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x 
+              \<rbrace>
+                \<acute>buf_x := (CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x) ;;
+              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x 
+              \<rbrace>
+                \<acute>buf_x := (CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x) ;;
+              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x \<and>
+                \<acute>buf_x = CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x 
+              \<rbrace>
+                \<acute>buf_x := (CleanQ_RB_read_tail_flags_x \<acute>CRB \<acute>buf_x) ;;
+              \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x\<rbrace>
                 \<acute>CRB := (CleanQ_RB_incr_tail_x \<acute>buf_x \<acute>CRB)
             ELSE 
                 \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
@@ -2090,180 +2060,26 @@ abbreviation "CleanQ_CRB_deq_mult_y \<equiv>
                 \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y
               \<rbrace>
                 \<acute>buf_y := (CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y) ;;
-              \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
-                \<acute>CRB := (CleanQ_RB_incr_tail_y \<acute>buf_y \<acute>CRB)
-            ELSE 
-                \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
-                SKIP
-            FI"
-
-(*
-abbreviation "CleanQ_CRB_enq_mult_y b \<equiv> 
-            \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
-            IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
-            THEN
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>local_y := (CleanQ_RB_write_region_y (region b) \<acute>local_y) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_y = region b 
-              \<rbrace>
-                \<acute>local_y := (CleanQ_RB_write_offset_y (offset b) \<acute>local_y) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_y = region b \<and>
-                offset \<acute>local_y = offset b 
-              \<rbrace>
-                \<acute>local_y := (CleanQ_RB_write_length_y (length b) \<acute>local_y) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_y = region b \<and>
-                offset \<acute>local_y = offset b \<and>
-                length \<acute>local_y = length b 
-              \<rbrace>
-                \<acute>local_y := (CleanQ_RB_write_valid_offset_y (valid_offset b) b) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_y = region b \<and>
-                offset \<acute>local_y = offset b \<and>
-                length \<acute>local_y = length b \<and>
-                valid_offset \<acute>local_y = valid_offset b 
-              \<rbrace>
-                \<acute>local_y := (CleanQ_RB_write_valid_length_y (valid_length b) b) ;;
-               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_y = region b \<and>
-                offset \<acute>local_y = offset b \<and>
-                length \<acute>local_y = length b \<and>
-                valid_offset \<acute>local_y = valid_offset b \<and>
-                valid_length \<acute>local_y = valid_length b
-               \<rbrace>
-                \<acute>local_y := (CleanQ_RB_write_flags_y (flags b) b) ;;
-               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region \<acute>local_y = region b \<and>
-                offset \<acute>local_y = offset b \<and>
-                length \<acute>local_y = length b \<and>
-                valid_offset \<acute>local_y = valid_offset b \<and>
-                valid_length \<acute>local_y = valid_length b \<and>
-                flags \<acute>local_y = flags b
-              \<rbrace>
-              \<acute>CRB := (CleanQ_RB_write_head_y \<acute>local_y \<acute>CRB);;
-              \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_incr_head_y b \<acute>CRB)
-            ELSE 
-                \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
-                SKIP
-            FI"
-
-
-abbreviation "CleanQ_CRB_enq_mult_y b \<equiv> 
-            \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
-            IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
-            THEN
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_region_y (region b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_y \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_offset_y (offset b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_y \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_length_y (length b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                length b = length (CleanQ_RB_read_head_y \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_y (valid_offset b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                length b = length (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                valid_offset b = valid_offset (CleanQ_RB_read_head_y \<acute>CRB) 
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_length_y (valid_length b) b \<acute>CRB) ;;
-               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
-                region b = region (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                offset b = offset (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                length b = length (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                valid_offset b = valid_offset (CleanQ_RB_read_head_y \<acute>CRB) \<and>
-                valid_length b = valid_length (CleanQ_RB_read_head_y \<acute>CRB)
-              \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_flags_y (flags b) b \<acute>CRB) ;;
-              \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_incr_head_y b \<acute>CRB)
-            ELSE 
-                \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
-                SKIP
-            FI"
-
-
-abbreviation "CleanQ_CRB_deq_mult_x \<equiv> 
-            \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
-            IF CleanQ_RB_deq_x_possible \<acute>CRB
-            THEN
-              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<rbrace>
-                \<acute>buf_x := (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x) ;;
-              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-                \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<rbrace>
-                \<acute>buf_x := (CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x) ;;
-              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-                \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x) \<rbrace>
-                \<acute>buf_x := (CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x) ;;
-              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-                \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB
-                        (CleanQ_RB_read_tail_offset_x \<acute>CRB 
-                        (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x))\<rbrace>
-                \<acute>buf_x := (CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x) ;;
-              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-                \<acute>buf_x =(CleanQ_RB_read_tail_valid_offset_x \<acute>CRB 
-                        (CleanQ_RB_read_tail_length_x \<acute>CRB
-                        (CleanQ_RB_read_tail_offset_x \<acute>CRB 
-                        (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x))))\<rbrace>
-                \<acute>buf_x := (CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x) ;;
-              \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-                \<acute>buf_x = CleanQ_RB_read_tail_valid_length_x \<acute>CRB
-                        (CleanQ_RB_read_tail_valid_offset_x \<acute>CRB 
-                        (CleanQ_RB_read_tail_length_x \<acute>CRB
-                        (CleanQ_RB_read_tail_offset_x \<acute>CRB 
-                        (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x))))\<rbrace>
-                \<acute>buf_x := (CleanQ_RB_read_tail_flags_x \<acute>CRB \<acute>buf_x) ;;
-              \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
-                \<acute>CRB := (CleanQ_RB_incr_tail_x \<acute>buf_x \<acute>CRB)
-            ELSE 
-                \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
-                SKIP
-            FI"
-
-
-abbreviation "CleanQ_CRB_deq_mult_y \<equiv> 
-            \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
-            IF CleanQ_RB_deq_y_possible \<acute>CRB
-            THEN
-              \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<rbrace>
-                \<acute>buf_y := (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y) ;;
               \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-                \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y 
+                \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y
               \<rbrace>
-                \<acute>buf_y := (CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y) ;;
-              \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-                \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y) 
-              \<rbrace>
-                \<acute>buf_y := (CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y) ;;
-              \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-                \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB
-                        (CleanQ_RB_read_tail_offset_y \<acute>CRB 
-                        (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y))\<rbrace>
                 \<acute>buf_y := (CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y) ;;
               \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-                \<acute>buf_y =(CleanQ_RB_read_tail_valid_offset_y \<acute>CRB 
-                        (CleanQ_RB_read_tail_length_y \<acute>CRB
-                        (CleanQ_RB_read_tail_offset_y \<acute>CRB 
-                        (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y))))\<rbrace>
+                \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y
+              \<rbrace>
                 \<acute>buf_y := (CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y) ;;
               \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-                \<acute>buf_y = CleanQ_RB_read_tail_valid_length_y \<acute>CRB
-                        (CleanQ_RB_read_tail_valid_offset_y \<acute>CRB 
-                        (CleanQ_RB_read_tail_length_y \<acute>CRB
-                        (CleanQ_RB_read_tail_offset_y \<acute>CRB 
-                        (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y))))\<rbrace>
+                \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y \<and>
+                \<acute>buf_y = CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y
+              \<rbrace>
                 \<acute>buf_y := (CleanQ_RB_read_tail_flags_y \<acute>CRB \<acute>buf_y) ;;
               \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
                 \<acute>CRB := (CleanQ_RB_incr_tail_y \<acute>buf_y \<acute>CRB)
@@ -2271,7 +2087,6 @@ abbreviation "CleanQ_CRB_deq_mult_y \<equiv>
                 \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
                 SKIP
             FI"
-*)
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Hoare Triples for the Enqueue Operation\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -2657,6 +2472,147 @@ using [[simp_trace=false]]
     
   by (simp_all add: CleanQ_RB_deq_y_possible_def)
 
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Helper lemmas specifically for last concurrency proof\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+paragraph \<open>Write head behaves as expected for X\<close>
+
+lemma CleanQ_RB_write_head_flags_x_eq:
+  assumes reg: "region (CleanQ_RB_read_head_x (CRB x)) = region b2" and
+          off: "offset (CleanQ_RB_read_head_x (CRB x)) = offset b2 " and
+          len: "length (CleanQ_RB_read_head_x (CRB x)) = length b2" and
+          vao: "valid_offset (CleanQ_RB_read_head_x (CRB x)) = valid_offset b2" and
+          val:"valid_length (CleanQ_RB_read_head_x (CRB x)) = valid_length b2"
+  shows "b2 = CleanQ_RB_read_head_x (CleanQ_RB_write_head_flags_x (flags b2) (CRB x))"
+  using assms unfolding CleanQ_RB_write_head_flags_x_def CleanQ_RB_read_head_x_def
+  by(auto)
+
+lemma CleanQ_RB_write_head_region_x_eq :
+  shows "region (CleanQ_RB_read_head_x (CleanQ_RB_write_head_region_x (region b2) (CRB x))) = region b2"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_region_x_def)
+
+lemma CleanQ_RB_write_head_offset_x_eq :
+  shows "offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_offset_x (offset b2) (CRB x))) = offset b2"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_offset_x_def)
+
+lemma CleanQ_RB_write_head_length_x_eq :
+  shows "length (CleanQ_RB_read_head_x (CleanQ_RB_write_head_length_x (length b2) (CRB x))) = length b2"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_length_x_def)
+
+lemma CleanQ_RB_write_head_valid_length_x_eq :
+  shows "valid_length (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_x (valid_length b2) (CRB x))) = valid_length b2"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_length_x_def)
+  
+
+lemma CleanQ_RB_write_head_valid_offset_x_eq :
+  shows "valid_offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_offset_x (valid_offset b2) (CRB x))) = valid_offset b2"
+  by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_offset_x_def)
+  
+lemmas CleanQ_RB_write_head_x_eq[simp] = 
+  CleanQ_RB_write_head_region_x_eq
+  CleanQ_RB_write_head_offset_x_eq 
+  CleanQ_RB_write_head_length_x_eq
+  CleanQ_RB_write_head_valid_offset_x_eq
+  CleanQ_RB_write_head_valid_length_x_eq
+  CleanQ_RB_write_head_flags_x_eq
+
+paragraph \<open>Write head behaves as expected for Y\<close>
+
+lemma CleanQ_RB_write_head_flags_y_eq:
+  assumes reg: "region (CleanQ_RB_read_head_y (CRB x)) = region b2" and
+          off: "offset (CleanQ_RB_read_head_y (CRB x)) = offset b2 " and
+          len: "length (CleanQ_RB_read_head_y (CRB x)) = length b2" and
+          vao: "valid_offset (CleanQ_RB_read_head_y (CRB x)) = valid_offset b2" and
+          val:"valid_length (CleanQ_RB_read_head_y (CRB x)) = valid_length b2"
+  shows "b2 = CleanQ_RB_read_head_y (CleanQ_RB_write_head_flags_y (flags b2) (CRB x))"
+  using assms unfolding CleanQ_RB_write_head_flags_y_def CleanQ_RB_read_head_y_def
+  by(auto)
+
+lemma CleanQ_RB_write_head_region_y_eq :
+  shows "region (CleanQ_RB_read_head_y (CleanQ_RB_write_head_region_y (region b2) (CRB y))) = region b2"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_region_y_def)
+
+lemma CleanQ_RB_write_head_offset_y_eq :
+  shows "offset (CleanQ_RB_read_head_y (CleanQ_RB_write_head_offset_y (offset b2) (CRB y))) = offset b2"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_offset_y_def)
+
+lemma CleanQ_RB_write_head_length_y_eq :
+  shows "length (CleanQ_RB_read_head_y (CleanQ_RB_write_head_length_y (length b2) (CRB y))) = length b2"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_length_y_def)
+
+lemma CleanQ_RB_write_head_valid_length_y_eq :
+  shows "valid_length (CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_length_y (valid_length b2) (CRB y))) = valid_length b2"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_valid_length_y_def)
+  
+lemma CleanQ_RB_write_head_valid_offset_y_eq :
+  shows "valid_offset (CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_offset_y (valid_offset b2) (CRB y))) = valid_offset b2"
+  by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_valid_offset_y_def)
+
+lemmas CleanQ_RB_write_head_y_eq[simp] = 
+  CleanQ_RB_write_head_region_y_eq
+  CleanQ_RB_write_head_offset_y_eq 
+  CleanQ_RB_write_head_length_y_eq
+  CleanQ_RB_write_head_valid_offset_y_eq
+  CleanQ_RB_write_head_valid_length_y_eq
+  CleanQ_RB_write_head_flags_y_eq
+
+
+(* These ones seem to be not used by simp yet*)
+lemma CleanQ_RB_write_head_y_flags_none_false :
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_flags_y (flags b2) (CRB x)) \<Longrightarrow> False"
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_flags_y_def)
+
+lemma CleanQ_RB_write_head_x_flags_none_false :
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_flags_x (flags b2) (CRB x)) \<Longrightarrow> False"
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_flags_x_def)
+
+lemma CleanQ_RB_write_head_y_region_none_false :
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_region_y (flags b2) (CRB x)) \<Longrightarrow> False"
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_region_y_def)
+
+lemma CleanQ_RB_write_head_x_region_none_false :
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_region_x (flags b2) (CRB x)) \<Longrightarrow> False"
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_region_x_def)
+
+
+lemmas CleanQ_RB_write_head_x_region_none[simp] = 
+  CleanQ_RB_write_head_x_region_none_false
+  CleanQ_RB_write_head_x_flags_none_false
+
+lemmas CleanQ_RB_write_head_y_region_none[simp] = 
+  CleanQ_RB_write_head_y_region_none_false
+  CleanQ_RB_write_head_y_flags_none_false
+
+lemma CleanQ_RB_read_tail_y_flags [simp]:
+  assumes "buf_y x = CleanQ_RB_read_tail_region_y (CRB x) (buf_y x)" and
+          "buf_y x = CleanQ_RB_read_tail_offset_y (CRB x) (buf_y x)" and
+          "buf_y x = CleanQ_RB_read_tail_length_y (CRB x) (buf_y x)" and
+          "buf_y x = CleanQ_RB_read_tail_valid_offset_y (CRB x) (buf_y x)" and
+          "buf_y x = CleanQ_RB_read_tail_valid_length_y (CRB x) (buf_y x)"
+  shows "CleanQ_RB_read_tail_flags_y (CRB x) (buf_y x) = CleanQ_RB_read_tail_y (CRB x)"
+  unfolding CleanQ_RB_read_tail_flags_y_def
+  by (metis CleanQ_Buffer.surjective CleanQ_Buffer.update_convs(4) CleanQ_Buffer.update_convs(5) 
+      CleanQ_Buffer.update_convs(6) CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_valid_length_y_def 
+      CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_fields_eq assms(1) assms(2) assms(3) assms(4) assms(5))
+
+lemma CleanQ_RB_read_tail_x_flags [simp]:
+  assumes "buf_x x = CleanQ_RB_read_tail_region_x (CRB x) (buf_x x)" and
+          "buf_x x = CleanQ_RB_read_tail_offset_x (CRB x) (buf_x x)" and
+          "buf_x x = CleanQ_RB_read_tail_length_x (CRB x) (buf_x x)" and
+          "buf_x x = CleanQ_RB_read_tail_valid_offset_x (CRB x) (buf_x x)" and
+          "buf_x x = CleanQ_RB_read_tail_valid_length_x (CRB x) (buf_x x)"
+  shows "CleanQ_RB_read_tail_flags_x (CRB x) (buf_x x) = CleanQ_RB_read_tail_x (CRB x)"
+  unfolding CleanQ_RB_read_tail_flags_x_def
+  by (metis CleanQ_Buffer.surjective CleanQ_Buffer.update_convs(4) CleanQ_Buffer.update_convs(5) 
+      CleanQ_Buffer.update_convs(6) CleanQ_RB_read_tail_flags_x_def CleanQ_RB_read_tail_valid_length_x_def 
+      CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_read_tail_x_fields_eq assms(1) assms(2) assms(3) assms(4) assms(5)) 
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Final concurrency proof\<close>
+(* ------------------------------------------------------------------------------------ *)
+
 lemma CleanQ_RB_conc_mult_if_all:
      "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
       COBEGIN
@@ -2677,10 +2633,7 @@ lemma CleanQ_RB_conc_mult_if_all:
          \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>
       COEND
       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
-  apply(oghoare, simp_all) (* 178 subgoals. Auto after this takes really really long*)
-  
-  
-  
+  apply(oghoare, simp_all) (* 478 subgoals. Auto after this takes really really long*)
   
   oops
 

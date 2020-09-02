@@ -438,7 +438,7 @@ definition CleanQ_RB_read_head_x :: "'a CleanQ_RB_State \<Rightarrow> 'a "
 definition CleanQ_RB_read_head_y :: "'a CleanQ_RB_State \<Rightarrow> 'a " 
   where "CleanQ_RB_read_head_y rb = rb_read_head (rTYX rb)"
 
-definition CleanQ_RB_head_none_x :: "'a CleanQ_RB_State \<Rightarrow> bool" 
+definition CleanQ_RB_head_none_x :: "'a CleanQ_RB_State \<Rightarrow> bool"
   where "CleanQ_RB_head_none_x rb = rb_head_none (rTXY rb)"
 
 definition CleanQ_RB_head_none_y :: "'a CleanQ_RB_State \<Rightarrow> bool" 
