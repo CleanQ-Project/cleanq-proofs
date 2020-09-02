@@ -2511,25 +2511,49 @@ lemma CleanQ_RB_write_head_flags_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_flags_x v rb)"
   by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
 
+lemma CleanQ_RB_write_head_flags_x_not_none2:
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_flags_y v rb) = CleanQ_RB_head_none_x rb "
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_flags_y_def)
+
 lemma CleanQ_RB_write_head_offset_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_offset_x v rb)"
   by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_offset_x_not_none2:
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_offset_y v rb) = CleanQ_RB_head_none_x rb "
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_write_head_length_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_length_x v rb)"
   by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
 
+lemma CleanQ_RB_write_head_length_x_not_none2:
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_length_y v rb) = CleanQ_RB_head_none_x rb "
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_length_y_def)
+
 lemma CleanQ_RB_write_head_region_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_region_x v rb)"
   by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_region_x_not_none2:
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_region_y v rb) = CleanQ_RB_head_none_x rb "
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_write_head_valid_offset_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_offset_x v rb)"
   by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
 
+lemma CleanQ_RB_write_head_valid_offset_x_not_none2:
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_offset_y v rb) = CleanQ_RB_head_none_x rb "
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_valid_offset_y_def)
+
 lemma CleanQ_RB_write_head_valid_length_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_length_x v rb)"
   by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+
+lemma CleanQ_RB_write_head_valid_length_x_not_none2:
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_length_y v rb) = CleanQ_RB_head_none_x rb "
+  by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_write_head_x_not_none[simp] = 
      CleanQ_RB_write_head_flags_x_not_none
@@ -2538,34 +2562,62 @@ lemmas CleanQ_RB_write_head_x_not_none[simp] =
      CleanQ_RB_write_head_region_x_not_none
      CleanQ_RB_write_head_valid_offset_x_not_none
      CleanQ_RB_write_head_valid_length_x_not_none
+     CleanQ_RB_write_head_flags_x_not_none2
+     CleanQ_RB_write_head_offset_x_not_none2
+     CleanQ_RB_write_head_length_x_not_none2
+     CleanQ_RB_write_head_region_x_not_none2
+     CleanQ_RB_write_head_valid_offset_x_not_none2
+     CleanQ_RB_write_head_valid_length_x_not_none2
 
-
-
-paragraph \<open>Write X not none\<close>
+paragraph \<open>Write Y not none\<close>
 
 lemma CleanQ_RB_write_head_flags_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_flags_y v rb)"
   by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_flags_y_def CleanQ_RB_write_head_y_def)
 
+lemma CleanQ_RB_write_head_flags_y_not_none2:
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_flags_x v rb) = CleanQ_RB_head_none_y rb "
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_flags_x_def)
+
 lemma CleanQ_RB_write_head_offset_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_offset_y v rb)"
   by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_offset_y_def CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_offset_y_not_none2:
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_offset_x v rb) = CleanQ_RB_head_none_y rb "
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_offset_x_def)
 
 lemma CleanQ_RB_write_head_length_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_length_y v rb)"
   by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_length_y_def CleanQ_RB_write_head_y_def)
 
+lemma CleanQ_RB_write_head_length_y_not_none2:
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_length_x v rb) = CleanQ_RB_head_none_y rb "
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_length_x_def)
+
 lemma CleanQ_RB_write_head_region_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_region_y v rb)"
   by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_region_y_def CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_region_y_not_none2:
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_region_x v rb) = CleanQ_RB_head_none_y rb "
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_region_x_def)
 
 lemma CleanQ_RB_write_head_valid_offset_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_offset_y v rb)"
   by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_valid_offset_y_def CleanQ_RB_write_head_y_def)
 
+lemma CleanQ_RB_write_head_valid_offset_y_not_none2:
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_offset_x v rb) = CleanQ_RB_head_none_y rb "
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_valid_offset_x_def)
+
 lemma CleanQ_RB_write_head_valid_length_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_length_y v rb)"
   by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_valid_length_y_def CleanQ_RB_write_head_y_def)
+
+lemma CleanQ_RB_write_head_valid_length_y_not_none2:
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_length_x v rb) = CleanQ_RB_head_none_y rb "
+  by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_valid_length_x_def)
 
 lemmas CleanQ_RB_write_head_y_not_none[simp] = 
      CleanQ_RB_write_head_flags_y_not_none
@@ -2574,7 +2626,12 @@ lemmas CleanQ_RB_write_head_y_not_none[simp] =
      CleanQ_RB_write_head_region_y_not_none
      CleanQ_RB_write_head_valid_offset_y_not_none
      CleanQ_RB_write_head_valid_length_y_not_none
-
+     CleanQ_RB_write_head_flags_y_not_none2
+     CleanQ_RB_write_head_offset_y_not_none2
+     CleanQ_RB_write_head_length_y_not_none2
+     CleanQ_RB_write_head_region_y_not_none2
+     CleanQ_RB_write_head_valid_offset_y_not_none2
+     CleanQ_RB_write_head_valid_length_y_not_none2
 
 
 (* those two won't work with all fields... *)
@@ -3674,6 +3731,246 @@ lemma CleanQ_RB_conc_mult_if_all:
       COEND
       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
   apply(oghoare) (* 478 subgoals. Auto after this takes really really long*)
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
+apply(auto)[1]
 apply(auto)[1]
 apply(auto)[1]
 apply(auto)[1]
