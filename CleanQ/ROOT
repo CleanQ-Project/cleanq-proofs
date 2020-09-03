@@ -10,6 +10,7 @@ session "CleanQ" = "HOL" +
         "../Simpl/Vcg"
         "../Simpl/Simpl" 
         "../Complx/OG_Hoare" 
+        "../Complx/OG_Syntax" 
     theories 
         CleanQ_SetModel_Simpl        
         CleanQ_SetModel_Complx      

@@ -12,7 +12,10 @@
 
 
 
+
+(* #################################################################################### *)
 section \<open>CleanQ Abstract Concurrent Ring Buffer Model\<close>
+(* #################################################################################### *)
 
 text \<open>
   This model is the concurrent version of the ring buffer. The \verb+enqueue+ and \verb+deqeue+
