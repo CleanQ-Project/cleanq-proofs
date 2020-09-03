@@ -1511,6 +1511,34 @@ lemmas CleanQ_RB_write_head_y_invariant[simp] =
    CleanQ_RB_write_head_y_flags_inv
 
 
+paragraph \<open>Enqueue and Dequeue Preserves Inveraint\<close>
+
+lemma CleanQ_RB_deq_x_invariant:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_deq_x_possible rb 
+      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_deq_x rb)"
+  using CleanQ_RB_deq_x_all_inv by blast
+
+lemma CleanQ_RB_deq_y_invariant:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_deq_y_possible rb 
+      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_deq_y rb)"
+  using CleanQ_RB_deq_y_all_inv by blast
+
+lemma CleanQ_RB_enq_x_invariant:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_x_possible rb \<Longrightarrow> b \<in> rSX rb
+      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_enq_x b rb)"
+  by (meson CleanQ_RB_enq_x_inv_all)
+  
+lemma CleanQ_RB_enq_y_invariant:
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible rb \<Longrightarrow> b \<in> rSY rb
+      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_enq_y b rb)"
+  by (meson CleanQ_RB_enq_y_inv_all)
+
+lemmas CleanQ_RB_enq_deq_inv_simps[simp] = 
+    CleanQ_RB_deq_x_invariant
+    CleanQ_RB_deq_y_invariant
+    CleanQ_RB_enq_x_invariant
+    CleanQ_RB_enq_y_invariant
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Preserving the Enq/Deq Possible Predicate\<close>
 (* ------------------------------------------------------------------------------------ *)
@@ -2703,34 +2731,63 @@ lemmas CleanQ_RB_read_tail_flags_x_simps[simp] =
 
 
 (* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>Reading Tail, Writing Head\<close>
+subsubsection \<open>Reading Tail Unchanged, Writing Head Other\<close>
 (* ------------------------------------------------------------------------------------ *)
 
-paragraph \<open>Read Y, Writes X Unchanged\<close>
+text \<open>
+  Writing the head element of one side does not change the tail element on the other, 
+  if there is already an element to be dequeued. 
+\<close>
+
+paragraph \<open>Read Tail Region Y Unchanged, Writes Head X\<close>
 
 lemma CleanQ_RB_read_tail_region_y_write_flags_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_flags_x f rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_flags_x f rb) b 
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_region_y_write_region_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_region_x f rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_region_x f rb) b
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_region_y_write_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_offset_x f rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_offset_x f rb) b
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_region_y_write_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_length_x f rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_length_x f rb) b
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_region_y_write_valid_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_valid_offset_x f rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_valid_offset_x f rb) b
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_region_y_write_valid_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_valid_length_x f rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_write_head_valid_length_x f rb) b
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemmas CleanQ_RB_read_tail_region_y_write_x[simp] = 
      CleanQ_RB_read_tail_region_y_write_flags_x
@@ -2741,29 +2798,55 @@ lemmas CleanQ_RB_read_tail_region_y_write_x[simp] =
      CleanQ_RB_read_tail_region_y_write_valid_length_x
 
 
+paragraph \<open>Read Tail Offset Y Unchanged, Writes Head X\<close>
+
 lemma CleanQ_RB_read_tail_offset_y_write_flags_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_flags_x f rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_flags_x f rb) b
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_offset_y_write_region_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_region_x f rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_region_x f rb) b
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_offset_y_write_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_offset_x f rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_offset_x f rb) b
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_offset_y_write_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_length_x f rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_length_x f rb) b
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_offset_y_write_valid_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_valid_offset_x f rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_valid_offset_x f rb) b
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_offset_y_write_valid_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_valid_length_x f rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_write_head_valid_length_x f rb) b
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemmas CleanQ_RB_read_tail_offset_y_write_x[simp] = 
      CleanQ_RB_read_tail_offset_y_write_flags_x
@@ -2773,29 +2856,56 @@ lemmas CleanQ_RB_read_tail_offset_y_write_x[simp] =
      CleanQ_RB_read_tail_offset_y_write_valid_offset_x
      CleanQ_RB_read_tail_offset_y_write_valid_length_x
 
+
+paragraph \<open>Read Tail Length  Y Unchanged, Writes Head X\<close>
+
 lemma CleanQ_RB_read_tail_length_y_write_flags_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_flags_x f rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_flags_x f rb) b
+          = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_length_y_write_region_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_region_x f rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_region_x f rb) b
+          = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_length_y_write_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_offset_x f rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_offset_x f rb) b
+          = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_length_y_write_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_length_x f rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_length_x f rb) b
+          = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_length_y_write_valid_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_valid_offset_x f rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_valid_offset_x f rb) b
+          = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_length_y_write_valid_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_valid_length_x f rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_write_head_valid_length_x f rb) b
+          = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemmas CleanQ_RB_read_tail_length_y_write_x[simp] = 
      CleanQ_RB_read_tail_length_y_write_flags_x
@@ -2806,29 +2916,55 @@ lemmas CleanQ_RB_read_tail_length_y_write_x[simp] =
      CleanQ_RB_read_tail_length_y_write_valid_length_x
 
 
+paragraph \<open>Read Tail Flags Y Unchanged, Writes Head X\<close>
+
 lemma CleanQ_RB_read_tail_flags_y_write_flags_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_flags_x f rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_flags_x f rb) b
+          = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_flags_y_write_region_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_region_x f rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_region_x f rb) b
+          = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_flags_y_write_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_offset_x f rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_offset_x f rb) b
+          = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_flags_y_write_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_length_x f rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_length_x f rb) b
+          = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_flags_y_write_valid_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_valid_offset_x f rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_valid_offset_x f rb) b
+          = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_flags_y_write_valid_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_valid_length_x f rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_write_head_valid_length_x f rb) b
+          = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemmas CleanQ_RB_read_tail_flags_y_write_x[simp] = 
      CleanQ_RB_read_tail_flags_y_write_flags_x
@@ -2838,29 +2974,56 @@ lemmas CleanQ_RB_read_tail_flags_y_write_x[simp] =
      CleanQ_RB_read_tail_flags_y_write_valid_offset_x
      CleanQ_RB_read_tail_flags_y_write_valid_length_x
 
+
+paragraph \<open>Read Tail Valid Offset Y Unchanged, Writes Head X\<close>
+
 lemma CleanQ_RB_read_tail_valid_offset_y_write_flags_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_flags_x f rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_flags_x f rb) b
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def 
+            CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x 
+            CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_y_write_region_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_region_x f rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_region_x f rb) b
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def 
+            CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x 
+            CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_y_write_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_offset_x f rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_offset_x f rb) b
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def 
+            CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x 
+            CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_y_write_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_length_x f rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_length_x f rb) b
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def 
+            CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x 
+            CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_y_write_valid_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_valid_offset_x f rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_valid_offset_x f rb) b
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def 
+            CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x 
+            CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_y_write_valid_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_valid_length_x f rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_write_head_valid_length_x f rb) b
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def 
+            CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x 
+            CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
 
 lemmas CleanQ_RB_read_tail_valid_offset_y_write_x[simp] = 
      CleanQ_RB_read_tail_valid_offset_y_write_flags_x
@@ -2870,29 +3033,56 @@ lemmas CleanQ_RB_read_tail_valid_offset_y_write_x[simp] =
      CleanQ_RB_read_tail_valid_offset_y_write_valid_offset_x
      CleanQ_RB_read_tail_valid_offset_y_write_valid_length_x
 
+
+paragraph \<open>Read Tail Valid Length Y Unchanged, Writes Head X\<close>
+
 lemma CleanQ_RB_read_tail_valid_length_y_write_flags_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_flags_x f rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_flags_x f rb) b
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_flags_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_length_y_write_region_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_region_x f rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_region_x f rb) b
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_region_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_length_y_write_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_offset_x f rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_offset_x f rb) b
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_length_y_write_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_length_x f rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_length_x f rb) b
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_length_y_write_valid_offset_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_valid_offset_x f rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_valid_offset_x f rb) b
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_read_tail_valid_length_y_write_valid_length_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_valid_length_x f rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_write_head_valid_length_x f rb) b
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_write_head_x CleanQ_RB_write_head_valid_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemmas CleanQ_RB_read_tail_valid_length_y_write_x[simp] = 
      CleanQ_RB_read_tail_valid_length_y_write_flags_x
@@ -2904,32 +3094,49 @@ lemmas CleanQ_RB_read_tail_valid_length_y_write_x[simp] =
 
 
 
-paragraph \<open>Read X, Writes Y Unchanged\<close>
-
+paragraph \<open>Read Tail Valid Length X Unchanged, Writes Head Y\<close>
 
 lemma CleanQ_RB_read_tail_valid_length_x_write_flags_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_flags_y f rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_write_head_flags_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_flags_y f rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def 
+                CleanQ_RB_write_head_flags_y_def)
 
 lemma CleanQ_RB_read_tail_valid_length_x_write_region_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_region_y f rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_write_head_region_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_region_y f rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def 
+                CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_read_tail_valid_length_x_write_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_offset_y f rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_write_head_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_offset_y f rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def 
+                CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_read_tail_valid_length_x_write_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_length_y f rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_write_head_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_length_y f rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def 
+                CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_read_tail_valid_length_x_write_valid_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_valid_offset_y f rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_write_head_valid_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_valid_offset_y f rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def 
+                CleanQ_RB_write_head_valid_offset_y_def)
 
 lemma CleanQ_RB_read_tail_valid_length_x_write_valid_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_valid_length_y f rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_write_head_valid_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_write_head_valid_length_y f rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_length_x_def 
+                CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_read_tail_valid_length_x_write_y[simp] = 
      CleanQ_RB_read_tail_valid_length_x_write_flags_y
@@ -2940,30 +3147,49 @@ lemmas CleanQ_RB_read_tail_valid_length_x_write_y[simp] =
      CleanQ_RB_read_tail_valid_length_x_write_valid_length_y
 
 
+paragraph \<open>Read Tail Valid Offset X Unchanged, Writes Head Y\<close>
 
 lemma CleanQ_RB_read_tail_valid_offset_x_write_flags_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_flags_y f rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_write_head_flags_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_flags_y f rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def 
+                CleanQ_RB_write_head_flags_y_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_x_write_region_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_region_y f rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_write_head_region_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_region_y f rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def 
+                CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_x_write_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_offset_y f rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_write_head_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_offset_y f rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def 
+                CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_x_write_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_length_y f rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_write_head_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_length_y f rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def 
+                CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_x_write_valid_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_valid_offset_y f rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_write_head_valid_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_valid_offset_y f rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def 
+                CleanQ_RB_write_head_valid_offset_y_def)
 
 lemma CleanQ_RB_read_tail_valid_offset_x_write_valid_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_valid_length_y f rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_write_head_valid_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_write_head_valid_length_y f rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_valid_offset_x_def 
+                CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_read_tail_valid_offset_x_write_y[simp] = 
      CleanQ_RB_read_tail_valid_offset_x_write_flags_y
@@ -2973,29 +3199,49 @@ lemmas CleanQ_RB_read_tail_valid_offset_x_write_y[simp] =
      CleanQ_RB_read_tail_valid_offset_x_write_valid_offset_y
      CleanQ_RB_read_tail_valid_offset_x_write_valid_length_y
 
+paragraph \<open>Read Tail Flags X Unchanged, Writes Head Y\<close>
+
 lemma CleanQ_RB_read_tail_flags_x_write_flags_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_flags_y f rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def CleanQ_RB_write_head_flags_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_flags_y f rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def 
+                CleanQ_RB_write_head_flags_y_def)
 
 lemma CleanQ_RB_read_tail_flags_x_write_region_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_region_y f rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def CleanQ_RB_write_head_region_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_region_y f rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def 
+                CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_read_tail_flags_x_write_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_offset_y f rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def CleanQ_RB_write_head_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_offset_y f rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def 
+                CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_read_tail_flags_x_write_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_length_y f rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def CleanQ_RB_write_head_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_length_y f rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def 
+                CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_read_tail_flags_x_write_valid_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_valid_offset_y f rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def CleanQ_RB_write_head_valid_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_valid_offset_y f rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def 
+                CleanQ_RB_write_head_valid_offset_y_def)
 
 lemma CleanQ_RB_read_tail_flags_x_write_valid_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_valid_length_y f rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def CleanQ_RB_write_head_valid_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_write_head_valid_length_y f rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_flags_x_def 
+                CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_read_tail_flags_x_write_y[simp] = 
      CleanQ_RB_read_tail_flags_x_write_flags_y
@@ -3005,30 +3251,49 @@ lemmas CleanQ_RB_read_tail_flags_x_write_y[simp] =
      CleanQ_RB_read_tail_flags_x_write_valid_offset_y
      CleanQ_RB_read_tail_flags_x_write_valid_length_y
 
+paragraph \<open>Read Tail Offset X Unchanged, Writes Head Y\<close>
 
 lemma CleanQ_RB_read_tail_offset_x_write_flags_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_flags_y f rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def CleanQ_RB_write_head_flags_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_flags_y f rb) b 
+          = CleanQ_RB_read_tail_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def 
+                CleanQ_RB_write_head_flags_y_def)
 
 lemma CleanQ_RB_read_tail_offset_x_write_region_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_region_y f rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def CleanQ_RB_write_head_region_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_region_y f rb) b 
+          = CleanQ_RB_read_tail_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def 
+                CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_read_tail_offset_x_write_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_offset_y f rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def CleanQ_RB_write_head_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_offset_y f rb) b 
+          = CleanQ_RB_read_tail_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def 
+                CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_read_tail_offset_x_write_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_length_y f rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def CleanQ_RB_write_head_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_length_y f rb) b 
+          = CleanQ_RB_read_tail_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def 
+                CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_read_tail_offset_x_write_valid_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_valid_offset_y f rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def CleanQ_RB_write_head_valid_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_valid_offset_y f rb) b 
+          = CleanQ_RB_read_tail_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def 
+                CleanQ_RB_write_head_valid_offset_y_def)
 
 lemma CleanQ_RB_read_tail_offset_x_write_valid_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_valid_length_y f rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def CleanQ_RB_write_head_valid_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_write_head_valid_length_y f rb) b 
+            = CleanQ_RB_read_tail_offset_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_offset_x_def 
+                CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_read_tail_offset_x_write_y[simp] = 
      CleanQ_RB_read_tail_offset_x_write_flags_y
@@ -3038,29 +3303,49 @@ lemmas CleanQ_RB_read_tail_offset_x_write_y[simp] =
      CleanQ_RB_read_tail_offset_x_write_valid_offset_y
      CleanQ_RB_read_tail_offset_x_write_valid_length_y
 
+paragraph \<open>Read Tail Length X Unchanged, Writes Head Y\<close>
+
 lemma CleanQ_RB_read_tail_length_x_write_flags_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_flags_y f rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def CleanQ_RB_write_head_flags_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_flags_y f rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def 
+                CleanQ_RB_write_head_flags_y_def)
 
 lemma CleanQ_RB_read_tail_length_x_write_region_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_region_y f rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def CleanQ_RB_write_head_region_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_region_y f rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def 
+                CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_read_tail_length_x_write_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_offset_y f rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def CleanQ_RB_write_head_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_offset_y f rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def 
+                CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_read_tail_length_x_write_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_length_y f rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def CleanQ_RB_write_head_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_length_y f rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def 
+                CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_read_tail_length_x_write_valid_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_valid_offset_y f rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def CleanQ_RB_write_head_valid_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_valid_offset_y f rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def 
+                CleanQ_RB_write_head_valid_offset_y_def)
 
 lemma CleanQ_RB_read_tail_length_x_write_valid_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_valid_length_y f rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def CleanQ_RB_write_head_valid_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_write_head_valid_length_y f rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_length_x_def 
+                CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_read_tail_length_x_write_y[simp] = 
      CleanQ_RB_read_tail_length_x_write_flags_y
@@ -3071,29 +3356,49 @@ lemmas CleanQ_RB_read_tail_length_x_write_y[simp] =
      CleanQ_RB_read_tail_length_x_write_valid_length_y
 
 
+paragraph \<open>Read Tail Region X Unchanged, Writes Head Y\<close>
+
 lemma CleanQ_RB_read_tail_region_x_write_flags_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_flags_y f rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def CleanQ_RB_write_head_flags_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_flags_y f rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def 
+                CleanQ_RB_write_head_flags_y_def)
 
 lemma CleanQ_RB_read_tail_region_x_write_region_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_region_y f rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def CleanQ_RB_write_head_region_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_region_y f rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def 
+                CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_read_tail_region_x_write_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_offset_y f rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def CleanQ_RB_write_head_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_offset_y f rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def 
+                CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_read_tail_region_x_write_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_length_y f rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def CleanQ_RB_write_head_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_length_y f rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def 
+                CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_read_tail_region_x_write_valid_offset_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_valid_offset_y f rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def CleanQ_RB_write_head_valid_offset_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_valid_offset_y f rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def 
+                CleanQ_RB_write_head_valid_offset_y_def)
 
 lemma CleanQ_RB_read_tail_region_x_write_valid_length_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_valid_length_y f rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def CleanQ_RB_write_head_valid_length_y_def)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_write_head_valid_length_y f rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_tail_region_x_def 
+                CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_read_tail_region_x_write_y[simp] = 
      CleanQ_RB_read_tail_region_x_write_flags_y
@@ -3103,31 +3408,61 @@ lemmas CleanQ_RB_read_tail_region_x_write_y[simp] =
      CleanQ_RB_read_tail_region_x_write_valid_offset_y
      CleanQ_RB_read_tail_region_x_write_valid_length_y
 
-paragraph \<open>Read Y, Enq X\<close>
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Reading Tail, Writing Head\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+text \<open>
+  Not just writing a single element preserves reading the tail field, this is also the
+  case when we do a full enqueue or dequeue operation. We show this for both operations
+  and sides.
+\<close>
+
+paragraph \<open>Read Tail  Y, Enqueue X\<close>
+
 
 lemma CleanQ_RB_read_tail_region_y_enq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_enq_x b2 rb) b 
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_enq_x)
 
 lemma CleanQ_RB_read_tail_offset_y_enq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_enq_x b2 rb) b 
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_enq_x)
 
 lemma CleanQ_RB_read_tail_length_y_enq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_enq_x b2 rb) b 
+          = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_enq_x)
 
 lemma CleanQ_RB_read_tail_flags_y_enq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_enq_x b2 rb) b 
+          = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_enq_x)
 
 lemma CleanQ_RB_read_tail_valid_offset_y_enq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_enq_x b2 rb) b 
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_enq_x)
 
 lemma CleanQ_RB_read_tail_valid_length_y_enq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_enq_x b2 rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_enq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_enq_x b2 rb) b 
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_enq_x)
 
 lemmas CleanQ_RB_read_tail__y_enq_x_simps[simp] = 
      CleanQ_RB_read_tail_region_y_enq_x
@@ -3137,31 +3472,50 @@ lemmas CleanQ_RB_read_tail__y_enq_x_simps[simp] =
      CleanQ_RB_read_tail_valid_offset_y_enq_x
      CleanQ_RB_read_tail_valid_length_y_enq_x
 
-paragraph \<open>Read X, Enq Y\<close>
+
+paragraph \<open>Read Tail X, Enqueue YX\<close>
 
 lemma CleanQ_RB_read_tail_region_x_enq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (metis CleanQ_RB_read_tail_region_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_enq_y b2 rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (metis CleanQ_RB_read_tail_region_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_enq_y)
 
 lemma CleanQ_RB_read_tail_offset_x_enq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (metis CleanQ_RB_read_tail_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_enq_y b2 rb) b 
+          = CleanQ_RB_read_tail_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_offset_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_enq_y)
 
 lemma CleanQ_RB_read_tail_length_x_enq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (metis CleanQ_RB_read_tail_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_enq_y b2 rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (metis CleanQ_RB_read_tail_length_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_enq_y)
 
 lemma CleanQ_RB_read_tail_flags_x_enq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (metis CleanQ_RB_read_tail_flags_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_enq_y b2 rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (metis CleanQ_RB_read_tail_flags_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_enq_y)
 
 lemma CleanQ_RB_read_tail_valid_offset_x_enq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_enq_y b2 rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_enq_y)
 
 lemma CleanQ_RB_read_tail_valid_length_x_enq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_enq_y b2 rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_enq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_enq_y b2 rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_enq_y)
 
 lemmas CleanQ_RB_read_tail_x_enq_y_simps[simp] = 
      CleanQ_RB_read_tail_region_x_enq_y
@@ -3172,31 +3526,49 @@ lemmas CleanQ_RB_read_tail_x_enq_y_simps[simp] =
      CleanQ_RB_read_tail_valid_length_x_enq_y
 
 
-paragraph \<open>Read Y, Deq X\<close>
+paragraph \<open>Read Tail Y, Deqeueue X\<close>
 
 lemma CleanQ_RB_read_tail_region_y_deq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_deq_x  rb) b = CleanQ_RB_read_tail_region_y rb b"
-  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_y (CleanQ_RB_deq_x  rb) b 
+          = CleanQ_RB_read_tail_region_y rb b"
+  by (metis CleanQ_RB_read_tail_region_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_deq_x)
 
 lemma CleanQ_RB_read_tail_offset_y_deq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_deq_x  rb) b = CleanQ_RB_read_tail_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_y (CleanQ_RB_deq_x  rb) b 
+          = CleanQ_RB_read_tail_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_deq_x)
 
 lemma CleanQ_RB_read_tail_length_y_deq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_deq_x rb) b = CleanQ_RB_read_tail_length_y rb b"
-  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_y (CleanQ_RB_deq_x rb) b 
+        = CleanQ_RB_read_tail_length_y rb b"
+  by (metis CleanQ_RB_read_tail_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_deq_x)
 
 lemma CleanQ_RB_read_tail_flags_y_deq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_deq_x  rb) b = CleanQ_RB_read_tail_flags_y rb b"
-  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_y (CleanQ_RB_deq_x  rb) b 
+        = CleanQ_RB_read_tail_flags_y rb b"
+  by (metis CleanQ_RB_read_tail_flags_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_deq_x)
 
 lemma CleanQ_RB_read_tail_valid_offset_y_deq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_deq_x rb) b = CleanQ_RB_read_tail_valid_offset_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_y (CleanQ_RB_deq_x rb) b
+          = CleanQ_RB_read_tail_valid_offset_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_deq_x)
 
 lemma CleanQ_RB_read_tail_valid_length_y_deq_x:
-  "CleanQ_RB_deq_y_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_deq_x rb) b = CleanQ_RB_read_tail_valid_length_y rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def CleanQ_RB_read_tail_y_deq_x)
+  "CleanQ_RB_deq_y_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_y (CleanQ_RB_deq_x rb) b 
+          = CleanQ_RB_read_tail_valid_length_y rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_y_def CleanQ_RB_read_tail_y_def 
+            CleanQ_RB_read_tail_y_deq_x)
 
 lemmas CleanQ_RB_read_tail__y_deq_x_simps[simp] = 
      CleanQ_RB_read_tail_region_y_deq_x
@@ -3207,31 +3579,49 @@ lemmas CleanQ_RB_read_tail__y_deq_x_simps[simp] =
      CleanQ_RB_read_tail_valid_length_y_deq_x
 
 
-paragraph \<open>Read X, Deq Y\<close>
+paragraph \<open>Read Tail X, Dequeue Y\<close>
 
 lemma CleanQ_RB_read_tail_region_x_deq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_deq_y rb) b = CleanQ_RB_read_tail_region_x rb b"
-  by (metis CleanQ_RB_read_tail_region_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_region_x (CleanQ_RB_deq_y rb) b 
+          = CleanQ_RB_read_tail_region_x rb b"
+  by (metis CleanQ_RB_read_tail_region_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_deq_y)
 
 lemma CleanQ_RB_read_tail_offset_x_deq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_deq_y rb) b = CleanQ_RB_read_tail_offset_x rb b"
-  by (metis CleanQ_RB_read_tail_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_offset_x (CleanQ_RB_deq_y rb) b 
+          = CleanQ_RB_read_tail_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_offset_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_deq_y)
 
 lemma CleanQ_RB_read_tail_length_x_deq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_deq_y rb) b = CleanQ_RB_read_tail_length_x rb b"
-  by (metis CleanQ_RB_read_tail_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_length_x (CleanQ_RB_deq_y rb) b 
+          = CleanQ_RB_read_tail_length_x rb b"
+  by (metis CleanQ_RB_read_tail_length_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_deq_y)
 
 lemma CleanQ_RB_read_tail_flags_x_deq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_deq_y  rb) b = CleanQ_RB_read_tail_flags_x rb b"
-  by (metis CleanQ_RB_read_tail_flags_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_flags_x (CleanQ_RB_deq_y rb) b 
+          = CleanQ_RB_read_tail_flags_x rb b"
+  by (metis CleanQ_RB_read_tail_flags_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_deq_y)
 
 lemma CleanQ_RB_read_tail_valid_offset_x_deq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_deq_y  rb) b = CleanQ_RB_read_tail_valid_offset_x rb b"
-  by (metis CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_offset_x (CleanQ_RB_deq_y rb) b 
+          = CleanQ_RB_read_tail_valid_offset_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_offset_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_deq_y)
 
 lemma CleanQ_RB_read_tail_valid_length_x_deq_y:
-  "CleanQ_RB_deq_x_possible rb \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_deq_y  rb) b = CleanQ_RB_read_tail_valid_length_x rb b"
-  by (metis CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_read_tail_x_def CleanQ_RB_read_tail_x_deq_y)
+  "CleanQ_RB_deq_x_possible rb 
+    \<Longrightarrow> CleanQ_RB_read_tail_valid_length_x (CleanQ_RB_deq_y  rb) b 
+          = CleanQ_RB_read_tail_valid_length_x rb b"
+  by (metis CleanQ_RB_read_tail_valid_length_x_def CleanQ_RB_read_tail_x_def 
+            CleanQ_RB_read_tail_x_deq_y)
 
 lemmas CleanQ_RB_read_tail_x_deq_y_simps[simp] = 
      CleanQ_RB_read_tail_region_x_deq_y
@@ -3242,57 +3632,71 @@ lemmas CleanQ_RB_read_tail_x_deq_y_simps[simp] =
      CleanQ_RB_read_tail_valid_length_x_deq_y
 
 
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Writing Head, Head Not None\<close>
+(* ------------------------------------------------------------------------------------ *)
 
+text \<open>
+  Whenever an element of the ring buffer is written, the head element is not None.
+  We show this for all fields.
+\<close>
 
-
-paragraph \<open>Write X not none\<close>
+paragraph \<open>Write Head X, Head is Not None\<close>
 
 lemma CleanQ_RB_write_head_flags_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_flags_x v rb)"
-  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_flags_x_def CleanQ_RB_write_head_x_def)
+  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_flags_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_write_head_flags_x_not_none2:
-  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_flags_y v rb) = CleanQ_RB_head_none_x rb "
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_flags_y v rb) = CleanQ_RB_head_none_x rb"
   by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_flags_y_def)
 
 lemma CleanQ_RB_write_head_offset_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_offset_x v rb)"
-  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_offset_x_def CleanQ_RB_write_head_x_def)
+  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_write_head_offset_x_not_none2:
-  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_offset_y v rb) = CleanQ_RB_head_none_x rb "
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_offset_y v rb) = CleanQ_RB_head_none_x rb"
   by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_write_head_length_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_length_x v rb)"
-  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_length_x_def CleanQ_RB_write_head_x_def)
+  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_write_head_length_x_not_none2:
-  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_length_y v rb) = CleanQ_RB_head_none_x rb "
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_length_y v rb) = CleanQ_RB_head_none_x rb"
   by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_write_head_region_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_region_x v rb)"
-  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_region_x_def CleanQ_RB_write_head_x_def)
+  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_region_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_write_head_region_x_not_none2:
-  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_region_y v rb) = CleanQ_RB_head_none_x rb "
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_region_y v rb) = CleanQ_RB_head_none_x rb"
   by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_write_head_valid_offset_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_offset_x v rb)"
-  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_valid_offset_x_def CleanQ_RB_write_head_x_def)
+  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_valid_offset_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_write_head_valid_offset_x_not_none2:
-  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_offset_y v rb) = CleanQ_RB_head_none_x rb "
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_offset_y v rb) 
+    = CleanQ_RB_head_none_x rb"
   by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_valid_offset_y_def)
 
 lemma CleanQ_RB_write_head_valid_length_x_not_none:
   "\<not>CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_length_x v rb)"
-  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_valid_length_x_def CleanQ_RB_write_head_x_def)
+  by (metis CleanQ_RB_head_write_x_not_none CleanQ_RB_write_head_valid_length_x_def 
+            CleanQ_RB_write_head_x_def)
 
 lemma CleanQ_RB_write_head_valid_length_x_not_none2:
-  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_length_y v rb) = CleanQ_RB_head_none_x rb "
+  "CleanQ_RB_head_none_x (CleanQ_RB_write_head_valid_length_y v rb) 
+    = CleanQ_RB_head_none_x rb"
   by (simp add: CleanQ_RB_head_none_x_def CleanQ_RB_write_head_valid_length_y_def)
 
 lemmas CleanQ_RB_write_head_x_not_none[simp] = 
@@ -3309,54 +3713,62 @@ lemmas CleanQ_RB_write_head_x_not_none[simp] =
      CleanQ_RB_write_head_valid_offset_x_not_none2
      CleanQ_RB_write_head_valid_length_x_not_none2
 
-paragraph \<open>Write Y not none\<close>
+paragraph \<open>Write Head Y, Head is Not None\<close>
 
 lemma CleanQ_RB_write_head_flags_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_flags_y v rb)"
-  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_flags_y_def CleanQ_RB_write_head_y_def)
+  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_flags_y_def 
+            CleanQ_RB_write_head_y_def)
 
 lemma CleanQ_RB_write_head_flags_y_not_none2:
-  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_flags_x v rb) = CleanQ_RB_head_none_y rb "
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_flags_x v rb) = CleanQ_RB_head_none_y rb"
   by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_flags_x_def)
 
 lemma CleanQ_RB_write_head_offset_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_offset_y v rb)"
-  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_offset_y_def CleanQ_RB_write_head_y_def)
+  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_offset_y_def 
+            CleanQ_RB_write_head_y_def)
 
 lemma CleanQ_RB_write_head_offset_y_not_none2:
-  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_offset_x v rb) = CleanQ_RB_head_none_y rb "
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_offset_x v rb) = CleanQ_RB_head_none_y rb"
   by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_offset_x_def)
 
 lemma CleanQ_RB_write_head_length_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_length_y v rb)"
-  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_length_y_def CleanQ_RB_write_head_y_def)
+  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_length_y_def 
+            CleanQ_RB_write_head_y_def)
 
 lemma CleanQ_RB_write_head_length_y_not_none2:
-  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_length_x v rb) = CleanQ_RB_head_none_y rb "
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_length_x v rb) = CleanQ_RB_head_none_y rb"
   by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_length_x_def)
 
 lemma CleanQ_RB_write_head_region_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_region_y v rb)"
-  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_region_y_def CleanQ_RB_write_head_y_def)
+  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_region_y_def 
+            CleanQ_RB_write_head_y_def)
 
 lemma CleanQ_RB_write_head_region_y_not_none2:
-  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_region_x v rb) = CleanQ_RB_head_none_y rb "
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_region_x v rb) = CleanQ_RB_head_none_y rb"
   by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_region_x_def)
 
 lemma CleanQ_RB_write_head_valid_offset_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_offset_y v rb)"
-  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_valid_offset_y_def CleanQ_RB_write_head_y_def)
+  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_valid_offset_y_def 
+            CleanQ_RB_write_head_y_def)
 
 lemma CleanQ_RB_write_head_valid_offset_y_not_none2:
-  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_offset_x v rb) = CleanQ_RB_head_none_y rb "
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_offset_x v rb)
+     = CleanQ_RB_head_none_y rb"
   by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_valid_offset_x_def)
 
 lemma CleanQ_RB_write_head_valid_length_y_not_none:
   "\<not>CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_length_y v rb)"
-  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_valid_length_y_def CleanQ_RB_write_head_y_def)
+  by (metis CleanQ_RB_head_write_y_not_none CleanQ_RB_write_head_valid_length_y_def 
+            CleanQ_RB_write_head_y_def)
 
 lemma CleanQ_RB_write_head_valid_length_y_not_none2:
-  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_length_x v rb) = CleanQ_RB_head_none_y rb "
+  "CleanQ_RB_head_none_y (CleanQ_RB_write_head_valid_length_x v rb) 
+    = CleanQ_RB_head_none_y rb "
   by (simp add: CleanQ_RB_head_none_y_def CleanQ_RB_write_head_valid_length_x_def)
 
 lemmas CleanQ_RB_write_head_y_not_none[simp] = 
@@ -3374,33 +3786,9 @@ lemmas CleanQ_RB_write_head_y_not_none[simp] =
      CleanQ_RB_write_head_valid_length_y_not_none2
 
 
-paragraph \<open>Invariants\<close>
-
-lemma CleanQ_RB_deq_x_invariant:
-  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_deq_x_possible rb 
-      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_deq_x rb)"
-  using CleanQ_RB_deq_x_all_inv by blast
-
-lemma CleanQ_RB_deq_y_invariant:
-  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_deq_y_possible rb 
-      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_deq_y rb)"
-  using CleanQ_RB_deq_y_all_inv by blast
-
-lemma CleanQ_RB_enq_x_invariant:
-  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_x_possible rb \<Longrightarrow> b \<in> rSX rb
-      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_enq_x b rb)"
-  by (meson CleanQ_RB_enq_x_inv_all)
-  
-lemma CleanQ_RB_enq_y_invariant:
-  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible rb \<Longrightarrow> b \<in> rSY rb
-      \<Longrightarrow> CleanQ_RB_Invariants K (CleanQ_RB_enq_y b rb)"
-  by (meson CleanQ_RB_enq_y_inv_all)
-
-lemmas CleanQ_RB_enq_deq_inv_simps[simp] = 
-  CleanQ_RB_deq_x_invariant
-  CleanQ_RB_deq_y_invariant
-  CleanQ_RB_enq_x_invariant
-  CleanQ_RB_enq_y_invariant
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>TODO: Sort here\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 paragraph \<open>Write head behaves as expected for X\<close>
 
@@ -3410,29 +3798,29 @@ lemma CleanQ_RB_write_head_flags_x_eq:
           len: "length (CleanQ_RB_read_head_x (CRB x)) = length b2" and
           vao: "valid_offset (CleanQ_RB_read_head_x (CRB x)) = valid_offset b2" and
           val:"valid_length (CleanQ_RB_read_head_x (CRB x)) = valid_length b2"
-  shows "b2 = CleanQ_RB_read_head_x (CleanQ_RB_write_head_flags_x (flags b2) (CRB x))"
+  shows "b2 = CleanQ_RB_read_head_x (CleanQ_RB_write_head_flags_x ( b2) (CRB x))"
   using assms unfolding CleanQ_RB_write_head_flags_x_def CleanQ_RB_read_head_x_def
   by(auto)
 
 lemma CleanQ_RB_write_head_region_x_eq :
-  shows "region (CleanQ_RB_read_head_x (CleanQ_RB_write_head_region_x (region b2) (CRB x))) = region b2"
+  shows "region (CleanQ_RB_read_head_x (CleanQ_RB_write_head_region_x ( b2) (CRB x))) = region b2"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_region_x_def)
 
 lemma CleanQ_RB_write_head_offset_x_eq :
-  shows "offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_offset_x (offset b2) (CRB x))) = offset b2"
+  shows "offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_offset_x ( b2) (CRB x))) = offset b2"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_offset_x_def)
 
 lemma CleanQ_RB_write_head_length_x_eq :
-  shows "length (CleanQ_RB_read_head_x (CleanQ_RB_write_head_length_x (length b2) (CRB x))) = length b2"
+  shows "length (CleanQ_RB_read_head_x (CleanQ_RB_write_head_length_x ( b2) (CRB x))) = length b2"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_length_x_def)
 
 lemma CleanQ_RB_write_head_valid_length_x_eq :
-  shows "valid_length (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_x (valid_length b2) (CRB x))) = valid_length b2"
+  shows "valid_length (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_length_x ( b2) (CRB x))) = valid_length b2"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_length_x_def)
   
 
 lemma CleanQ_RB_write_head_valid_offset_x_eq :
-  shows "valid_offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_offset_x (valid_offset b2) (CRB x))) = valid_offset b2"
+  shows "valid_offset (CleanQ_RB_read_head_x (CleanQ_RB_write_head_valid_offset_x ( b2) (CRB x))) = valid_offset b2"
   by (simp add: CleanQ_RB_read_head_x_def CleanQ_RB_write_head_valid_offset_x_def)
   
 lemmas CleanQ_RB_write_head_x_eq[simp] = 
@@ -3451,28 +3839,28 @@ lemma CleanQ_RB_write_head_flags_y_eq:
           len: "length (CleanQ_RB_read_head_y (CRB x)) = length b2" and
           vao: "valid_offset (CleanQ_RB_read_head_y (CRB x)) = valid_offset b2" and
           val:"valid_length (CleanQ_RB_read_head_y (CRB x)) = valid_length b2"
-  shows "b2 = CleanQ_RB_read_head_y (CleanQ_RB_write_head_flags_y (flags b2) (CRB x))"
+  shows "b2 = CleanQ_RB_read_head_y (CleanQ_RB_write_head_flags_y ( b2) (CRB x))"
   using assms unfolding CleanQ_RB_write_head_flags_y_def CleanQ_RB_read_head_y_def
   by(auto)
 
 lemma CleanQ_RB_write_head_region_y_eq :
-  shows "region (CleanQ_RB_read_head_y (CleanQ_RB_write_head_region_y (region b2) (CRB y))) = region b2"
+  shows "region (CleanQ_RB_read_head_y (CleanQ_RB_write_head_region_y ( b2) (CRB y))) = region b2"
   by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_region_y_def)
 
 lemma CleanQ_RB_write_head_offset_y_eq :
-  shows "offset (CleanQ_RB_read_head_y (CleanQ_RB_write_head_offset_y (offset b2) (CRB y))) = offset b2"
+  shows "offset (CleanQ_RB_read_head_y (CleanQ_RB_write_head_offset_y ( b2) (CRB y))) = offset b2"
   by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_offset_y_def)
 
 lemma CleanQ_RB_write_head_length_y_eq :
-  shows "length (CleanQ_RB_read_head_y (CleanQ_RB_write_head_length_y (length b2) (CRB y))) = length b2"
+  shows "length (CleanQ_RB_read_head_y (CleanQ_RB_write_head_length_y ( b2) (CRB y))) = length b2"
   by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_length_y_def)
 
 lemma CleanQ_RB_write_head_valid_length_y_eq :
-  shows "valid_length (CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_length_y (valid_length b2) (CRB y))) = valid_length b2"
+  shows "valid_length (CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_length_y ( b2) (CRB y))) = valid_length b2"
   by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_valid_length_y_def)
   
 lemma CleanQ_RB_write_head_valid_offset_y_eq :
-  shows "valid_offset (CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_offset_y (valid_offset b2) (CRB y))) = valid_offset b2"
+  shows "valid_offset (CleanQ_RB_read_head_y (CleanQ_RB_write_head_valid_offset_y ( b2) (CRB y))) = valid_offset b2"
   by (simp add: CleanQ_RB_read_head_y_def CleanQ_RB_write_head_valid_offset_y_def)
 
 lemmas CleanQ_RB_write_head_y_eq[simp] = 
@@ -3574,29 +3962,29 @@ abbreviation "CleanQ_CRB_enq_mult_x b \<equiv>
             IF CleanQ_RB_enq_x_possible \<acute>CRB \<and> b \<in> rSX \<acute>CRB
             THEN
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_region_x (region b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_region_x ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_x \<acute>CRB) = region b 
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_offset_x (offset b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_offset_x ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_x \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b 
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_length_x (length b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_length_x ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_x \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b \<and>
                 length (CleanQ_RB_read_head_x \<acute>CRB) = length b
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_x (valid_offset b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_x ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_x \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b \<and>
                 length (CleanQ_RB_read_head_x \<acute>CRB) = length b \<and>
                 valid_offset (CleanQ_RB_read_head_x \<acute>CRB) = valid_offset b
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_length_x (valid_length b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_valid_length_x ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_x \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_x \<acute>CRB) = offset b \<and>
@@ -3604,7 +3992,7 @@ abbreviation "CleanQ_CRB_enq_mult_x b \<equiv>
                 valid_offset (CleanQ_RB_read_head_x \<acute>CRB) = valid_offset b \<and>
                 valid_length (CleanQ_RB_read_head_x \<acute>CRB) = valid_length b
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_flags_x (flags b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_flags_x ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<rbrace>
                 \<acute>CRB := (CleanQ_RB_incr_head_x b \<acute>CRB)
             ELSE 
@@ -3617,29 +4005,29 @@ abbreviation "CleanQ_CRB_enq_mult_y b \<equiv>
             IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
             THEN
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_region_y (region b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_region_y ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
                 region (CleanQ_RB_read_head_y \<acute>CRB) = region b 
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_offset_y (offset b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_offset_y ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and>  
                 region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b 
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_length_y (length b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_length_y ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and>  
                 region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
                 length (CleanQ_RB_read_head_y \<acute>CRB) = length b 
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_y (valid_offset b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_valid_offset_y ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and>  
                 region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
                 length (CleanQ_RB_read_head_y \<acute>CRB) = length b \<and> 
                 valid_offset (CleanQ_RB_read_head_y \<acute>CRB) = valid_offset b
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_valid_length_y (valid_length b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_valid_length_y ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and>  
                 region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
                 offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
@@ -3647,7 +4035,7 @@ abbreviation "CleanQ_CRB_enq_mult_y b \<equiv>
                 valid_offset (CleanQ_RB_read_head_y \<acute>CRB) = valid_offset b \<and>
                 valid_length (CleanQ_RB_read_head_y \<acute>CRB) = valid_length b
               \<rbrace>
-                \<acute>CRB := (CleanQ_RB_write_head_flags_y (flags b) \<acute>CRB) ;;
+                \<acute>CRB := (CleanQ_RB_write_head_flags_y ( b) \<acute>CRB) ;;
               \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<rbrace>
                 \<acute>CRB := (CleanQ_RB_incr_head_y b \<acute>CRB)
             ELSE 
