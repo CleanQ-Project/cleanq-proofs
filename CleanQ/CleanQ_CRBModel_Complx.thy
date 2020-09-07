@@ -5954,6 +5954,7 @@ lemmas CleanQ_RB_enq_deq_read_tail_head_simps[simp] =
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Lemmas around weak frame condition\<close>
 (* ------------------------------------------------------------------------------------ *)
+
 lemma frame_rb_write_head_x_frame_left_unchaged:
   assumes "CleanQ_RB_frame_weak_x rb' rb"
   shows "frame_rb_weak_left (rTXY (CleanQ_RB_write_head_x b rb')) (rTXY (CleanQ_RB_write_head_x b rb))"
@@ -6004,13 +6005,23 @@ lemma frame_rb_write_head_y_delta_tail_same:
   by (simp add: CleanQ_RB_write_head_y_def)
 
 lemma frame_rb_write_head_x_frame_rest_unchaged1:
-  assumes "CleanQ_RB_frame_weak_x rb' rb"
+  assumes "CleanQ_RB_frame_weak_x st' st"
   shows "rSY (CleanQ_RB_write_head_x b st') \<union> 
         set (rb_delta_tail_st (rTXY (CleanQ_RB_write_head_x b st')) (rTXY (CleanQ_RB_write_head_x b st))) = 
        (set (rb_delta_head_st (rTYX (CleanQ_RB_write_head_x b st')) (rTYX (CleanQ_RB_write_head_x b st))) \<union> 
         rSY (CleanQ_RB_write_head_x b st))"
-  using assms unfolding CleanQ_RB_frame_weak_x_def  
-  sorry
+  using assms unfolding CleanQ_RB_frame_weak_x_def
+  by (metis (no_types, lifting) frame_rb_weak_left_def frame_rb_write_head_x_delta_head_xy_same 
+      frame_rb_write_head_x_delta_tail_same2 frame_rb_write_head_x_sy_same) 
+
+lemma frame_rb_write_head_x_frame_unchaged:
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x (CleanQ_RB_write_head_x b st') (CleanQ_RB_write_head_x b st)"
+  unfolding CleanQ_RB_frame_weak_x_def
+  by (smt CleanQ_RB_frame_weak_x_def CleanQ_RB_write_head_x_SX assms frame_rb_write_head_x_delta_head_xy_same 
+      frame_rb_write_head_x_frame_left_unchaged frame_rb_write_head_x_frame_rest_unchaged1 
+      frame_rb_write_head_x_frame_right_unchaged frame_rb_write_head_x_sy_same)
+  
 
 lemma CleanQ_RB_conc_mult_ring_updates:
    "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
