@@ -4327,22 +4327,99 @@ abbreviation "CleanQ_CRB_enq_mult_y b \<equiv>
 
 paragraph \<open>Also do the conditional multistep?\<close>
 
-definition CleanQ_RB_transfer_buf_rsy :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
-  where "CleanQ_RB_transfer_buf_rsy b rb = rb \<lparr>rSY := (rSY rb) - {b} \<rparr>"
+definition CleanQ_RB_transfer_buf_rs_y :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_transfer_buf_rs_y b rb = rb \<lparr>rSY := (rSY rb) - {b} \<rparr>"
+
+definition CleanQ_RB_transfer_buf_rs_x :: "'a \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State" 
+  where "CleanQ_RB_transfer_buf_rs_x b rb = rb \<lparr>rSX := (rSX rb) - {b} \<rparr>"
+
+lemma CleanQ_RB_incr_head_y_split_eq[simp]:
+  "CleanQ_RB_write_headptr_y (Suc (CleanQ_RB_read_head_tx_y (CRB x)) mod CleanQ_RB_read_size_tx_y (CRB x)) (CleanQ_RB_transfer_buf_rs_y b (CRB x)) =
+         CleanQ_RB_incr_head_y b (CRB x)"
+  unfolding CleanQ_RB_write_headptr_y_def CleanQ_RB_incr_head_y_def CleanQ_RB_transfer_buf_rs_y_def
+  CleanQ_RB_read_head_tx_y_def rb_incr_head_def CleanQ_RB_read_size_tx_y_def
+  by(auto)
+
+lemma CleanQ_RB_incr_head_x_split_eq[simp]:
+  "CleanQ_RB_write_headptr_x (Suc (CleanQ_RB_read_head_tx_x (CRB x)) mod CleanQ_RB_read_size_tx_x (CRB x)) (CleanQ_RB_transfer_buf_rs_x b (CRB x)) =
+         CleanQ_RB_incr_head_x b (CRB x)"
+  unfolding CleanQ_RB_write_headptr_x_def CleanQ_RB_incr_head_x_def CleanQ_RB_transfer_buf_rs_x_def
+  CleanQ_RB_read_head_tx_x_def rb_incr_head_def CleanQ_RB_read_size_tx_x_def
+  by(auto)
+
 
 lemma CleanQ_RB_incr_head_y_mult : 
   "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
   \<lbrace>  CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> rb =\<acute>CRB \<rbrace> 
     \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
-  \<lbrace> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> rb =\<acute>CRB \<rbrace>
+  \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> rb =\<acute>CRB \<rbrace>
     \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
-  \<lbrace> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and> rb =\<acute>CRB  \<rbrace>
-    \<acute>CRB := (CleanQ_RB_write_headptr_y ((\<acute>head_y + 1) mod \<acute>size_y) (CleanQ_RB_transfer_buf_rsy b rb))
+  \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and> rb =\<acute>CRB  \<rbrace>
+    \<acute>CRB := (CleanQ_RB_write_headptr_y ((\<acute>head_y + 1) mod \<acute>size_y) (CleanQ_RB_transfer_buf_rs_y b rb))
   \<lbrace>  CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB b \<and> \<acute>CRB = CleanQ_RB_incr_head_y b rb \<rbrace> , \<lbrace>True\<rbrace>"
-  apply(oghoare, auto)
-  oops
+  by(oghoare, auto)
   
+lemma CleanQ_RB_incr_head_x_mult : 
+  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
+  \<lbrace>  CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> rb =\<acute>CRB \<rbrace> 
+    \<acute>head_x := CleanQ_RB_read_head_tx_x \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> rb =\<acute>CRB \<rbrace>
+    \<acute>size_x := CleanQ_RB_read_size_tx_x \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<and> rb =\<acute>CRB  \<rbrace>
+    \<acute>CRB := (CleanQ_RB_write_headptr_x ((\<acute>head_x + 1) mod \<acute>size_x) (CleanQ_RB_transfer_buf_rs_x b rb))
+  \<lbrace>  CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB b \<and> \<acute>CRB = CleanQ_RB_incr_head_x b rb \<rbrace> , \<lbrace>True\<rbrace>"
+  by(oghoare, auto)
 
+
+  
+abbreviation "CleanQ_CRB_enq_mult_head_y b \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
+    IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
+    THEN
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_region_y ( b) \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
+        region (CleanQ_RB_read_head_y \<acute>CRB) = region b 
+      \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_offset_y ( b) \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
+        region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
+        offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b 
+      \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_length_y ( b) \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
+        region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
+        offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
+        length (CleanQ_RB_read_head_y \<acute>CRB) = length b
+      \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_valid_offset_y ( b) \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
+        region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
+        offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
+        length (CleanQ_RB_read_head_y \<acute>CRB) = length b \<and>
+        valid_offset (CleanQ_RB_read_head_y \<acute>CRB) = valid_offset b
+      \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_valid_length_y ( b) \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<and> 
+        region (CleanQ_RB_read_head_y \<acute>CRB) = region b \<and>
+        offset (CleanQ_RB_read_head_y \<acute>CRB) = offset b \<and>
+        length (CleanQ_RB_read_head_y \<acute>CRB) = length b \<and>
+        valid_offset (CleanQ_RB_read_head_y \<acute>CRB) = valid_offset b \<and>
+        valid_length (CleanQ_RB_read_head_y \<acute>CRB) = valid_length b
+      \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_flags_y b \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<rbrace>
+         \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<rbrace>
+        \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB   \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_headptr_y ((\<acute>head_y + 1) mod \<acute>size_y) (CleanQ_RB_transfer_buf_rs_y b \<acute>CRB )) ;;
+      \<lbrace> CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB b \<rbrace> 
+        SKIP
+    ELSE 
+      \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+      SKIP
+    FI"
 
 (* ==================================================================================== *)
 subsection \<open>Hoare Triples for the Dequeue Operation\<close>
