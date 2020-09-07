@@ -2127,6 +2127,12 @@ lemma rb_weak_list_delta_tail_one:
       rb_can_incr_tail_n_lt_max rb_incr_tail_n_valid_drop rb_valid_implies_ptr_valid tail)
   
 
+lemma rb_delta_tail_head_notin:
+  assumes delta: "rb_delta_tail st' st \<le> rb_can_incr_tail_n_max st'"
+  shows "head st' \<notin> set (rb_incr_tail_n_delta (rb_delta_tail st' st) st')"
+  using assms unfolding rb_can_incr_tail_n_max_def
+  by (metis in_set_takeD rb_incr_tail_n_delta_def rb_valid_entries_head_not_member) 
+
 text \<open>
   Now, similar the left side, we also need the frame condition for the right side i.e. tail is fixed
   but the head can move

@@ -146,7 +146,7 @@ lemma frame_weak_y_sy:
 
 text \<open>Finally we show that the RB weak frame condition refines the List weak frame condition.\<close>
 
-lemma frame_rb_weak_x_list_weak:
+lemma frame_rb_weak_x_list_weak [simp]:
   fixes rb rb' K
   assumes I1: "CleanQ_RB_Invariants K rb'"
       and frame: "CleanQ_RB_frame_weak_x rb' rb"
@@ -156,7 +156,7 @@ lemma frame_rb_weak_x_list_weak:
   using I1 frame CleanQ_RB_frame_weak_x_def frame_weak_x_hd_delta frame_weak_x_tl_delta by fastforce
  
 
-lemma frame_rb_weak_y_list_weak:
+lemma frame_rb_weak_y_list_weak [simp]:
   fixes rb rb' K
   assumes I1: "CleanQ_RB_Invariants K rb'"
       and frame: "CleanQ_RB_frame_weak_y rb' rb"
@@ -165,8 +165,24 @@ lemma frame_rb_weak_y_list_weak:
   unfolding CleanQ_RB2List_def CleanQ_RB_list_def
   using I1 frame CleanQ_RB_frame_weak_y_def frame_weak_y_hd_delta frame_weak_y_tl_delta by fastforce
 
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Weak frame condition unchanged by writes of head\<close>
+(* ------------------------------------------------------------------------------------ *)
 
+(*
+definition CleanQ_RB_frame_weak_x :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ_RB_State \<Rightarrow> bool"
+  where "CleanQ_RB_frame_weak_x st' st \<longleftrightarrow> rSX st = rSX st' \<and> frame_rb_weak_left (rTXY st') (rTXY st) \<and> 
+                                    frame_rb_weak_right (rTYX st') (rTYX st) \<and> 
+                                    rSY st' \<union> set (rb_delta_tail_st (rTXY st') (rTXY st)) = (set (rb_delta_head_st (rTYX st') (rTYX st)) \<union> 
+                                    rSY st) \<and> distinct (rb_delta_head_st (rTYX st') (rTYX st)) \<and> 
+                                    rSY st \<inter> set (rb_delta_head_st (rTYX st') (rTYX st)) = {}" 
+*) 
 
+lemma frame_rb_weak_delta_incr_eq_write_head_unchanged :
+  assumes "rb_delta_tail rb' rb \<le> rb_can_incr_tail_n_max rb"
+  shows "rb_delta_tail rb' rb \<le> rb_can_incr_tail_n_max (rb_write_head b rb)"
+  unfolding rb_delta_tail_def rb_can_incr_tail_n_max_def rb_write_head_def apply auto
+  by (metis assms rb_can_incr_tail_n_max_def rb_delta_tail_def rb_write_head_def rb_write_perserves_valid_entries)+
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Weak frame condition preserver invariants\<close>

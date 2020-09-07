@@ -4977,11 +4977,11 @@ text \<open>
 (* *)
 
 abbreviation "CleanQ_CRB_deq_mult_if_x \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>CRB_prev = \<acute>CRB \<rbrace>
     \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB \<rbrace>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<rbrace>
    \<acute>head_x := CleanQ_RB_read_head_rx_x \<acute>CRB ;; 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<and> \<acute>head_x = CleanQ_RB_read_head_rx_x \<acute>CRB \<and>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<and>
      \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB
   \<rbrace>
     IF (\<acute>tail_x \<noteq> \<acute>head_x)
@@ -5028,11 +5028,11 @@ abbreviation "CleanQ_CRB_deq_mult_if_x \<equiv>
     FI"
 
 abbreviation "CleanQ_CRB_deq_mult_if_y \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>CRB_prev = \<acute>CRB \<rbrace>
     \<acute>tail_y := CleanQ_RB_read_tail_rx_y \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB \<rbrace>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_y \<acute>CRB_prev \<acute>CRB\<rbrace>
    \<acute>head_y := CleanQ_RB_read_head_rx_y \<acute>CRB ;; 
- \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> \<acute>head_y = CleanQ_RB_read_head_rx_y \<acute>CRB \<and>
+ \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_y \<acute>CRB_prev \<acute>CRB \<and>
     \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB 
   \<rbrace>
     IF (\<acute>tail_y \<noteq> \<acute>head_y)  
@@ -5731,15 +5731,9 @@ lemma CleanQ_RB_conc_non_atomic_head_tail_updates:
   apply(auto)[100]
   apply(auto)[100]
   by(auto)
-
-
-
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Separated Enq/Deq Conditionals\<close>
 (* ------------------------------------------------------------------------------------ *)
-
-
-
 
 lemma CleanQ_RB_write_head_flags_x_head_tx_x_unchanged:
   "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_flags_x b rb) 
@@ -5957,6 +5951,67 @@ lemmas CleanQ_RB_enq_deq_read_tail_head_simps[simp] =
   CleanQ_RB_deq_y_read_tail_tx_y
   CleanQ_RB_deq_x_read_tail_tx_x
 
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Lemmas around weak frame condition\<close>
+(* ------------------------------------------------------------------------------------ *)
+lemma frame_rb_write_head_x_frame_left_unchaged:
+  assumes "CleanQ_RB_frame_weak_x rb' rb"
+  shows "frame_rb_weak_left (rTXY (CleanQ_RB_write_head_x b rb')) (rTXY (CleanQ_RB_write_head_x b rb))"
+  using assms unfolding frame_rb_weak_left_def CleanQ_RB_write_head_x_def rb_write_head_def 
+    CleanQ_RB_frame_weak_x_def apply(auto)
+  using rb_write_head_valid apply (metis rb_write_head_def) 
+  using rb_write_head_valid apply (metis rb_write_head_def) 
+  using frame_rb_weak_delta_incr_eq_write_head_unchanged
+  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) 
+      rb_can_incr_tail_n_max_def rb_delta_tail_def rb_valid_entries_def) 
+
+lemma frame_rb_write_head_x_frame_right_unchaged:
+  assumes "CleanQ_RB_frame_weak_x rb' rb"
+  shows "frame_rb_weak_right (rTYX (CleanQ_RB_write_head_x b rb')) (rTYX (CleanQ_RB_write_head_x b rb))"
+  using assms unfolding frame_rb_weak_right_def CleanQ_RB_write_head_x_def rb_write_head_def 
+    CleanQ_RB_frame_weak_x_def 
+  by(auto)
+
+lemma frame_rb_write_head_x_delta_tail_same:
+  shows "rb_delta_tail_st (rTYX rb) = rb_delta_tail_st (rTYX (CleanQ_RB_write_head_x b rb))"
+  by (simp add: CleanQ_RB_write_head_x_def)
+
+lemma frame_rb_write_head_x_delta_tail_same2:
+  assumes "rb_delta_tail (rTXY rb') (rTXY rb) \<le> rb_can_incr_tail_n_max (rTXY rb')"
+  shows "set (rb_delta_tail_st (rTXY rb') (rTXY rb)) = set (rb_delta_tail_st (rTXY (CleanQ_RB_write_head_x b rb')) (rTXY (CleanQ_RB_write_head_x b rb)))"
+  using assms unfolding CleanQ_RB_write_head_x_def rb_write_head_def rb_delta_tail_st_def 
+   rb_incr_tail_n_delta_map_def
+  using rb_delta_tail_head_notin apply(auto)
+  apply (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) image_eqI rb_delta_tail_def 
+      rb_incr_tail_n_delta_def rb_valid_entries_head_not_member rb_write_head_def rb_write_perserves_valid_entries 
+      set_take_subset subsetD)
+  apply (smt CleanQ_RB.select_convs(2) CleanQ_RB.surjective CleanQ_RB.update_convs(1) in_set_takeD 
+        rb_incr_tail_n_delta_def rb_valid_entries_head_not_member)
+  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) image_eqI rb_delta_tail_def 
+      rb_incr_tail_n_delta_def rb_valid_entries_def)
+
+lemma frame_rb_write_head_x_delta_head_xy_same:
+  shows "rb_delta_head_st (rTYX (CleanQ_RB_write_head_x b st')) (rTYX (CleanQ_RB_write_head_x b st)) = 
+        rb_delta_head_st (rTYX st') (rTYX st)"
+  unfolding CleanQ_RB_write_head_x_def by simp 
+  
+lemma frame_rb_write_head_x_sy_same:
+  shows "rSY (CleanQ_RB_write_head_x b st) = rSY st"
+  by simp 
+
+lemma frame_rb_write_head_y_delta_tail_same:
+  shows "rb_delta_tail_st (rTXY rb) = rb_delta_tail_st (rTXY (CleanQ_RB_write_head_y b rb))"
+  by (simp add: CleanQ_RB_write_head_y_def)
+
+lemma frame_rb_write_head_x_frame_rest_unchaged1:
+  assumes "CleanQ_RB_frame_weak_x rb' rb"
+  shows "rSY (CleanQ_RB_write_head_x b st') \<union> 
+        set (rb_delta_tail_st (rTXY (CleanQ_RB_write_head_x b st')) (rTXY (CleanQ_RB_write_head_x b st))) = 
+       (set (rb_delta_head_st (rTYX (CleanQ_RB_write_head_x b st')) (rTYX (CleanQ_RB_write_head_x b st))) \<union> 
+        rSY (CleanQ_RB_write_head_x b st))"
+  using assms unfolding CleanQ_RB_frame_weak_x_def  
+  sorry
+
 lemma CleanQ_RB_conc_mult_ring_updates:
    "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
     COBEGIN
@@ -5994,7 +6049,6 @@ lemma CleanQ_RB_conc_mult_ring_updates:
   apply(auto)[100]
   apply(auto)
   oops
-
 
 lemma "CleanQ_RB_read_head_rx_x rb = CleanQ_RB_read_head_rx_x (CleanQ_RB_enq_y b rb)"
   oops
