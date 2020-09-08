@@ -5915,6 +5915,7 @@ lemmas CleanQ_RB_write_head_y_read_tail_rx_x_unchanged_simps[simp] =
       CleanQ_RB_write_head_valid_offset_y_read_tail_rx_x_unchanged
       CleanQ_RB_write_head_valid_length_y_read_tail_rx_x_unchanged
 
+
 lemma CleanQ_RB_deq_x_read_head_tx_x:
   "CleanQ_RB_read_head_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_head_tx_x rb"
   by (simp add: CleanQ_RB_deq_x_def CleanQ_RB_read_head_tx_x_def prod.case_eq_if)
@@ -5923,33 +5924,9 @@ lemma CleanQ_RB_deq_y_read_head_tx_y:
   "CleanQ_RB_read_head_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_head_tx_y rb"
   by (simp add: CleanQ_RB_deq_y_def CleanQ_RB_read_head_tx_y_def prod.case_eq_if)
 
-(*
-lemma CleanQ_RB_enq_x_read_tail_tx_x:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  by(simp add: CleanQ_RB_enq_x_def CleanQ_RB_read_tail_tx_x_def rb_enq_equiv rb_enq_alt_def)
-
-lemma CleanQ_RB_enq_y_read_tail_tx_y:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  by(simp add: CleanQ_RB_enq_y_def CleanQ_RB_read_tail_tx_y_def rb_enq_equiv rb_enq_alt_def)
-
-lemma CleanQ_RB_deq_y_read_tail_tx_y:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_deq_y_def
-  by (simp add: rb_deq_def)
-
-lemma CleanQ_RB_deq_x_read_tail_tx_x:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_deq_x_def
-  by (simp add: rb_deq_def)
-*)
-
 lemmas CleanQ_RB_enq_deq_read_tail_head_simps[simp] = 
   CleanQ_RB_deq_x_read_head_tx_x
   CleanQ_RB_deq_y_read_head_tx_y
-  CleanQ_RB_enq_x_read_tail_tx_x
-  CleanQ_RB_enq_y_read_tail_tx_y
-  CleanQ_RB_deq_y_read_tail_tx_y
-  CleanQ_RB_deq_x_read_tail_tx_x
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Lemmas around weak frame condition\<close>
