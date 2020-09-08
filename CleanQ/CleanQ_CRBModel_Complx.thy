@@ -62,6 +62,8 @@ text \<open>
 record CleanQ_CRB_State_vars = 
   CRB  :: "CleanQ_Buffer CleanQ_RB_State"
   CRB_prev  :: "CleanQ_Buffer CleanQ_RB_State"
+  CRB_prev_x  :: "CleanQ_Buffer CleanQ_RB_State"
+  CRB_prev_y  :: "CleanQ_Buffer CleanQ_RB_State"
   buf_x :: "CleanQ_Buffer"
   buf_y :: "CleanQ_Buffer"
   uni :: "CleanQ_Buffer set"
@@ -5012,17 +5014,17 @@ text \<open>
 \<close>
 
 abbreviation "CleanQ_CRB_enq_mult_cond_check_x b \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
-    \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
-    \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
-    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
-    \<acute>tail_y := CleanQ_RB_read_tail_tx_y \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
-    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>\<acute>tail_y = CleanQ_RB_read_tail_tx_y \<acute>CRB   
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<rbrace> 
+    \<acute>size_x := CleanQ_RB_read_size_tx_x \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev_x  \<rbrace>
+    \<acute>head_x := CleanQ_RB_read_head_tx_x \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> 
+    \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev_x  \<rbrace>
+    \<acute>tail_x := CleanQ_RB_read_tail_tx_x \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> 
+    \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<and>  CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev_x
   \<rbrace>
-    IF  ((((\<acute>head_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_y) \<and> b \<in> rSX \<acute>CRB
+    IF  ((((\<acute>head_x) + 1) mod \<acute>size_x) \<noteq> \<acute>tail_x) \<and> b \<in> rSX \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
         \<acute>CRB := (CleanQ_RB_write_head_x b \<acute>CRB) ;;
@@ -5036,15 +5038,15 @@ abbreviation "CleanQ_CRB_enq_mult_cond_check_x b \<equiv>
     FI"
 
 abbreviation "CleanQ_CRB_enq_mult_cond_check_y b \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<rbrace> 
     \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and>\<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and> CleanQ_RB_frame_weak_y \<acute>CRB \<acute>CRB_prev_y  \<rbrace>
     \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
-    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and> CleanQ_RB_frame_weak_y \<acute>CRB \<acute>CRB_prev_y  \<rbrace>
     \<acute>tail_y := CleanQ_RB_read_tail_tx_y \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
-    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>\<acute>tail_y = CleanQ_RB_read_tail_tx_y \<acute>CRB   
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>  CleanQ_RB_frame_weak_y \<acute>CRB \<acute>CRB_prev_y
   \<rbrace>
     IF  ((((\<acute>head_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_y) \<and> b \<in> rSY \<acute>CRB
     THEN
@@ -6241,22 +6243,58 @@ lemma frame_rb_write_head_x_frame_unchaged:
       frame_rb_write_head_x_frame_right_unchaged frame_rb_write_head_x_sy_same)
   
 
-lemma CleanQ_RB_conc_mult_ring_updates:
+
+lemma helper_sorry[simp]:
+  "CleanQ_RB_frame_weak_y (CleanQ_RB_enq_x b rb) rb' = CleanQ_RB_frame_weak_y rb rb'"
+  sorry
+
+lemma helper_sorry2[simp]:
+  "CleanQ_RB_frame_weak_x (CleanQ_RB_enq_y b rb) rb' = CleanQ_RB_frame_weak_x rb rb'"
+  sorry
+
+lemma helper_sorry3[simp]:
+  "CleanQ_RB_frame_weak_y (CleanQ_RB_deq_x  rb) rb' = CleanQ_RB_frame_weak_y rb rb'"
+  sorry
+
+lemma helper_sorry4[simp]:
+  "CleanQ_RB_frame_weak_x (CleanQ_RB_deq_y  rb) rb' = CleanQ_RB_frame_weak_x rb rb'"
+  sorry
+
+lemma helper_sorry5[simp]:
+  "CleanQ_RB_frame_weak_y (CleanQ_RB_write_head_x b rb) rb' = CleanQ_RB_frame_weak_y rb rb'"
+  sorry
+
+lemma helper_sorry6[simp]:
+  "CleanQ_RB_frame_weak_x (CleanQ_RB_write_head_y b rb) rb' = CleanQ_RB_frame_weak_x rb rb'"
+  sorry
+
+
+lemma helper_sorry7[simp]:
+  "CleanQ_RB_frame_weak_y rb' rb \<Longrightarrow> Suc (CleanQ_RB_read_head_tx_y rb') mod CleanQ_RB_read_size_tx_y rb' \<noteq> tail_y x  \<Longrightarrow> CleanQ_RB_enq_y_possible rb'"
+  sorry
+
+lemma helper_sorry8[simp]:
+  "CleanQ_RB_frame_weak_x rb'  rb \<Longrightarrow> Suc (CleanQ_RB_read_head_tx_x rb' ) mod CleanQ_RB_read_size_tx_x rb'  \<noteq> tail_x x  \<Longrightarrow> CleanQ_RB_enq_x_possible rb' "
+  sorry
+
+
+
+lemma CleanQ_RB_conc_mult_cond_check:
    "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
     COBEGIN
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        DO  
-          CleanQ_CRB_enq_mult_ring_write_x b;;
-          CleanQ_CRB_deq_mult_cond_check_x
+          CleanQ_CRB_enq_mult_cond_check_x b;;
+          CleanQ_CRB_deq_x
        OD
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>  
        \<parallel> 
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        DO 
-          CleanQ_CRB_enq_mult_ring_write_y b2;;
-          CleanQ_CRB_deq_mult_cond_check_y
+          CleanQ_CRB_enq_mult_cond_check_y b2;;
+          CleanQ_CRB_deq_y
        OD
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>
     COEND
