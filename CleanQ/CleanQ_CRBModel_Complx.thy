@@ -4867,14 +4867,14 @@ abbreviation "CleanQ_CRB_enq_y b \<equiv>
         SKIP
     FI"
 
-paragraph \<open>Multistep Enqueue Operation\<close>
+paragraph \<open>Multistep Ring Write Enqueue Operation\<close>
 
 text \<open>
   Writing the entire record is not an atomic operation. So we define this as a sequence
   of writing single fields in the record. 
 \<close>
 
-abbreviation "CleanQ_CRB_enq_mult_x b \<equiv> 
+abbreviation "CleanQ_CRB_enq_mult_ring_write_x b \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
     IF CleanQ_RB_enq_x_possible \<acute>CRB \<and> b \<in> rSX \<acute>CRB
     THEN
@@ -4919,7 +4919,7 @@ abbreviation "CleanQ_CRB_enq_mult_x b \<equiv>
       SKIP
     FI"
 
-abbreviation "CleanQ_CRB_enq_mult_y b \<equiv> 
+abbreviation "CleanQ_CRB_enq_mult_ring_write_y b \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
     IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
     THEN
@@ -5011,7 +5011,7 @@ text \<open>
   We now use this definition in the enqueue operation:
 \<close>
 
-abbreviation "CleanQ_CRB_enq_x_if b \<equiv> 
+abbreviation "CleanQ_CRB_enq_mult_cond_check_x b \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
     \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
@@ -5035,7 +5035,7 @@ abbreviation "CleanQ_CRB_enq_x_if b \<equiv>
         SKIP
     FI"
 
-abbreviation "CleanQ_CRB_enq_y_if b \<equiv> 
+abbreviation "CleanQ_CRB_enq_mult_cond_check_y b \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
     \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and>\<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
@@ -5433,14 +5433,14 @@ abbreviation "CleanQ_CRB_deq_y \<equiv>
     FI"
 
 
-paragraph \<open>Multistep Dequeue Operation\<close>
+paragraph \<open>Multistep Ring Write Enqueue Operation\<close>
 
 text \<open>
   Reading the entire record is not an atomic operation. So we define this as a sequence
   of reading single fields in the record. 
 \<close>
 
-abbreviation "CleanQ_CRB_deq_mult_x \<equiv> 
+abbreviation "CleanQ_CRB_deq_mult_ring_write_x \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
     IF CleanQ_RB_deq_x_possible \<acute>CRB
     THEN
@@ -5485,7 +5485,7 @@ abbreviation "CleanQ_CRB_deq_mult_x \<equiv>
       SKIP
     FI"
 
-abbreviation "CleanQ_CRB_deq_mult_y \<equiv> 
+abbreviation "CleanQ_CRB_deq_mult_ring_write_y \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
     IF CleanQ_RB_deq_y_possible \<acute>CRB
     THEN
@@ -5530,6 +5530,160 @@ abbreviation "CleanQ_CRB_deq_mult_y \<equiv>
       SKIP
     FI"
 
+
+paragraph \<open>Multistep Conditional Check\<close>
+
+text \<open>
+  Next, we expand the \verb+CleanQ_RB_deq_x|y_possible+ checks to expose those memory
+  accesses in the model. We first define the way to obtain the deq possible result.
+\<close>
+
+lemma CleanQ_RB_read_head_tail_deq_x_possible[simp]:
+  "CleanQ_RB_read_head_rx_x rb \<noteq> CleanQ_RB_read_tail_rx_x rb = CleanQ_RB_deq_x_possible rb"
+  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_head_tx_y_def 
+                CleanQ_RB_read_tail_tx_y_def rb_can_deq_def rb_empty_def)
+
+lemma CleanQ_RB_read_head_tail_deq_y_possible[simp]:
+  "CleanQ_RB_read_head_rx_y rb \<noteq> CleanQ_RB_read_tail_rx_y rb = CleanQ_RB_deq_y_possible rb"
+  by (simp add: CleanQ_RB_deq_y_possible_def CleanQ_RB_read_head_tx_x_def 
+                CleanQ_RB_read_tail_tx_x_def rb_can_deq_def rb_empty_def)
+
+lemma CleanQ_RB_read_head_tail_deq_y_possible2[simp]:
+  "CleanQ_RB_read_tail_tx_y rb \<noteq> CleanQ_RB_read_head_tx_y rb = CleanQ_RB_deq_x_possible rb"
+  using CleanQ_RB_read_head_tail_deq_x_possible by force
+
+
+lemma CleanQ_RB_read_head_tail_deq_x_possible2[simp]:
+  "CleanQ_RB_read_tail_tx_x rb \<noteq> CleanQ_RB_read_head_tx_x rb = CleanQ_RB_deq_y_possible rb"
+  using CleanQ_RB_read_head_tail_deq_y_possible by force
+
+lemma CleanQ_RB_deq_possible_x_mult : 
+  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>head_x := CleanQ_RB_read_head_rx_x \<acute>CRB ;;
+  \<lbrace> \<acute>head_x = CleanQ_RB_read_head_rx_x \<acute>CRB \<rbrace>
+    \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB
+  \<lbrace> (\<acute>tail_x \<noteq> \<acute>head_x) = CleanQ_RB_deq_x_possible \<acute>CRB  \<rbrace> , \<lbrace>True\<rbrace>"
+  apply(oghoare, auto)
+  using CleanQ_RB_read_head_tail_deq_y_possible2 by blast
+
+lemma CleanQ_RB_deq_possible_y_mult : 
+  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>head_y := CleanQ_RB_read_head_rx_y \<acute>CRB ;;
+  \<lbrace> \<acute>head_y = CleanQ_RB_read_head_rx_y \<acute>CRB \<rbrace>
+    \<acute>tail_y := CleanQ_RB_read_tail_rx_y \<acute>CRB
+  \<lbrace> (\<acute>tail_y \<noteq> \<acute>head_y) = CleanQ_RB_deq_y_possible \<acute>CRB  \<rbrace> , \<lbrace>True\<rbrace>"
+  apply(oghoare, auto) 
+  using CleanQ_RB_read_head_tail_deq_x_possible2 by blast
+
+text \<open>
+
+\<close>
+
+(* *)
+
+abbreviation "CleanQ_CRB_deq_mult_cond_check_x \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>CRB_prev = \<acute>CRB \<rbrace>
+    \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<rbrace>
+   \<acute>head_x := CleanQ_RB_read_head_rx_x \<acute>CRB ;; 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<and>
+     \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB
+  \<rbrace>
+    IF (\<acute>tail_x \<noteq> \<acute>head_x)
+    THEN
+      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<rbrace>
+        \<acute>buf_x := (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x) ;;
+      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x
+      \<rbrace>
+        \<acute>buf_x := (CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x) ;;
+      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x 
+      \<rbrace>
+        \<acute>buf_x := (CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x) ;;
+      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x 
+      \<rbrace>
+        \<acute>buf_x := (CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x) ;;
+      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x 
+      \<rbrace>
+        \<acute>buf_x := (CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x) ;;
+      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x \<and>
+        \<acute>buf_x = CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x 
+      \<rbrace>
+        \<acute>buf_x := (CleanQ_RB_read_tail_flags_x \<acute>CRB \<acute>buf_x) ;;
+      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x\<rbrace>
+        \<acute>CRB := (CleanQ_RB_incr_tail_x \<acute>buf_x \<acute>CRB);;
+      \<lbrace> CleanQ_RB_deq_x_R \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
+        SKIP
+    ELSE 
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+      SKIP
+    FI"
+
+abbreviation "CleanQ_CRB_deq_mult_cond_check_y \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>CRB_prev = \<acute>CRB \<rbrace>
+    \<acute>tail_y := CleanQ_RB_read_tail_rx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_y \<acute>CRB_prev \<acute>CRB\<rbrace>
+   \<acute>head_y := CleanQ_RB_read_head_rx_y \<acute>CRB ;; 
+ \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_y \<acute>CRB_prev \<acute>CRB \<and>
+    \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB 
+  \<rbrace>
+    IF (\<acute>tail_y \<noteq> \<acute>head_y)  
+    THEN
+      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<rbrace>
+        \<acute>buf_y := (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y) ;;
+      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y
+      \<rbrace>
+        \<acute>buf_y := (CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y) ;;
+      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y 
+      \<rbrace>
+        \<acute>buf_y := (CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y) ;;
+      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y 
+      \<rbrace>
+        \<acute>buf_y := (CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y) ;;
+      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y 
+      \<rbrace>
+        \<acute>buf_y := (CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y) ;;
+      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y \<and>
+        \<acute>buf_y = CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y 
+      \<rbrace>
+        \<acute>buf_y := (CleanQ_RB_read_tail_flags_y \<acute>CRB \<acute>buf_y) ;;
+      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y\<rbrace>
+        \<acute>CRB := (CleanQ_RB_incr_tail_y \<acute>buf_y \<acute>CRB);;
+      \<lbrace> CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
+        SKIP
+    ELSE 
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+      SKIP
+    FI"
 
 paragraph \<open>Multistep Increment Tail\<close>
 
@@ -5635,67 +5789,12 @@ abbreviation "CleanQ_CRB_deq_mult_incr_tail_y \<equiv>
       SKIP
     FI"
 
-paragraph \<open>Also do the Conditional in MultiStep?\<close>
-
-text \<open>
-  Next, we expand the \verb+CleanQ_RB_deq_x|y_possible+ checks to expose those memory
-  accesses in the model. We first define the way to obtain the deq possible result.
-\<close>
-
-lemma CleanQ_RB_read_head_tail_deq_x_possible[simp]:
-  "CleanQ_RB_read_head_rx_x rb \<noteq> CleanQ_RB_read_tail_rx_x rb = CleanQ_RB_deq_x_possible rb"
-  by (simp add: CleanQ_RB_deq_x_possible_def CleanQ_RB_read_head_tx_y_def 
-                CleanQ_RB_read_tail_tx_y_def rb_can_deq_def rb_empty_def)
-
-lemma CleanQ_RB_read_head_tail_deq_y_possible[simp]:
-  "CleanQ_RB_read_head_rx_y rb \<noteq> CleanQ_RB_read_tail_rx_y rb = CleanQ_RB_deq_y_possible rb"
-  by (simp add: CleanQ_RB_deq_y_possible_def CleanQ_RB_read_head_tx_x_def 
-                CleanQ_RB_read_tail_tx_x_def rb_can_deq_def rb_empty_def)
-
-lemma CleanQ_RB_read_head_tail_deq_y_possible2[simp]:
-  "CleanQ_RB_read_tail_tx_y rb \<noteq> CleanQ_RB_read_head_tx_y rb = CleanQ_RB_deq_x_possible rb"
-  using CleanQ_RB_read_head_tail_deq_x_possible by force
+paragraph\<open>Fully Decomposed Dequeue\<close>
 
 
-lemma CleanQ_RB_read_head_tail_deq_x_possible2[simp]:
-  "CleanQ_RB_read_tail_tx_x rb \<noteq> CleanQ_RB_read_head_tx_x rb = CleanQ_RB_deq_y_possible rb"
-  using CleanQ_RB_read_head_tail_deq_y_possible by force
-
-lemma CleanQ_RB_deq_possible_x_mult : 
-  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
-    \<acute>head_x := CleanQ_RB_read_head_rx_x \<acute>CRB ;;
-  \<lbrace> \<acute>head_x = CleanQ_RB_read_head_rx_x \<acute>CRB \<rbrace>
-    \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB
-  \<lbrace> (\<acute>tail_x \<noteq> \<acute>head_x) = CleanQ_RB_deq_x_possible \<acute>CRB  \<rbrace> , \<lbrace>True\<rbrace>"
-  apply(oghoare, auto)
-  using CleanQ_RB_read_head_tail_deq_y_possible2 by blast
-
-lemma CleanQ_RB_deq_possible_y_mult : 
-  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
-    \<acute>head_y := CleanQ_RB_read_head_rx_y \<acute>CRB ;;
-  \<lbrace> \<acute>head_y = CleanQ_RB_read_head_rx_y \<acute>CRB \<rbrace>
-    \<acute>tail_y := CleanQ_RB_read_tail_rx_y \<acute>CRB
-  \<lbrace> (\<acute>tail_y \<noteq> \<acute>head_y) = CleanQ_RB_deq_y_possible \<acute>CRB  \<rbrace> , \<lbrace>True\<rbrace>"
-  apply(oghoare, auto) 
-  using CleanQ_RB_read_head_tail_deq_x_possible2 by blast
-
-text \<open>
-
-\<close>
-
-(* *)
-
-abbreviation "CleanQ_CRB_deq_mult_if_x \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>CRB_prev = \<acute>CRB \<rbrace>
-    \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<rbrace>
-   \<acute>head_x := CleanQ_RB_read_head_rx_x \<acute>CRB ;; 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<and>
-     \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB
-  \<rbrace>
-    IF (\<acute>tail_x \<noteq> \<acute>head_x)
+abbreviation "CleanQ_CRB_deq_mult_full_x \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
+    IF CleanQ_RB_deq_x_possible \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<rbrace>
         \<acute>buf_x := (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x) ;;
@@ -5729,8 +5828,12 @@ abbreviation "CleanQ_CRB_deq_mult_if_x \<equiv>
         \<acute>buf_x = CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x 
       \<rbrace>
         \<acute>buf_x := (CleanQ_RB_read_tail_flags_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x\<rbrace>
-        \<acute>CRB := (CleanQ_RB_incr_tail_x \<acute>buf_x \<acute>CRB);;
+     \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
+        \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<and> \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB  \<rbrace>
+        \<acute>size_x := CleanQ_RB_read_size_rx_x \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<and> \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB \<and> \<acute>size_x = CleanQ_RB_read_size_rx_x \<acute>CRB  \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_tailptr_x ((\<acute>tail_x + 1) mod \<acute>size_x) (CleanQ_RB_transfer_buf_rx_x \<acute>buf_x \<acute>CRB)) ;;
       \<lbrace> CleanQ_RB_deq_x_R \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
         SKIP
     ELSE 
@@ -5738,15 +5841,9 @@ abbreviation "CleanQ_CRB_deq_mult_if_x \<equiv>
       SKIP
     FI"
 
-abbreviation "CleanQ_CRB_deq_mult_if_y \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>CRB_prev = \<acute>CRB \<rbrace>
-    \<acute>tail_y := CleanQ_RB_read_tail_rx_y \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_y \<acute>CRB_prev \<acute>CRB\<rbrace>
-   \<acute>head_y := CleanQ_RB_read_head_rx_y \<acute>CRB ;; 
- \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_y \<acute>CRB_prev \<acute>CRB \<and>
-    \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB 
-  \<rbrace>
-    IF (\<acute>tail_y \<noteq> \<acute>head_y)  
+abbreviation "CleanQ_CRB_deq_mult_full_y \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
+    IF CleanQ_RB_deq_y_possible \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<rbrace>
         \<acute>buf_y := (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y) ;;
@@ -5780,15 +5877,18 @@ abbreviation "CleanQ_CRB_deq_mult_if_y \<equiv>
         \<acute>buf_y = CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y 
       \<rbrace>
         \<acute>buf_y := (CleanQ_RB_read_tail_flags_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y\<rbrace>
-        \<acute>CRB := (CleanQ_RB_incr_tail_y \<acute>buf_y \<acute>CRB);;
+      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
+        \<acute>tail_y := CleanQ_RB_read_tail_rx_y \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<and> \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB  \<rbrace>
+        \<acute>size_y := CleanQ_RB_read_size_rx_y \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<and> \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_rx_y \<acute>CRB  \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_tailptr_y ((\<acute>tail_y + 1) mod \<acute>size_y) (CleanQ_RB_transfer_buf_rx_y \<acute>buf_y \<acute>CRB)) ;;
       \<lbrace> CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
         SKIP
     ELSE 
       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
       SKIP
     FI"
-
 
 (* ==================================================================================== *)
 subsection \<open>Concurrency proofs\<close>
@@ -5904,6 +6004,7 @@ lemma CleanQ_RB_loop_deq_deq:
   \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
 by(oghoare, auto)
 
+
 paragraph\<open>Breaking Up Into Update Buffer, Increment Pointers\<close>
 
 text \<open>
@@ -6010,16 +6111,16 @@ lemma CleanQ_RB_conc_mult_ring_updates:
          \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
          WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
          DO  
-            CleanQ_CRB_enq_mult_x b;;
-            CleanQ_CRB_deq_mult_x
+            CleanQ_CRB_enq_mult_ring_write_x b;;
+            CleanQ_CRB_deq_mult_ring_write_x
          OD
          \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>  
          \<parallel> 
          \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
          WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
          DO 
-            CleanQ_CRB_enq_mult_y b2;;
-            CleanQ_CRB_deq_mult_y
+            CleanQ_CRB_enq_mult_ring_write_y b2;;
+            CleanQ_CRB_deq_mult_ring_write_y
          OD
          \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>
       COEND
@@ -6066,14 +6167,6 @@ lemma CleanQ_RB_conc_non_atomic_head_tail_updates:
   apply(auto)[100]
   apply(auto)[100]
   by(auto)
-
-
-
-
-
-(* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>Separated Enq/Deq Conditionals\<close>
-(* ------------------------------------------------------------------------------------ *)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -6154,16 +6247,16 @@ lemma CleanQ_RB_conc_mult_ring_updates:
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        DO  
-          CleanQ_CRB_enq_mult_x b;;
-          CleanQ_CRB_deq_mult_if_x
+          CleanQ_CRB_enq_mult_ring_write_x b;;
+          CleanQ_CRB_deq_mult_cond_check_x
        OD
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>  
        \<parallel> 
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
        DO 
-          CleanQ_CRB_enq_mult_y b2;;
-          CleanQ_CRB_deq_mult_if_y
+          CleanQ_CRB_enq_mult_ring_write_y b2;;
+          CleanQ_CRB_deq_mult_cond_check_y
        OD
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>
     COEND
