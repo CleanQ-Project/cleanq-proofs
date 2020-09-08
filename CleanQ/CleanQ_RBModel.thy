@@ -968,8 +968,8 @@ lemma CleanQ_RB_deq_x_enq_y_possible [simp]:
   by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def case_prod_beta)
 
 lemma CleanQ_RB_deq_y_enq_y_possible [simp]:
-  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible rb  
-        \<longleftrightarrow> CleanQ_RB_enq_y_possible (CleanQ_RB_deq_y rb)"
+  "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible (CleanQ_RB_deq_y rb) 
+                                      = CleanQ_RB_enq_y_possible rb"
   unfolding CleanQ_RB_enq_y_possible_def CleanQ_RB_deq_y_def 
   by (simp add: CleanQ_RB_Invariants_def  I4_rb_valid_def prod.case_eq_if)
 
@@ -987,7 +987,7 @@ lemma CleanQ_RB_enq_x_deq_y_possible [simp]:
 
 lemma CleanQ_RB_enq_y_deq_y_possible [simp]:
   "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_enq_y_possible rb  
-        \<Longrightarrow>  CleanQ_RB_deq_y_possible rb \<longleftrightarrow> CleanQ_RB_deq_y_possible (CleanQ_RB_enq_y b rb)"
+        \<Longrightarrow>  CleanQ_RB_deq_y_possible (CleanQ_RB_enq_y b rb) = CleanQ_RB_deq_y_possible rb"
   by (simp add: CleanQ_RB_deq_y_possible_def CleanQ_RB_enq_y_def)
 
 
