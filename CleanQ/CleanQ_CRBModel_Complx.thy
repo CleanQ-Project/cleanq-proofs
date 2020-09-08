@@ -4117,6 +4117,548 @@ lemmas CleanQ_RB_read_tail_x_fields_simp =
   CleanQ_RB_read_tail_x_flags
 
 
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Reading Size, Head and Tail Pointers\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+
+lemma CleanQ_RB_enq_x_read_head_tx_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_enq_x_def by simp
+
+lemma CleanQ_RB_deq_x_read_head_tx_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_deq_x rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_deq_x_def rb_deq_def by auto 
+
+lemma CleanQ_RB_enq_y_read_head_tx_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_enq_y_def by simp
+
+lemma CleanQ_RB_deq_y_read_head_tx_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_deq_y rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_deq_y_def rb_deq_def by auto 
+
+lemma CleanQ_RB_write_head_flags_x_read_head_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_flags_x_def by simp
+
+lemma CleanQ_RB_write_head_offset_x_read_head_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_offset_x_def by simp
+
+lemma CleanQ_RB_write_head_length_x_read_head_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_length_x_def by simp
+
+lemma CleanQ_RB_write_head_region_x_read_head_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_region_x_def by simp
+
+lemma CleanQ_RB_write_head_valid_offset_x_read_head_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_offset_x_def by simp
+
+lemma CleanQ_RB_write_head_valid_length_x_read_head_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_length_x_def by simp
+
+lemma CleanQ_RB_write_head_flags_y_read_head_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_flags_y_def by simp
+
+lemma CleanQ_RB_write_head_offset_y_read_head_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_length_y_read_head_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_length_y_def by simp
+
+lemma CleanQ_RB_write_head_region_y_read_head_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_region_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_offset_y_read_head_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_length_y_read_head_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_length_y_def by simp
+
+lemmas CleanQ_RB_read_head_simps[simp] = 
+    CleanQ_RB_enq_x_read_head_tx_y
+    CleanQ_RB_deq_x_read_head_tx_y
+    CleanQ_RB_enq_y_read_head_tx_x
+    CleanQ_RB_deq_y_read_head_tx_x
+    CleanQ_RB_write_head_flags_x_read_head_y
+    CleanQ_RB_write_head_offset_x_read_head_y
+    CleanQ_RB_write_head_length_x_read_head_y
+    CleanQ_RB_write_head_region_x_read_head_y
+    CleanQ_RB_write_head_valid_offset_x_read_head_y
+    CleanQ_RB_write_head_valid_length_x_read_head_y
+    CleanQ_RB_write_head_flags_y_read_head_x
+    CleanQ_RB_write_head_offset_y_read_head_x
+    CleanQ_RB_write_head_length_y_read_head_x
+    CleanQ_RB_write_head_region_y_read_head_x
+    CleanQ_RB_write_head_valid_offset_y_read_head_x
+    CleanQ_RB_write_head_valid_length_y_read_head_x
+
+lemma CleanQ_RB_enq_x_read_tail_tx_x:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_enq_x_def by simp
+
+lemma CleanQ_RB_deq_x_read_tail_tx_x:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_deq_x_def rb_deq_def by auto 
+
+lemma CleanQ_RB_enq_y_read_tail_tx_y:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_enq_y_def by simp
+
+lemma CleanQ_RB_deq_y_read_tail_tx_y:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_deq_y_def rb_deq_def by auto 
+
+lemma CleanQ_RB_write_head_flags_x_read_tail_y:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_flags_x_def by auto
+
+lemma CleanQ_RB_write_head_offset_x_read_tail_y:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_offset_x_def by auto
+
+lemma CleanQ_RB_write_head_length_x_read_tail_y:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_length_x_def by auto
+
+lemma CleanQ_RB_write_head_region_x_read_tail_y:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_region_x_def by auto
+
+lemma CleanQ_RB_write_head_valid_offset_x_read_tail_y:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_valid_offset_x_def by auto
+
+lemma CleanQ_RB_write_head_valid_length_x_read_tail_y:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_valid_length_x_def by auto
+
+lemma CleanQ_RB_write_head_flags_y_read_tail_x:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_flags_y_def by auto
+
+lemma CleanQ_RB_write_head_offset_y_read_tail_x:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_length_y_read_tail_x:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_length_y_def by simp
+
+lemma CleanQ_RB_write_head_region_y_read_tail_x:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_region_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_offset_y_read_tail_x:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_valid_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_length_y_read_tail_x:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_valid_length_y_def by simp
+
+lemmas CleanQ_RB_read_tail_simps[simp] = 
+    CleanQ_RB_enq_x_read_tail_tx_x
+    CleanQ_RB_deq_x_read_tail_tx_x
+    CleanQ_RB_enq_y_read_tail_tx_y
+    CleanQ_RB_deq_y_read_tail_tx_y
+    CleanQ_RB_write_head_flags_x_read_tail_y
+    CleanQ_RB_write_head_offset_x_read_tail_y
+    CleanQ_RB_write_head_length_x_read_tail_y
+    CleanQ_RB_write_head_region_x_read_tail_y
+    CleanQ_RB_write_head_valid_offset_x_read_tail_y
+    CleanQ_RB_write_head_valid_length_x_read_tail_y
+    CleanQ_RB_write_head_flags_y_read_tail_x
+    CleanQ_RB_write_head_offset_y_read_tail_x
+    CleanQ_RB_write_head_length_y_read_tail_x
+    CleanQ_RB_write_head_region_y_read_tail_x
+    CleanQ_RB_write_head_valid_offset_y_read_tail_x
+    CleanQ_RB_write_head_valid_length_y_read_tail_x
+
+
+lemma Cleanq_RB_enq_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_enq_x_def by simp
+
+lemma Cleanq_RB_enq_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_enq_x_def by simp
+
+
+lemma CleanQ_RB_deq_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_deq_x rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_deq_x_def rb_deq_def by simp
+
+lemma CleanQ_RB_deq_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_deq_x_def rb_deq_def by simp
+
+
+lemma Cleanq_RB_enq_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_enq_y_def by simp
+
+lemma Cleanq_RB_enq_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_enq_y_def by simp
+
+lemma Cleanq_RB_deq_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_deq_y rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_deq_y_def rb_deq_def by simp
+
+lemma Cleanq_RB_deq_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_deq_y_def rb_deq_def by simp
+
+
+
+lemma CleanQ_RB_write_head_flags_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_flags_y_def by simp
+
+lemma CleanQ_RB_write_head_offset_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_length_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_length_y_def by simp
+
+lemma CleanQ_RB_write_head_region_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_region_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_offset_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_length_y_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_length_y_def by simp
+
+
+
+lemma CleanQ_RB_write_head_flags_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_flags_y_def by simp
+
+lemma CleanQ_RB_write_head_offset_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_length_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_length_y_def by simp
+
+lemma CleanQ_RB_write_head_region_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_region_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_offset_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_offset_y_def by simp
+
+lemma CleanQ_RB_write_head_valid_length_y_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_length_y_def by simp
+
+
+
+lemma CleanQ_RB_write_head_flags_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_flags_x_def by simp
+
+lemma CleanQ_RB_write_head_offset_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_offset_x_def by simp
+
+lemma CleanQ_RB_write_head_length_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_length_x_def by simp
+
+lemma CleanQ_RB_write_head_region_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_region_x_def by simp
+
+lemma CleanQ_RB_write_head_valid_offset_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_offset_x_def by simp
+
+lemma CleanQ_RB_write_head_valid_length_x_read_size_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_length_x_def by simp
+
+
+lemma CleanQ_RB_write_head_flags_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_flags_x_def by simp
+
+lemma CleanQ_RB_write_head_offset_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_offset_x_def by simp
+
+lemma CleanQ_RB_write_head_length_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_length_x_def by simp
+
+lemma CleanQ_RB_write_head_region_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_region_x_def by simp
+
+lemma CleanQ_RB_write_head_valid_offset_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_offset_x_def by simp
+
+lemma CleanQ_RB_write_head_valid_length_x_read_size_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_length_x_def by simp
+
+
+lemmas CleanQ_RB_read_size_simps[simp] = 
+    Cleanq_RB_enq_x_read_size_y
+    Cleanq_RB_enq_x_read_size_x
+    CleanQ_RB_deq_x_read_size_x
+    CleanQ_RB_deq_x_read_size_y
+    Cleanq_RB_enq_y_read_size_x
+    Cleanq_RB_enq_y_read_size_y
+    Cleanq_RB_deq_y_read_size_x
+    Cleanq_RB_deq_y_read_size_y
+    CleanQ_RB_write_head_valid_length_y_read_size_x
+    CleanQ_RB_write_head_valid_offset_y_read_size_x
+    CleanQ_RB_write_head_region_y_read_size_x
+    CleanQ_RB_write_head_length_y_read_size_x
+    CleanQ_RB_write_head_offset_y_read_size_x
+    CleanQ_RB_write_head_flags_y_read_size_x
+    CleanQ_RB_write_head_valid_length_x_read_size_y
+    CleanQ_RB_write_head_valid_offset_x_read_size_y
+    CleanQ_RB_write_head_region_x_read_size_y
+    CleanQ_RB_write_head_length_x_read_size_y
+    CleanQ_RB_write_head_offset_x_read_size_y
+    CleanQ_RB_write_head_flags_x_read_size_y
+    CleanQ_RB_write_head_valid_length_x_read_size_x
+    CleanQ_RB_write_head_valid_offset_x_read_size_x
+    CleanQ_RB_write_head_region_x_read_size_x
+    CleanQ_RB_write_head_length_x_read_size_x
+    CleanQ_RB_write_head_offset_x_read_size_x
+    CleanQ_RB_write_head_flags_x_read_size_x
+    CleanQ_RB_write_head_valid_length_y_read_size_y
+    CleanQ_RB_write_head_valid_offset_y_read_size_y
+    CleanQ_RB_write_head_region_y_read_size_y
+    CleanQ_RB_write_head_length_y_read_size_y
+    CleanQ_RB_write_head_offset_y_read_size_y
+    CleanQ_RB_write_head_flags_y_read_size_y
+
+
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Write head preserves Size, Tail and Head Pointers\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+lemma CleanQ_RB_write_head_flags_x_head_tx_x_unchanged:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_flags_x b rb) 
+      = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_flags_x_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_region_x_head_tx_x_unchanged:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_region_x b rb) 
+      = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_region_x_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_offset_x_head_tx_x_unchanged:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_offset_x b rb) 
+      = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_offset_x_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_length_x_head_tx_x_unchanged:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_length_x b rb) 
+      = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_length_x_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_length_x_head_tx_x_unchanged:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_length_x b rb) 
+      = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_length_x_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_offset_x_head_tx_x_unchanged:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_offset_x b rb) 
+      = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_offset_x_def 
+  by (simp add: rb_write_head_def)
+
+lemmas CleanQ_RB_write_head_x_head_tx_x_unchanged[simp] = 
+   CleanQ_RB_write_head_flags_x_head_tx_x_unchanged
+   CleanQ_RB_write_head_region_x_head_tx_x_unchanged
+   CleanQ_RB_write_head_offset_x_head_tx_x_unchanged
+   CleanQ_RB_write_head_length_x_head_tx_x_unchanged
+   CleanQ_RB_write_head_valid_length_x_head_tx_x_unchanged
+   CleanQ_RB_write_head_valid_offset_x_head_tx_x_unchanged
+
+
+lemma CleanQ_RB_write_head_flags_y_head_tx_y_unchanged:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_flags_y b rb) 
+      = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_flags_y_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_region_y_head_tx_y_unchanged:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_region_y b rb) 
+      = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_region_y_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_offset_y_head_tx_y_unchanged:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_offset_y b rb) 
+      = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_offset_y_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_length_y_head_tx_y_unchanged:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_length_y b rb) 
+      = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_length_y_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_length_y_head_tx_y_unchanged:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_length_y b rb) 
+      = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_length_y_def 
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_offset_y_head_tx_y_unchanged:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_offset_y b rb) 
+      = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_offset_y_def 
+  by (simp add: rb_write_head_def)
+
+lemmas CleanQ_RB_write_head_y_head_tx_y_unchanged[simp] = 
+   CleanQ_RB_write_head_flags_y_head_tx_y_unchanged
+   CleanQ_RB_write_head_region_y_head_tx_y_unchanged
+   CleanQ_RB_write_head_offset_y_head_tx_y_unchanged
+   CleanQ_RB_write_head_length_y_head_tx_y_unchanged
+   CleanQ_RB_write_head_valid_length_y_head_tx_y_unchanged
+   CleanQ_RB_write_head_valid_offset_y_head_tx_y_unchanged
+
+
+
+lemma CleanQ_RB_write_head_flags_x_read_tail_rx_y_unchanged:
+  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_flags_x b rb)
+     = CleanQ_RB_read_tail_rx_y rb"
+  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_flags_x_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_region_x_read_tail_rx_y_unchanged:
+  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_region_x b rb)
+     = CleanQ_RB_read_tail_rx_y rb"
+  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_region_x_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_offset_x_read_tail_rx_y_unchanged:
+  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_offset_x b rb)
+     = CleanQ_RB_read_tail_rx_y rb"
+  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_offset_x_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_length_x_read_tail_rx_y_unchanged:
+  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_length_x b rb)
+     = CleanQ_RB_read_tail_rx_y rb"
+  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_length_x_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_offset_x_read_tail_rx_y_unchanged:
+  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_valid_offset_x b rb)
+     = CleanQ_RB_read_tail_rx_y rb"
+  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_valid_offset_x_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_length_x_read_tail_rx_y_unchanged:
+  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_valid_length_x b rb)
+     = CleanQ_RB_read_tail_rx_y rb"
+  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_valid_length_x_def
+  by (simp add: rb_write_head_def)
+
+lemmas CleanQ_RB_write_head_x_read_tail_rx_y_unchanged_simps[simp] = 
+      CleanQ_RB_write_head_flags_x_read_tail_rx_y_unchanged
+      CleanQ_RB_write_head_region_x_read_tail_rx_y_unchanged
+      CleanQ_RB_write_head_offset_x_read_tail_rx_y_unchanged
+      CleanQ_RB_write_head_length_x_read_tail_rx_y_unchanged
+      CleanQ_RB_write_head_valid_offset_x_read_tail_rx_y_unchanged
+      CleanQ_RB_write_head_valid_length_x_read_tail_rx_y_unchanged
+
+
+lemma CleanQ_RB_write_head_flags_y_read_tail_rx_x_unchanged:
+  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_flags_y b rb)
+     = CleanQ_RB_read_tail_rx_x rb"
+  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_flags_y_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_region_y_read_tail_rx_x_unchanged:
+  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_region_y b rb)
+     = CleanQ_RB_read_tail_rx_x rb"
+  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_region_y_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_offset_y_read_tail_rx_x_unchanged:
+  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_offset_y b rb)
+     = CleanQ_RB_read_tail_rx_x rb"
+  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_offset_y_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_length_y_read_tail_rx_x_unchanged:
+  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_length_y b rb)
+     = CleanQ_RB_read_tail_rx_x rb"
+  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_length_y_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_offset_y_read_tail_rx_x_unchanged:
+  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_valid_offset_y b rb)
+     = CleanQ_RB_read_tail_rx_x rb"
+  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_valid_offset_y_def
+  by (simp add: rb_write_head_def)
+
+lemma CleanQ_RB_write_head_valid_length_y_read_tail_rx_x_unchanged:
+  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_valid_length_y b rb)
+     = CleanQ_RB_read_tail_rx_x rb"
+  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_valid_length_y_def
+  by (simp add: rb_write_head_def)
+
+lemmas CleanQ_RB_write_head_y_read_tail_rx_x_unchanged_simps[simp] = 
+      CleanQ_RB_write_head_flags_y_read_tail_rx_x_unchanged
+      CleanQ_RB_write_head_region_y_read_tail_rx_x_unchanged
+      CleanQ_RB_write_head_offset_y_read_tail_rx_x_unchanged
+      CleanQ_RB_write_head_length_y_read_tail_rx_x_unchanged
+      CleanQ_RB_write_head_valid_offset_y_read_tail_rx_x_unchanged
+      CleanQ_RB_write_head_valid_length_y_read_tail_rx_x_unchanged
+
+
+lemma CleanQ_RB_deq_x_read_head_tx_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_head_tx_x rb"
+  by (simp add: CleanQ_RB_deq_x_def CleanQ_RB_read_head_tx_x_def prod.case_eq_if)
+
+lemma CleanQ_RB_deq_y_read_head_tx_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_head_tx_y rb"
+  by (simp add: CleanQ_RB_deq_y_def CleanQ_RB_read_head_tx_y_def prod.case_eq_if)
+
+lemmas CleanQ_RB_enq_deq_read_tail_head_simps[simp] = 
+  CleanQ_RB_deq_x_read_head_tx_x
+  CleanQ_RB_deq_y_read_head_tx_y
+
+
 (* ==================================================================================== *)
 subsection \<open>Hoare Triples for the Enqueue Operation\<close>
 (* ==================================================================================== *)
@@ -4355,6 +4897,100 @@ abbreviation "CleanQ_CRB_enq_mult_y b \<equiv>
       SKIP
     FI"
 
+paragraph \<open>Multistep Conditional Check\<close>
+
+text \<open>
+  We now perform the conditional check whether an enqueue is possible using multiple
+  atomic steps.  
+\<close>
+
+lemma CleanQ_RB_read_head_tail_enq_x_possible[simp]:
+  "Suc (CleanQ_RB_read_head_tx_x rb) mod CleanQ_RB_read_size_tx_x rb \<noteq> CleanQ_RB_read_tail_tx_x rb 
+        = CleanQ_RB_enq_x_possible rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_read_size_tx_x_def CleanQ_RB_read_tail_tx_x_def
+            CleanQ_RB_enq_x_possible_def rb_can_enq_def rb_full_def by auto
+
+lemma CleanQ_RB_read_head_tail_enq_y_possible[simp]:
+  "Suc (CleanQ_RB_read_head_tx_y rb) mod CleanQ_RB_read_size_tx_y rb \<noteq> CleanQ_RB_read_tail_tx_y rb 
+        = CleanQ_RB_enq_y_possible rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_read_size_tx_y_def CleanQ_RB_read_tail_tx_y_def
+            CleanQ_RB_enq_y_possible_def rb_can_enq_def rb_full_def by auto
+
+lemma CleanQ_RB_enq_possible_x_mult : 
+  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>size_x := CleanQ_RB_read_size_tx_x \<acute>CRB ;;
+  \<lbrace> \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<rbrace>
+    \<acute>head_x := CleanQ_RB_read_head_tx_x \<acute>CRB ;;
+  \<lbrace> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<rbrace>
+    \<acute>tail_x := CleanQ_RB_read_tail_tx_x \<acute>CRB
+  \<lbrace> ((((\<acute>head_x) + 1) mod \<acute>size_x) \<noteq> \<acute>tail_x) = CleanQ_RB_enq_x_possible \<acute>CRB  \<rbrace> , \<lbrace>True\<rbrace>"
+  apply(oghoare, auto)
+  using CleanQ_RB_read_head_tail_enq_x_possible by blast
+ 
+lemma CleanQ_RB_enq_possible_y_mult : 
+  "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/ F\<^esub>  
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
+  \<lbrace> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
+  \<lbrace> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>tail_y := CleanQ_RB_read_tail_tx_y \<acute>CRB
+  \<lbrace> ((((\<acute>head_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_y) = CleanQ_RB_enq_y_possible \<acute>CRB  \<rbrace> , \<lbrace>True\<rbrace>"
+  apply(oghoare, auto)
+  using CleanQ_RB_read_head_tail_enq_y_possible by blast
+
+text \<open>
+  We now use this definition in the enqueue operation:
+\<close>
+
+abbreviation "CleanQ_CRB_enq_x_if b \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>tail_y := CleanQ_RB_read_tail_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>\<acute>tail_y = CleanQ_RB_read_tail_tx_y \<acute>CRB   
+  \<rbrace>
+    IF  ((((\<acute>head_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_y) \<and> b \<in> rSX \<acute>CRB
+    THEN
+      \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_x b \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<rbrace>
+        \<acute>CRB := (CleanQ_RB_incr_head_x b \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB b \<rbrace> 
+        SKIP
+    ELSE 
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+        SKIP
+    FI"
+
+abbreviation "CleanQ_CRB_enq_y_if b \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and>\<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>tail_y := CleanQ_RB_read_tail_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>\<acute>tail_y = CleanQ_RB_read_tail_tx_y \<acute>CRB   
+  \<rbrace>
+    IF  ((((\<acute>head_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_y) \<and> b \<in> rSY \<acute>CRB
+    THEN
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_y b \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<rbrace>
+        \<acute>CRB := (CleanQ_RB_incr_head_y b \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB b \<rbrace> 
+        SKIP
+    ELSE 
+      \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+        SKIP
+    FI"
 
 paragraph \<open>Multistep Increment Head\<close>
 
@@ -4427,6 +5063,62 @@ abbreviation "CleanQ_CRB_enq_mult_incr_head_x b \<equiv>
     IF CleanQ_RB_enq_x_possible \<acute>CRB \<and> b \<in> rSX \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_x b \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<rbrace>
+         \<acute>head_x := CleanQ_RB_read_head_tx_x \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<rbrace>
+        \<acute>size_x := CleanQ_RB_read_size_tx_x \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> 
+        \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB   \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_headptr_x ((\<acute>head_x + 1) mod \<acute>size_x) (CleanQ_RB_transfer_buf_tx_x b \<acute>CRB )) ;;
+      \<lbrace> CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB b \<rbrace> 
+        SKIP
+    ELSE 
+      \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+      SKIP
+    FI"
+
+abbreviation "CleanQ_CRB_enq_mult_incr_head_y b \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
+    IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
+    THEN
+      \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_head_y b \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<rbrace>
+         \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<rbrace>
+        \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+        \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB   \<rbrace>
+        \<acute>CRB := (CleanQ_RB_write_headptr_y ((\<acute>head_y + 1) mod \<acute>size_y) (CleanQ_RB_transfer_buf_tx_y b \<acute>CRB )) ;;
+      \<lbrace> CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB b \<rbrace> 
+        SKIP
+    ELSE 
+      \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+      SKIP
+    FI"
+
+
+paragraph \<open>Fully Decomposed Enqueue\<close>
+
+text \<open>
+  We now combine the three definitions above to get the fully decomposed enqueue operation
+\<close>
+
+abbreviation "CleanQ_CRB_enq_mult_full_x b \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>tail_y := CleanQ_RB_read_tail_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>\<acute>tail_y = CleanQ_RB_read_tail_tx_y \<acute>CRB   
+  \<rbrace>
+    IF  ((((\<acute>head_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_y) \<and> b \<in> rSX \<acute>CRB
+    THEN
+      \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<rbrace>
         \<acute>CRB := (CleanQ_RB_write_head_region_x ( b) \<acute>CRB) ;;
       \<lbrace> CleanQ_RB_enq_x_P \<acute>uni \<acute>CRB b \<and> 
         region (CleanQ_RB_read_head_x \<acute>CRB) = region b 
@@ -4462,7 +5154,8 @@ abbreviation "CleanQ_CRB_enq_mult_incr_head_x b \<equiv>
          \<acute>head_x := CleanQ_RB_read_head_tx_x \<acute>CRB ;;
       \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<rbrace>
         \<acute>size_x := CleanQ_RB_read_size_tx_x \<acute>CRB ;;
-      \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB   \<rbrace>
+      \<lbrace> CleanQ_RB_enq_x_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> 
+        \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB   \<rbrace>
         \<acute>CRB := (CleanQ_RB_write_headptr_x ((\<acute>head_x + 1) mod \<acute>size_x) (CleanQ_RB_transfer_buf_tx_x b \<acute>CRB )) ;;
       \<lbrace> CleanQ_RB_enq_x_R \<acute>uni \<acute>CRB b \<rbrace> 
         SKIP
@@ -4472,9 +5165,18 @@ abbreviation "CleanQ_CRB_enq_mult_incr_head_x b \<equiv>
     FI"
 
 
-abbreviation "CleanQ_CRB_enq_mult_incr_head_y b \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>
-    IF CleanQ_RB_enq_y_possible \<acute>CRB \<and> b \<in> rSY \<acute>CRB
+abbreviation "CleanQ_CRB_enq_mult_full_y b \<equiv> 
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace> 
+    \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and>\<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
+    \<acute>tail_y := CleanQ_RB_read_tail_tx_y \<acute>CRB ;;
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+    \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>\<acute>tail_y = CleanQ_RB_read_tail_tx_y \<acute>CRB   
+  \<rbrace>
+    IF  ((((\<acute>head_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_y) \<and> b \<in> rSY \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
         \<acute>CRB := (CleanQ_RB_write_head_region_y ( b) \<acute>CRB) ;;
@@ -4512,7 +5214,8 @@ abbreviation "CleanQ_CRB_enq_mult_incr_head_y b \<equiv>
          \<acute>head_y := CleanQ_RB_read_head_tx_y \<acute>CRB ;;
       \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<rbrace>
         \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
-      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB   \<rbrace>
+      \<lbrace> CleanQ_RB_enq_y_Q \<acute>uni \<acute>CRB b \<and> \<acute>head_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
+        \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB   \<rbrace>
         \<acute>CRB := (CleanQ_RB_write_headptr_y ((\<acute>head_y + 1) mod \<acute>size_y) (CleanQ_RB_transfer_buf_tx_y b \<acute>CRB )) ;;
       \<lbrace> CleanQ_RB_enq_y_R \<acute>uni \<acute>CRB b \<rbrace> 
         SKIP
@@ -4520,6 +5223,7 @@ abbreviation "CleanQ_CRB_enq_mult_incr_head_y b \<equiv>
       \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
       SKIP
     FI"
+
 
 (* ==================================================================================== *)
 subsection \<open>Hoare Triples for the Dequeue Operation\<close>
@@ -4831,38 +5535,8 @@ abbreviation "CleanQ_CRB_deq_mult_incr_tail_x \<equiv>
     IF CleanQ_RB_deq_x_possible \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_flags_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x\<rbrace>
+        \<acute>buf_x := (CleanQ_RB_read_tail_x  \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
         \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB ;;
       \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<and> \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB  \<rbrace>
         \<acute>size_x := CleanQ_RB_read_size_rx_x \<acute>CRB ;;
@@ -4880,38 +5554,8 @@ abbreviation "CleanQ_CRB_deq_mult_incr_tail_y \<equiv>
     IF CleanQ_RB_deq_y_possible \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_flags_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y\<rbrace>
+        \<acute>buf_y := (CleanQ_RB_read_tail_y  \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
         \<acute>tail_y := CleanQ_RB_read_tail_rx_y \<acute>CRB ;;
       \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<and> \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB  \<rbrace>
         \<acute>size_y := CleanQ_RB_read_size_rx_y \<acute>CRB ;;
@@ -5286,6 +5930,11 @@ lemma CleanQ_RB_concurrent_if_all:
 subsubsection \<open>Concurrency with Separated Ring Updates\<close>
 (* ------------------------------------------------------------------------------------ *)
 
+text \<open>
+  We do the concurrency proof with separated ring updates. This introduces a lot of
+  concurrency pairs. 
+\<close>
+
 lemma CleanQ_RB_conc_mult_ring_updates:
      "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
       COBEGIN
@@ -5322,375 +5971,6 @@ subsubsection \<open>Non-atomic Head/Tail Pointer Updates\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 
-lemma rb_incr_tail_size_const[simp]:
-  "size (rb_incr_tail rb) = size rb"
-  unfolding rb_incr_tail_def by simp
-
-lemma rb_incr_tail_head_const[simp]:
-  "head (rb_incr_tail rb) = head rb"
-  unfolding rb_incr_tail_def by simp
-
-lemma rb_incr_head_tail_const[simp]:
-  "tail (rb_incr_head rb) = tail rb"
-  unfolding rb_incr_head_def by simp
-
-lemma rb_incr_head_size_const[simp]:
-  "size (rb_incr_head rb) = size rb"
-  unfolding rb_incr_head_def by simp
-
-lemma rb_write_head_tail_const[simp]:
-  "tail (rb_write_head b rb) = tail rb"
-  unfolding rb_write_head_def by simp
-
-lemma rb_write_head_size_const[simp]:
-  "size (rb_write_head b rb) = size rb"
-  unfolding rb_write_head_def by simp
-
-lemma rb_enq_tail_const[simp]:
-  "tail (rb_enq b rb) = tail rb"
-  unfolding rb_enq_def rb_incr_head_def rb_write_head_def by simp
-
-lemma rb_rb_enq_size_const[simp]:
-  "size (rb_enq b rb) = size rb"
-  unfolding rb_enq_def rb_incr_head_def rb_write_head_def by simp
-
-
-lemma CleanQ_RB_enq_x_read_head_tx_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_enq_x_def by simp
-
-lemma CleanQ_RB_deq_x_read_head_tx_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_deq_x rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_deq_x_def rb_deq_def by auto 
-
-lemma CleanQ_RB_enq_y_read_head_tx_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_enq_y_def by simp
-
-lemma CleanQ_RB_deq_y_read_head_tx_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_deq_y rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_deq_y_def rb_deq_def by auto 
-
-lemma CleanQ_RB_write_head_flags_x_read_head_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_flags_x_def by simp
-
-lemma CleanQ_RB_write_head_offset_x_read_head_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_offset_x_def by simp
-
-lemma CleanQ_RB_write_head_length_x_read_head_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_length_x_def by simp
-
-lemma CleanQ_RB_write_head_region_x_read_head_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_region_x_def by simp
-
-lemma CleanQ_RB_write_head_valid_offset_x_read_head_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_offset_x_def by simp
-
-lemma CleanQ_RB_write_head_valid_length_x_read_head_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_length_x_def by simp
-
-lemma CleanQ_RB_write_head_flags_y_read_head_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_flags_y_def by simp
-
-lemma CleanQ_RB_write_head_offset_y_read_head_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_length_y_read_head_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_length_y_def by simp
-
-lemma CleanQ_RB_write_head_region_y_read_head_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_region_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_offset_y_read_head_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_length_y_read_head_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_length_y_def by simp
-
-lemmas CleanQ_RB_read_head_simps[simp] = 
-    CleanQ_RB_enq_x_read_head_tx_y
-    CleanQ_RB_deq_x_read_head_tx_y
-    CleanQ_RB_enq_y_read_head_tx_x
-    CleanQ_RB_deq_y_read_head_tx_x
-    CleanQ_RB_write_head_flags_x_read_head_y
-    CleanQ_RB_write_head_offset_x_read_head_y
-    CleanQ_RB_write_head_length_x_read_head_y
-    CleanQ_RB_write_head_region_x_read_head_y
-    CleanQ_RB_write_head_valid_offset_x_read_head_y
-    CleanQ_RB_write_head_valid_length_x_read_head_y
-    CleanQ_RB_write_head_flags_y_read_head_x
-    CleanQ_RB_write_head_offset_y_read_head_x
-    CleanQ_RB_write_head_length_y_read_head_x
-    CleanQ_RB_write_head_region_y_read_head_x
-    CleanQ_RB_write_head_valid_offset_y_read_head_x
-    CleanQ_RB_write_head_valid_length_y_read_head_x
-
-lemma CleanQ_RB_enq_x_read_tail_tx_x:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_enq_x_def by simp
-
-lemma CleanQ_RB_deq_x_read_tail_tx_x:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_deq_x_def rb_deq_def by auto 
-
-lemma CleanQ_RB_enq_y_read_tail_tx_y:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_enq_y_def by simp
-
-lemma CleanQ_RB_deq_y_read_tail_tx_y:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_deq_y_def rb_deq_def by auto 
-
-lemma CleanQ_RB_write_head_flags_x_read_tail_y:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_flags_x_def by auto
-
-lemma CleanQ_RB_write_head_offset_x_read_tail_y:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_offset_x_def by auto
-
-lemma CleanQ_RB_write_head_length_x_read_tail_y:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_length_x_def by auto
-
-lemma CleanQ_RB_write_head_region_x_read_tail_y:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_region_x_def by auto
-
-lemma CleanQ_RB_write_head_valid_offset_x_read_tail_y:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_valid_offset_x_def by auto
-
-lemma CleanQ_RB_write_head_valid_length_x_read_tail_y:
-  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_tail_tx_x rb"
-  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_valid_length_x_def by auto
-
-lemma CleanQ_RB_write_head_flags_y_read_tail_x:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_flags_y_def by auto
-
-lemma CleanQ_RB_write_head_offset_y_read_tail_x:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_length_y_read_tail_x:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_length_y_def by simp
-
-lemma CleanQ_RB_write_head_region_y_read_tail_x:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_region_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_offset_y_read_tail_x:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_valid_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_length_y_read_tail_x:
-  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_tail_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_valid_length_y_def by simp
-
-lemmas CleanQ_RB_read_tail_simps[simp] = 
-    CleanQ_RB_enq_x_read_tail_tx_x
-    CleanQ_RB_deq_x_read_tail_tx_x
-    CleanQ_RB_enq_y_read_tail_tx_y
-    CleanQ_RB_deq_y_read_tail_tx_y
-    CleanQ_RB_write_head_flags_x_read_tail_y
-    CleanQ_RB_write_head_offset_x_read_tail_y
-    CleanQ_RB_write_head_length_x_read_tail_y
-    CleanQ_RB_write_head_region_x_read_tail_y
-    CleanQ_RB_write_head_valid_offset_x_read_tail_y
-    CleanQ_RB_write_head_valid_length_x_read_tail_y
-    CleanQ_RB_write_head_flags_y_read_tail_x
-    CleanQ_RB_write_head_offset_y_read_tail_x
-    CleanQ_RB_write_head_length_y_read_tail_x
-    CleanQ_RB_write_head_region_y_read_tail_x
-    CleanQ_RB_write_head_valid_offset_y_read_tail_x
-    CleanQ_RB_write_head_valid_length_y_read_tail_x
-
-
-lemma Cleanq_RB_enq_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_enq_x_def by simp
-
-lemma Cleanq_RB_enq_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_enq_x b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_enq_x_def by simp
-
-
-lemma CleanQ_RB_deq_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_deq_x rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_deq_x_def rb_deq_def by simp
-
-lemma CleanQ_RB_deq_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_deq_x_def rb_deq_def by simp
-
-
-lemma Cleanq_RB_enq_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_enq_y_def by simp
-
-lemma Cleanq_RB_enq_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_enq_y b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_enq_y_def by simp
-
-lemma Cleanq_RB_deq_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_deq_y rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_deq_y_def rb_deq_def by simp
-
-lemma Cleanq_RB_deq_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_deq_y_def rb_deq_def by simp
-
-
-
-lemma CleanQ_RB_write_head_flags_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_flags_y_def by simp
-
-lemma CleanQ_RB_write_head_offset_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_length_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_length_y_def by simp
-
-lemma CleanQ_RB_write_head_region_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_region_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_offset_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_length_y_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_length_y_def by simp
-
-
-
-lemma CleanQ_RB_write_head_flags_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_flags_y b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_flags_y_def by simp
-
-lemma CleanQ_RB_write_head_offset_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_offset_y b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_length_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_length_y b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_length_y_def by simp
-
-lemma CleanQ_RB_write_head_region_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_region_y b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_region_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_offset_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_offset_y b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_offset_y_def by simp
-
-lemma CleanQ_RB_write_head_valid_length_y_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_length_y b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_length_y_def by simp
-
-
-
-lemma CleanQ_RB_write_head_flags_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_flags_x_def by simp
-
-lemma CleanQ_RB_write_head_offset_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_offset_x_def by simp
-
-lemma CleanQ_RB_write_head_length_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_length_x_def by simp
-
-lemma CleanQ_RB_write_head_region_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_region_x_def by simp
-
-lemma CleanQ_RB_write_head_valid_offset_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_offset_x_def by simp
-
-lemma CleanQ_RB_write_head_valid_length_x_read_size_y:
-  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_valid_length_x_def by simp
-
-
-lemma CleanQ_RB_write_head_flags_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_flags_x b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_flags_x_def by simp
-
-lemma CleanQ_RB_write_head_offset_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_offset_x b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_offset_x_def by simp
-
-lemma CleanQ_RB_write_head_length_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_length_x b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_length_x_def by simp
-
-lemma CleanQ_RB_write_head_region_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_region_x b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_region_x_def by simp
-
-lemma CleanQ_RB_write_head_valid_offset_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_offset_x b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_offset_x_def by simp
-
-lemma CleanQ_RB_write_head_valid_length_x_read_size_x:
-  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_valid_length_x b rb) = CleanQ_RB_read_size_tx_x rb"
-  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_valid_length_x_def by simp
-
-
-lemmas CleanQ_RB_read_size_simps[simp] = 
-    Cleanq_RB_enq_x_read_size_y
-    Cleanq_RB_enq_x_read_size_x
-    CleanQ_RB_deq_x_read_size_x
-    CleanQ_RB_deq_x_read_size_y
-    Cleanq_RB_enq_y_read_size_x
-    Cleanq_RB_enq_y_read_size_y
-    Cleanq_RB_deq_y_read_size_x
-    Cleanq_RB_deq_y_read_size_y
-    CleanQ_RB_write_head_valid_length_y_read_size_x
-    CleanQ_RB_write_head_valid_offset_y_read_size_x
-    CleanQ_RB_write_head_region_y_read_size_x
-    CleanQ_RB_write_head_length_y_read_size_x
-    CleanQ_RB_write_head_offset_y_read_size_x
-    CleanQ_RB_write_head_flags_y_read_size_x
-    CleanQ_RB_write_head_valid_length_x_read_size_y
-    CleanQ_RB_write_head_valid_offset_x_read_size_y
-    CleanQ_RB_write_head_region_x_read_size_y
-    CleanQ_RB_write_head_length_x_read_size_y
-    CleanQ_RB_write_head_offset_x_read_size_y
-    CleanQ_RB_write_head_flags_x_read_size_y
-    CleanQ_RB_write_head_valid_length_x_read_size_x
-    CleanQ_RB_write_head_valid_offset_x_read_size_x
-    CleanQ_RB_write_head_region_x_read_size_x
-    CleanQ_RB_write_head_length_x_read_size_x
-    CleanQ_RB_write_head_offset_x_read_size_x
-    CleanQ_RB_write_head_flags_x_read_size_x
-    CleanQ_RB_write_head_valid_length_y_read_size_y
-    CleanQ_RB_write_head_valid_offset_y_read_size_y
-    CleanQ_RB_write_head_region_y_read_size_y
-    CleanQ_RB_write_head_length_y_read_size_y
-    CleanQ_RB_write_head_offset_y_read_size_y
-    CleanQ_RB_write_head_flags_y_read_size_y
 
 lemma CleanQ_RB_conc_non_atomic_head_tail_updates:
      "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
@@ -5731,202 +6011,12 @@ lemma CleanQ_RB_conc_non_atomic_head_tail_updates:
   apply(auto)[100]
   apply(auto)[100]
   by(auto)
+
+
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Separated Enq/Deq Conditionals\<close>
 (* ------------------------------------------------------------------------------------ *)
 
-lemma CleanQ_RB_write_head_flags_x_head_tx_x_unchanged:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_flags_x b rb) 
-      = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_flags_x_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_region_x_head_tx_x_unchanged:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_region_x b rb) 
-      = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_region_x_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_offset_x_head_tx_x_unchanged:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_offset_x b rb) 
-      = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_offset_x_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_length_x_head_tx_x_unchanged:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_length_x b rb) 
-      = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_length_x_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_length_x_head_tx_x_unchanged:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_length_x b rb) 
-      = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_length_x_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_offset_x_head_tx_x_unchanged:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_valid_offset_x b rb) 
-      = CleanQ_RB_read_head_tx_x rb"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_valid_offset_x_def 
-  by (simp add: rb_write_head_def)
-
-lemmas CleanQ_RB_write_head_x_head_tx_x_unchanged[simp] = 
-   CleanQ_RB_write_head_flags_x_head_tx_x_unchanged
-   CleanQ_RB_write_head_region_x_head_tx_x_unchanged
-   CleanQ_RB_write_head_offset_x_head_tx_x_unchanged
-   CleanQ_RB_write_head_length_x_head_tx_x_unchanged
-   CleanQ_RB_write_head_valid_length_x_head_tx_x_unchanged
-   CleanQ_RB_write_head_valid_offset_x_head_tx_x_unchanged
-
-
-lemma CleanQ_RB_write_head_flags_y_head_tx_y_unchanged:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_flags_y b rb) 
-      = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_flags_y_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_region_y_head_tx_y_unchanged:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_region_y b rb) 
-      = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_region_y_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_offset_y_head_tx_y_unchanged:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_offset_y b rb) 
-      = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_offset_y_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_length_y_head_tx_y_unchanged:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_length_y b rb) 
-      = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_length_y_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_length_y_head_tx_y_unchanged:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_length_y b rb) 
-      = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_length_y_def 
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_offset_y_head_tx_y_unchanged:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_valid_offset_y b rb) 
-      = CleanQ_RB_read_head_tx_y rb"
-  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_valid_offset_y_def 
-  by (simp add: rb_write_head_def)
-
-lemmas CleanQ_RB_write_head_y_head_tx_y_unchanged[simp] = 
-   CleanQ_RB_write_head_flags_y_head_tx_y_unchanged
-   CleanQ_RB_write_head_region_y_head_tx_y_unchanged
-   CleanQ_RB_write_head_offset_y_head_tx_y_unchanged
-   CleanQ_RB_write_head_length_y_head_tx_y_unchanged
-   CleanQ_RB_write_head_valid_length_y_head_tx_y_unchanged
-   CleanQ_RB_write_head_valid_offset_y_head_tx_y_unchanged
-
-
-
-lemma CleanQ_RB_write_head_flags_x_read_tail_rx_y_unchanged:
-  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_flags_x b rb)
-     = CleanQ_RB_read_tail_rx_y rb"
-  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_flags_x_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_region_x_read_tail_rx_y_unchanged:
-  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_region_x b rb)
-     = CleanQ_RB_read_tail_rx_y rb"
-  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_region_x_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_offset_x_read_tail_rx_y_unchanged:
-  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_offset_x b rb)
-     = CleanQ_RB_read_tail_rx_y rb"
-  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_offset_x_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_length_x_read_tail_rx_y_unchanged:
-  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_length_x b rb)
-     = CleanQ_RB_read_tail_rx_y rb"
-  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_length_x_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_offset_x_read_tail_rx_y_unchanged:
-  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_valid_offset_x b rb)
-     = CleanQ_RB_read_tail_rx_y rb"
-  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_valid_offset_x_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_length_x_read_tail_rx_y_unchanged:
-  "CleanQ_RB_read_tail_rx_y (CleanQ_RB_write_head_valid_length_x b rb)
-     = CleanQ_RB_read_tail_rx_y rb"
-  unfolding CleanQ_RB_read_tail_rx_y_def CleanQ_RB_write_head_valid_length_x_def
-  by (simp add: rb_write_head_def)
-
-lemmas CleanQ_RB_write_head_x_read_tail_rx_y_unchanged_simps[simp] = 
-      CleanQ_RB_write_head_flags_x_read_tail_rx_y_unchanged
-      CleanQ_RB_write_head_region_x_read_tail_rx_y_unchanged
-      CleanQ_RB_write_head_offset_x_read_tail_rx_y_unchanged
-      CleanQ_RB_write_head_length_x_read_tail_rx_y_unchanged
-      CleanQ_RB_write_head_valid_offset_x_read_tail_rx_y_unchanged
-      CleanQ_RB_write_head_valid_length_x_read_tail_rx_y_unchanged
-
-
-lemma CleanQ_RB_write_head_flags_y_read_tail_rx_x_unchanged:
-  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_flags_y b rb)
-     = CleanQ_RB_read_tail_rx_x rb"
-  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_flags_y_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_region_y_read_tail_rx_x_unchanged:
-  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_region_y b rb)
-     = CleanQ_RB_read_tail_rx_x rb"
-  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_region_y_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_offset_y_read_tail_rx_x_unchanged:
-  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_offset_y b rb)
-     = CleanQ_RB_read_tail_rx_x rb"
-  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_offset_y_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_length_y_read_tail_rx_x_unchanged:
-  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_length_y b rb)
-     = CleanQ_RB_read_tail_rx_x rb"
-  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_length_y_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_offset_y_read_tail_rx_x_unchanged:
-  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_valid_offset_y b rb)
-     = CleanQ_RB_read_tail_rx_x rb"
-  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_valid_offset_y_def
-  by (simp add: rb_write_head_def)
-
-lemma CleanQ_RB_write_head_valid_length_y_read_tail_rx_x_unchanged:
-  "CleanQ_RB_read_tail_rx_x (CleanQ_RB_write_head_valid_length_y b rb)
-     = CleanQ_RB_read_tail_rx_x rb"
-  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_write_head_valid_length_y_def
-  by (simp add: rb_write_head_def)
-
-lemmas CleanQ_RB_write_head_y_read_tail_rx_x_unchanged_simps[simp] = 
-      CleanQ_RB_write_head_flags_y_read_tail_rx_x_unchanged
-      CleanQ_RB_write_head_region_y_read_tail_rx_x_unchanged
-      CleanQ_RB_write_head_offset_y_read_tail_rx_x_unchanged
-      CleanQ_RB_write_head_length_y_read_tail_rx_x_unchanged
-      CleanQ_RB_write_head_valid_offset_y_read_tail_rx_x_unchanged
-      CleanQ_RB_write_head_valid_length_y_read_tail_rx_x_unchanged
-
-
-lemma CleanQ_RB_deq_x_read_head_tx_x:
-  "CleanQ_RB_read_head_tx_x (CleanQ_RB_deq_x rb) = CleanQ_RB_read_head_tx_x rb"
-  by (simp add: CleanQ_RB_deq_x_def CleanQ_RB_read_head_tx_x_def prod.case_eq_if)
-
-lemma CleanQ_RB_deq_y_read_head_tx_y:
-  "CleanQ_RB_read_head_tx_y (CleanQ_RB_deq_y rb) = CleanQ_RB_read_head_tx_y rb"
-  by (simp add: CleanQ_RB_deq_y_def CleanQ_RB_read_head_tx_y_def prod.case_eq_if)
-
-lemmas CleanQ_RB_enq_deq_read_tail_head_simps[simp] = 
-  CleanQ_RB_deq_x_read_head_tx_x
-  CleanQ_RB_deq_y_read_head_tx_y
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Lemmas around weak frame condition\<close>
@@ -6050,6 +6140,29 @@ lemma "CleanQ_RB_read_head_rx_y rb = CleanQ_RB_read_head_rx_y (CleanQ_RB_enq_x b
 subsubsection \<open>Final Concurrency Proofs\<close>
 (* ------------------------------------------------------------------------------------ *)
 
+text \<open>
 
+\<close>
+
+lemma CleanQ_RB_conc_mult_full:
+   "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
+    COBEGIN
+       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+       WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+       DO  
+          CleanQ_CRB_enq_mult_full_x b;;
+          CleanQ_CRB_deq_mult_full_x
+       OD
+       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>  
+       \<parallel> 
+       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+       WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
+       DO 
+          CleanQ_CRB_enq_mult_full_y b2;;
+          CleanQ_CRB_deq_mult_full_y
+       OD
+       \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>
+    COEND
+    \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>, \<lbrace>True\<rbrace>" 
 
 end 

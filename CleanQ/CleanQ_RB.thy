@@ -553,12 +553,13 @@ definition rb_incr_tail :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB"
 
 
 (* ------------------------------------------------------------------------------------ *)
-subsubsection \<open>The Ring is not Changed\<close>
+subsubsection \<open>Unchanged State\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 text \<open>
   First, the incrementing the head or tail pointers does not change the contents of 
-  the ring. So we can keep on reasoning about the ring contents.
+  the ring. So we can keep on reasoning about the ring contents. Furthermore, the size
+  and the tail/head is not changed as well.
 \<close>
 
 lemma rb_incr_head_ring[simp]: 
@@ -568,6 +569,22 @@ lemma rb_incr_head_ring[simp]:
 lemma rb_incr_tail_ring[simp]: 
   "(ring (rb_incr_tail rb)) = ring rb"
   unfolding rb_incr_tail_def by(auto)
+
+lemma rb_incr_tail_size_const[simp]:
+  "size (rb_incr_tail rb) = size rb"
+  unfolding rb_incr_tail_def by simp
+
+lemma rb_incr_tail_head_const[simp]:
+  "head (rb_incr_tail rb) = head rb"
+  unfolding rb_incr_tail_def by simp
+
+lemma rb_incr_head_tail_const[simp]:
+  "tail (rb_incr_head rb) = tail rb"
+  unfolding rb_incr_head_def by simp
+
+lemma rb_incr_head_size_const[simp]:
+  "size (rb_incr_head rb) = size rb"
+  unfolding rb_incr_head_def by simp
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -1566,7 +1583,21 @@ definition rb_read_head :: "'a CleanQ_RB \<Rightarrow> 'a"
 definition rb_head_none :: "'a CleanQ_RB \<Rightarrow> bool"
   where "rb_head_none rb =  (((ring rb) (head rb)) = None)"
 
+text \<open>
+  Writing the head element does not change any of the pointers.
+\<close>
 
+lemma rb_write_head_head_const[simp]:
+  "head (rb_write_head b rb) = head rb"
+  unfolding rb_write_head_def by simp
+
+lemma rb_write_head_tail_const[simp]:
+  "tail (rb_write_head b rb) = tail rb"
+  unfolding rb_write_head_def by simp
+
+lemma rb_write_head_size_const[simp]:
+  "size (rb_write_head b rb) = size rb"
+  unfolding rb_write_head_def by simp
 
 text \<open>
   Writing an entry preserves the list of valid entries as well as the validity of
@@ -1670,6 +1701,17 @@ lemma rb_enq_equiv_fun:
   "rb_enq b rb = rb_enq_fun b rb"
   unfolding rb_enq_fun_def rb_enq_def by(auto)
 
+text \<open>
+  Enqueueing does not change the tail and the size of the ring.
+\<close>
+
+lemma rb_enq_tail_const[simp]:
+  "tail (rb_enq b rb) = tail rb"
+  unfolding rb_enq_def rb_incr_head_def rb_write_head_def by simp
+
+lemma rb_rb_enq_size_const[simp]:
+  "size (rb_enq b rb) = size rb"
+  unfolding rb_enq_def rb_incr_head_def rb_write_head_def by simp
 
 text \<open>
   Next we can talk about the effects on the set of valid entries in the ring buffer, 
