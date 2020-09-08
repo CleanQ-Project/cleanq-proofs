@@ -4659,6 +4659,73 @@ lemmas CleanQ_RB_enq_deq_read_tail_head_simps[simp] =
   CleanQ_RB_deq_y_read_head_tx_y
 
 
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Reading Size, Head and Tail Pointers writing the head Element\<close>
+(* ------------------------------------------------------------------------------------ *)
+
+lemma CleanQ_RB_write_head_x_read_head_tx_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_x_def by auto
+
+lemma CleanQ_RB_write_head_x_read_head_tx_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_x_def by auto
+
+lemma CleanQ_RB_write_head_y_read_head_tx_y:
+  "CleanQ_RB_read_head_tx_y (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_head_tx_y rb"
+  unfolding CleanQ_RB_read_head_tx_y_def CleanQ_RB_write_head_y_def by auto
+
+lemma CleanQ_RB_write_head_y_read_head_tx_x:
+  "CleanQ_RB_read_head_tx_x (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_head_tx_x rb"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_write_head_y_def by auto
+
+lemma CleanQ_RB_write_head_x_read_size_tx_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_x_def by auto
+
+lemma CleanQ_RB_write_head_x_read_size_tx_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_x_def by auto
+
+lemma CleanQ_RB_write_head_y_read_size_tx_y:
+  "CleanQ_RB_read_size_tx_y (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_size_tx_y rb"
+  unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_write_head_y_def by auto
+
+lemma CleanQ_RB_write_head_y_read_size_tx_x:
+  "CleanQ_RB_read_size_tx_x (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_size_tx_x rb"
+  unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_write_head_y_def by auto
+
+lemma CleanQ_RB_write_head_x_read_tail_tx_y:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_x_def by auto
+
+lemma CleanQ_RB_write_head_x_read_tail_tx_x:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_x b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_x_def by auto
+
+lemma CleanQ_RB_write_head_y_read_tail_tx_y:
+  "CleanQ_RB_read_tail_tx_y (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_tail_tx_y rb"
+  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_write_head_y_def by auto
+
+lemma CleanQ_RB_write_head_y_read_tail_tx_x:
+  "CleanQ_RB_read_tail_tx_x (CleanQ_RB_write_head_y b rb) = CleanQ_RB_read_tail_tx_x rb"
+  unfolding CleanQ_RB_read_tail_tx_x_def CleanQ_RB_write_head_y_def by auto
+
+lemmas CleanQ_RB_write_head_read_ptrs_simps[simp] = 
+  CleanQ_RB_write_head_x_read_head_tx_y
+  CleanQ_RB_write_head_x_read_head_tx_x
+  CleanQ_RB_write_head_y_read_head_tx_y
+  CleanQ_RB_write_head_y_read_head_tx_x
+  CleanQ_RB_write_head_x_read_size_tx_y
+  CleanQ_RB_write_head_x_read_size_tx_x
+  CleanQ_RB_write_head_y_read_size_tx_y
+  CleanQ_RB_write_head_y_read_size_tx_x
+  CleanQ_RB_write_head_x_read_tail_tx_y
+  CleanQ_RB_write_head_x_read_tail_tx_x
+  CleanQ_RB_write_head_y_read_tail_tx_y
+  CleanQ_RB_write_head_y_read_tail_tx_x
+
 (* ==================================================================================== *)
 subsection \<open>Hoare Triples for the Enqueue Operation\<close>
 (* ==================================================================================== *)
@@ -5727,7 +5794,9 @@ abbreviation "CleanQ_CRB_deq_mult_if_y \<equiv>
 subsection \<open>Concurrency proofs\<close>
 (* ==================================================================================== *)
 
-paragraph\<open>Big Step Semantics\<close>
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Big Step Semantics\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 text \<open>
   We first start of using the big-step semantics for enqueue and dequeue. 
@@ -5971,7 +6040,6 @@ subsubsection \<open>Non-atomic Head/Tail Pointer Updates\<close>
 (* ------------------------------------------------------------------------------------ *)
 
 
-
 lemma CleanQ_RB_conc_non_atomic_head_tail_updates:
      "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
       COBEGIN
@@ -5997,20 +6065,10 @@ lemma CleanQ_RB_conc_non_atomic_head_tail_updates:
   apply(auto)[100]
   apply(auto)[100]
   apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
-  apply(auto)[100]
   by(auto)
+
+
+
 
 
 (* ------------------------------------------------------------------------------------ *)
