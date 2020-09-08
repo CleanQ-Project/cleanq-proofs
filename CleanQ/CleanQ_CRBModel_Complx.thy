@@ -5586,49 +5586,20 @@ text \<open>
 (* *)
 
 abbreviation "CleanQ_CRB_deq_mult_cond_check_x \<equiv> 
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>CRB_prev = \<acute>CRB \<rbrace>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<rbrace>
     \<acute>tail_x := CleanQ_RB_read_tail_rx_x \<acute>CRB ;;
-  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<rbrace>
+  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<and>
+    \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB  \<rbrace>
    \<acute>head_x := CleanQ_RB_read_head_rx_x \<acute>CRB ;; 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<and> CleanQ_RB_frame_weak_x \<acute>CRB \<acute>CRB_prev \<and>
-     \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB
+     \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB \<and> \<acute>head_x = CleanQ_RB_read_head_rx_x \<acute>CRB_prev
   \<rbrace>
     IF (\<acute>tail_x \<noteq> \<acute>head_x)
     THEN
       \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_x \<acute>CRB) \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_region_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_length_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_valid_offset_x \<acute>CRB \<acute>buf_x \<and>
-        \<acute>buf_x = CleanQ_RB_read_tail_valid_length_x \<acute>CRB \<acute>buf_x 
-      \<rbrace>
-        \<acute>buf_x := (CleanQ_RB_read_tail_flags_x \<acute>CRB \<acute>buf_x) ;;
-      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x\<rbrace>
-        \<acute>CRB := (CleanQ_RB_incr_tail_x \<acute>buf_x \<acute>CRB);;
+        \<acute>buf_x := (CleanQ_RB_read_tail_x  \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_deq_x_Q \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
+        \<acute>CRB := (CleanQ_RB_incr_tail_x \<acute>buf_x \<acute>CRB) ;;
       \<lbrace> CleanQ_RB_deq_x_R \<acute>uni \<acute>CRB \<acute>buf_x \<rbrace>
         SKIP
     ELSE 
@@ -5647,39 +5618,9 @@ abbreviation "CleanQ_CRB_deq_mult_cond_check_y \<equiv>
     IF (\<acute>tail_y \<noteq> \<acute>head_y)  
     THEN
       \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_P \<acute>uni \<acute>CRB (CleanQ_RB_read_tail_y \<acute>CRB) \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_region_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_length_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_valid_offset_y \<acute>CRB \<acute>buf_y \<and>
-        \<acute>buf_y = CleanQ_RB_read_tail_valid_length_y \<acute>CRB \<acute>buf_y 
-      \<rbrace>
-        \<acute>buf_y := (CleanQ_RB_read_tail_flags_y \<acute>CRB \<acute>buf_y) ;;
-      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y\<rbrace>
-        \<acute>CRB := (CleanQ_RB_incr_tail_y \<acute>buf_y \<acute>CRB);;
+        \<acute>buf_y := (CleanQ_RB_read_tail_y  \<acute>CRB) ;;
+      \<lbrace> CleanQ_RB_deq_y_Q \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
+        \<acute>CRB := (CleanQ_RB_incr_tail_y \<acute>buf_y \<acute>CRB) ;;
       \<lbrace> CleanQ_RB_deq_y_R \<acute>uni \<acute>CRB \<acute>buf_y \<rbrace>
         SKIP
     ELSE 
@@ -6269,13 +6210,31 @@ lemma helper_sorry6[simp]:
   sorry
 
 
+
+(* ok we need to show that using the old tail which may be behind the current tail, 
+   this implies the condition still holds for the current tail.  *)
+lemma helper_sorry9:
+  "CleanQ_RB_frame_weak_y rb' rb \<Longrightarrow> 
+    Suc (CleanQ_RB_read_head_tx_y rb') mod CleanQ_RB_read_size_tx_y rb' \<noteq>  CleanQ_RB_read_tail_tx_y rb 
+     = (Suc (CleanQ_RB_read_head_tx_y rb') mod CleanQ_RB_read_size_tx_y rb' \<noteq> CleanQ_RB_read_tail_tx_y rb')"
+  sorry
+
+
+(* Then we can use the lemma to show that there ins an enq possible...  *)
+lemma "CleanQ_RB_frame_weak_y rb' rb \<Longrightarrow> 
+    Suc (CleanQ_RB_read_head_tx_y rb') mod CleanQ_RB_read_size_tx_y rb' \<noteq>  CleanQ_RB_read_tail_tx_y rb  = CleanQ_RB_enq_y_possible rb'"
+  by (simp add: helper_sorry9)
+
+
+(* this needs reformulation as it uses tail_y x, which is not quite we want read_tail_tx or something \<longrightarrow> adabt the abbreviation *)
 lemma helper_sorry7[simp]:
-  "CleanQ_RB_frame_weak_y rb' rb \<Longrightarrow> Suc (CleanQ_RB_read_head_tx_y rb') mod CleanQ_RB_read_size_tx_y rb' \<noteq> tail_y x  \<Longrightarrow> CleanQ_RB_enq_y_possible rb'"
+  "CleanQ_RB_frame_weak_y rb' rb \<Longrightarrow> Suc (CleanQ_RB_read_head_tx_y rb') mod CleanQ_RB_read_size_tx_y rb' \<noteq> tail_y x  = CleanQ_RB_enq_y_possible rb'"
   sorry
 
 lemma helper_sorry8[simp]:
-  "CleanQ_RB_frame_weak_x rb'  rb \<Longrightarrow> Suc (CleanQ_RB_read_head_tx_x rb' ) mod CleanQ_RB_read_size_tx_x rb'  \<noteq> tail_x x  \<Longrightarrow> CleanQ_RB_enq_x_possible rb' "
+  "CleanQ_RB_frame_weak_x rb'  rb \<Longrightarrow> Suc (CleanQ_RB_read_head_tx_x rb' ) mod CleanQ_RB_read_size_tx_x rb'  \<noteq> tail_x x  = CleanQ_RB_enq_x_possible rb' "
   sorry
+
 
 
 
