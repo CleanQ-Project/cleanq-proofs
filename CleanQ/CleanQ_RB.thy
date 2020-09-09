@@ -1887,6 +1887,8 @@ definition CleanQ_RB_list_opt :: "'a CleanQ_RB \<Rightarrow> ('a option) list"
 definition CleanQ_RB_list :: "'a CleanQ_RB \<Rightarrow> 'a list"
   where "CleanQ_RB_list rb = map (the o ring rb) (rb_valid_entries rb)"
 
+definition CleanQ_RB_list_ring :: "'a CleanQ_RB \<Rightarrow> (nat \<Rightarrow> 'a option) \<Rightarrow> 'a  list"
+  where "CleanQ_RB_list_ring rb rig = map (the o rig) (rb_valid_entries rb)"
 
 text \<open>
   If the ring is valid, then the list is bounded by the size of the ring.
@@ -1895,6 +1897,11 @@ text \<open>
 lemma rb_list_size:
   "rb_valid_ptr rb \<Longrightarrow> (length (CleanQ_RB_list rb) < size rb)"
   unfolding CleanQ_RB_list_def rb_valid_entries_def rb_valid_ptr_def
+  by auto
+
+lemma rb_list_size_ring:
+  "rb_valid_ptr rb \<Longrightarrow> (length (CleanQ_RB_list_ring rb (ring rb)) < size rb)"
+  unfolding CleanQ_RB_list_ring_def rb_valid_entries_def rb_valid_ptr_def
   by auto
 
 text \<open>
@@ -1909,6 +1916,13 @@ lemma rb_list_opt_list_equiv:
   "CleanQ_RB_list rb = map the (CleanQ_RB_list_opt rb)"
   unfolding CleanQ_RB_list_def CleanQ_RB_list_opt_def by(auto)
 
+lemma rb_list_opt_list_ring_equiv:
+  "CleanQ_RB_list_ring rb (ring rb) = map the (CleanQ_RB_list_opt rb)"
+  unfolding CleanQ_RB_list_ring_def CleanQ_RB_list_opt_def by(auto)
+
+lemma rb_list_list_ring_equiv:
+  "CleanQ_RB_list_ring rb (ring rb) = CleanQ_RB_list rb" 
+  unfolding CleanQ_RB_list_def CleanQ_RB_list_ring_def CleanQ_RB_list_opt_def by(auto)
 
 text \<open>
  We can now show that the list of valid entries is empty, when the predicate 
@@ -1919,6 +1933,11 @@ lemma rb_list_empty:
   "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> CleanQ_RB_list rb = []"
   by (metis CleanQ_RB_list_def map_is_Nil_conv rb_empty_valid_entries_equiv_list)
 
+lemma rb_list_ring_empty:
+  "rb_valid_ptr rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> CleanQ_RB_list_ring rb x = []"
+  unfolding CleanQ_RB_list_ring_def rb_valid_entries_def
+  by (simp add: le_less rb_empty_def rb_valid_ptr_def) 
+
 lemma rb_list_empty2:
   "rb_valid rb \<Longrightarrow> rb_empty rb \<longleftrightarrow> CleanQ_RB_list rb = []"
   using rb_list_empty rb_valid_implies_ptr_valid by blast
@@ -1927,6 +1946,10 @@ lemma rb_deq_not_empty:
   "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> CleanQ_RB_list rb \<noteq> []"
   using rb_can_deq_def rb_list_empty2 by blast
 
+lemma rb_deq_ring_not_empty:
+  "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> CleanQ_RB_list_ring rb x \<noteq> []"
+  unfolding CleanQ_RB_list_ring_def rb_valid_entries_def
+  by (simp add: rb_can_deq_def rb_empty_def rb_valid_def rb_valid_ptr_def) 
 
 text \<open>
   Doing the enqueue operation then behaves as adding the buffer to the end
@@ -1938,7 +1961,12 @@ lemma rb_enq_list_add[simp]:
      CleanQ_RB_list (rb_enq b rb) = (CleanQ_RB_list rb) @ [b]"
   unfolding CleanQ_RB_list_def rb_enq_ring_write_head
   by(subst rb_enq_valid_entries, simp_all add: rb_write_head_def)
-  
+
+lemma rb_enq_list_ring_add[simp]:
+  "rb_can_enq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> 
+     CleanQ_RB_list_ring (rb_enq b rb) (ring (rb_enq b rb)) = (CleanQ_RB_list_ring rb (ring rb)) @ [b]"
+  unfolding CleanQ_RB_list_ring_def rb_enq_ring_write_head
+  by (metis CleanQ_RB_list_def rb_enq_list_add rb_enq_ring_write_head) 
 
 text \<open>
   The dequeue operation returns an element which is in the list of the original state,
@@ -1950,7 +1978,6 @@ lemma rb_deq_list_was_head[simp]:
   apply(simp add:CleanQ_RB_list_def rb_can_deq_def rb_valid_def, subst hd_map)
   using rb_empty_valid_entries_equiv_list apply blast
   by (simp add: rb_read_tail_def)
-
 
 lemma rb_deq_list_was_in :
    "rb_can_deq rb \<Longrightarrow> rb_valid rb \<Longrightarrow> fst  (rb_deq rb) \<in> set (CleanQ_RB_list rb)"
@@ -2184,19 +2211,10 @@ definition frame_rb_weak_right :: "'a CleanQ_RB \<Rightarrow> 'a CleanQ_RB \<Rig
   where "frame_rb_weak_right st' st \<longleftrightarrow>
     size st' = size st \<and>
     tail st' = tail st \<and>
-    ring st' = ring st \<and>
+    CleanQ_RB_list_ring st' (ring st') =  CleanQ_RB_list_ring st' (ring st) \<and>
     rb_valid st' \<and> rb_valid st \<and> 
    (rb_delta_head st' st \<le> rb_can_incr_head_n_max st')" 
 
-lemma frame_rb_weak_right_state:
-  assumes frame: "frame_rb_weak_right st' st" and
-          head: "head st = head (rb_incr_head_n n st')" and
-          incr: "rb_can_incr_head_n n st'"
-  shows "st = rb_incr_head_n n st'"
-  using assms unfolding frame_rb_weak_right_def rb_incr_head_n_def
-  by simp
-
-  
 lemma rb_delta_head_st_incr_head:
   fixes st st'
   assumes valid: "rb_valid st \<and> rb_valid st'" and
@@ -2206,14 +2224,6 @@ lemma rb_delta_head_st_incr_head:
   unfolding rb_incr_head_n_def rb_delta_head_def
   by (smt ab_semigroup_add_class.add_ac(1) le_add_diff_inverse le_less mod_add_self1 mod_less 
       rb_valid_implies_ptr_valid rb_valid_ptr_def size valid)
-
-lemma rb_delta_head_st_incr_head_n :
-  fixes st st'
-  assumes frame: "frame_rb_weak_right st' st"
-  shows "rb_delta_head st' st = n \<Longrightarrow> st = rb_incr_head_n n st'" 
-  using frame unfolding frame_rb_weak_right_def
-  by (metis frame frame_rb_weak_right_state rb_can_incr_head_n_lt_max rb_delta_head_st_incr_head 
-      rb_incr_head_n_def rb_valid_implies_ptr_valid select_convs(2) surjective update_convs(2))
 
 lemma rb_delta_head_inv_helper:
   assumes valid: "rb_valid rb" and
@@ -2393,26 +2403,6 @@ lemma rb_weak_delta_tail_n:
   by (metis append_take_drop_id frame frame_rb_weak_left_state rb_can_incr_tail_n_lt_max 
             rb_incr_tail_n_valid_drop rb_valid_def)
 
-
-lemma rb_weak_delta_head_invalid_n:
-  fixes st' st 
-  assumes frame: "frame_rb_weak_right st' st" and
-          head: "head st = head (rb_incr_head_n n st')" and
-          enq: "rb_can_incr_head_n n st'"
-        shows  "rb_invalid_entries st' = (rb_incr_head_n_delta n st') @ rb_invalid_entries st"  
-  by (metis enq frame frame_rb_weak_right_def frame_rb_weak_right_state head not_less 
-      rb_can_incr_head_n_exceeds rb_incr_head_n_delta_invalid_entries rb_valid_def)
-
-lemma rb_weak_delta_head_n: 
-  fixes st' st 
-  assumes frame: "frame_rb_weak_right st' st" and
-          head: "head st = head (rb_incr_head_n n st')" and
-          enq: "rb_can_incr_head_n n st'"
-        shows  "rb_valid_entries st =  rb_valid_entries st' @ (rb_incr_head_n_delta n st')"
-  using rb_incr_head_n_delta_valid_entries
-  using enq frame frame_rb_weak_right_def frame_rb_weak_right_state head rb_can_incr_head_n_lt_max 
-        rb_valid_def by blast 
-
 text \<open>
   And at last proofs regarding the equivalence of the entries to actually mapping it on the ring and
   some other useful lemmas in that direction
@@ -2478,10 +2468,10 @@ next
 
     from assms tl2 have core1: "\<not> tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> 
                                 map (the \<circ> ring rb') [tail rb' + \<delta>tl..<size rb'] = map (the \<circ> ring rb) [tail rb..<size rb]"
-      by (simp add: rb_incr_tail_n_ring rb_incr_tail_n_size)
+      by (simp)
 
     from tl have hd: "head rb' = head rb"       
-      by (simp add: rb_incr_tail_n_head) 
+      by (simp) 
 
     from assms hd tl3 have core2: "\<not> tail rb' \<le> head rb' \<Longrightarrow> \<not> tail rb \<le> head rb \<Longrightarrow> 
               map (the \<circ> ring rb') [\<delta>tl - (size rb' - tail rb')..<head rb'] = map (the \<circ> ring rb) [0..<head rb]"
@@ -2495,14 +2485,17 @@ next
   qed
 qed
 
+
 lemma rb_ring_map_take_eq: 
   fixes st' st 
   assumes frame: "frame_rb_weak_right st' st" and
           head: "head st = head (rb_incr_head_n n st')" and
           enq: "rb_can_incr_head_n n st'"
   shows  "map (the \<circ> ring st') (rb_valid_entries st') @ map (the \<circ> ring st) (rb_incr_head_n_delta n st') = map (the \<circ> ring st) (rb_valid_entries st)"
-  using enq frame head rb_weak_delta_head_n
-  by (metis frame_rb_weak_right_state map_append rb_incr_head_n_ring)
+  using enq frame head unfolding rb_incr_head_n_delta_def
+  by (smt CleanQ_RB_list_ring_def add.left_neutral add.right_neutral frame_rb_weak_right_def length_append 
+      map_append rb_can_incr_head_n_lt_max rb_incr_head_n_delta_def rb_incr_head_n_delta_invalid_entries 
+      rb_incr_head_n_delta_valid_entries rb_incr_head_n_tail rb_incr_head_n_valid_ptr rb_valid_def rb_valid_entries_def rb_valid_invalid_entries_lengths semiring_normalization_rules(20)) 
 
 lemma rb_valid_tl_delta_take_drop:
   assumes "rb_valid_entries rb' = drop \<delta>tl (rb_valid_entries rb)"
@@ -2517,7 +2510,7 @@ lemma rb_equal_implies_map:
 
 lemma rb_equal_ring_equal:
  "(rTXY rb) = rb_incr_tail_n \<delta>tl (rTXY rb') \<Longrightarrow> ring (rTXY rb) = ring (rTXY rb')"
-  by (simp add: rb_incr_tail_n_ring)
+  by (simp)
 
 lemma rb_delta_tail_incr:
   assumes frame: "frame_rb_weak_left st' st"
@@ -2529,8 +2522,10 @@ lemma rb_delta_head_incr:
   assumes frame: "frame_rb_weak_right st' st"
   shows  "map (the \<circ> ring st') (rb_valid_entries st') @ (rb_delta_head_st st' st) = map (the \<circ> ring st) (rb_valid_entries st)"
   unfolding rb_delta_head_st_def
-  by (metis (no_types, lifting) frame frame_rb_weak_right_def rb_can_incr_head_max_implies_can_incr 
-      rb_delta_head_st_incr_head_n rb_incr_head_n_delta_map_def rb_ring_map_take_eq rb_valid_implies_ptr_valid) 
+  by (smt frame frame_rb_weak_right_def rb_can_incr_head_n_lt_max rb_delta_head_st_incr_head 
+      rb_incr_head_n_def rb_incr_head_n_delta_map_def rb_ring_map_take_eq rb_valid_implies_ptr_valid 
+      select_convs(2) surjective update_convs(2))
+  
 
 end
 
