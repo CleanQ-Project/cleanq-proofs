@@ -700,8 +700,7 @@ lemma CleanQ_RB_write_head_x_I3[simp]:
 
 lemma CleanQ_RB_write_head_x_I4[simp]:
   "I4_rb_valid (CleanQ_RB_write_head_x b rb) = I4_rb_valid rb"
-  unfolding I4_rb_valid_def CleanQ_RB_write_head_x_def
-  by(simp, meson rb_write_head_valid)
+  unfolding I4_rb_valid_def CleanQ_RB_write_head_x_def by simp
 
 lemma CleanQ_RB_write_head_x_Invariant[simp]:
   "CleanQ_RB_Invariants K (CleanQ_RB_write_head_x b rb) = CleanQ_RB_Invariants K rb"
@@ -722,8 +721,7 @@ lemma CleanQ_RB_write_head_y_I3[simp]:
 
 lemma CleanQ_RB_write_head_y_I4[simp]:
   "I4_rb_valid (CleanQ_RB_write_head_y b rb) = I4_rb_valid rb"
-  unfolding I4_rb_valid_def CleanQ_RB_write_head_y_def
-  by(simp, meson rb_write_head_valid)
+  unfolding I4_rb_valid_def CleanQ_RB_write_head_y_def by simp
 
 lemma CleanQ_RB_write_head_y_Invariant[simp]:
   "CleanQ_RB_Invariants K (CleanQ_RB_write_head_y b rb) = CleanQ_RB_Invariants K rb"

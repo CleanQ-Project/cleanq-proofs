@@ -1613,19 +1613,15 @@ lemma rb_write_perserves_invalid_entries[simp]:
   unfolding rb_write_head_def rb_invalid_entries_def by(auto)
 
 lemma rb_write_preserves_valid_ptr[simp]:
-  "rb_valid_ptr rb \<Longrightarrow> rb_valid_ptr (rb_write_head b rb)"
+  "rb_valid_ptr (rb_write_head b rb) = rb_valid_ptr rb"
   unfolding rb_valid_ptr_def rb_write_head_def by(auto)
 
 lemma rb_write_preserves_valid[simp]:
-  "rb_valid rb \<Longrightarrow> rb_valid (rb_write_head b rb)"
-  unfolding rb_valid_def by(simp, simp add:rb_write_head_def)
+  "rb_valid (rb_write_head b rb) = rb_valid rb"
+  unfolding rb_valid_def 
+  by (simp, metis fun_upd_other rb_valid_entries_head_not_member rb_write_head_def 
+                  select_convs(1) surjective update_convs(1))
 
-lemma rb_write_head_valid:
-  "rb_valid rb \<longleftrightarrow> rb_valid (rb_write_head b rb)"
-  apply(rule iffI, simp, simp only: rb_valid_def, auto)
-  apply (simp add: rb_valid_ptr_def rb_write_head_def)
-  by (metis fun_upd_apply rb_valid_entries_head_not_member rb_write_head_def 
-              select_convs(1) surjective update_convs(1))
 
 text \<open>
   Writing the head means that the entry at head is not none.
