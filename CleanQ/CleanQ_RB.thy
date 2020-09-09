@@ -941,6 +941,15 @@ definition rb_incr_head_n_delta :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow>
 definition rb_incr_tail_n_delta :: "nat \<Rightarrow> 'a CleanQ_RB \<Rightarrow> nat list"
   where "rb_incr_tail_n_delta n rb  = take n (rb_valid_entries rb)"
 
+text \<open>
+  Lemmas which bring incr head and can enq into relation
+\<close>
+
+lemma rb_not_full_incr_head_max_leq_zero:
+  assumes valid: "rb_valid rb"
+  shows "\<not> rb_full rb \<Longrightarrow> rb_can_incr_head_n_max rb > 0"
+  by (metis assms length_greater_0_conv length_tl rb_can_incr_head_n_max_def rb_incr_head_invalid_entries_tail 
+      rb_incr_head_valid_ptr rb_invalid_entries_never_empty_list rb_valid_def)
 
 
 (* ------------------------------------------------------------------------------------ *)
@@ -2022,7 +2031,19 @@ lemma rb_enq_write_can_enq :
   "rb_can_enq rb \<Longrightarrow> rb_can_enq (rb_write_head b rb)"
   unfolding CleanQ_RB_list_def rb_write_head_def
   by (simp add: rb_can_enq_def rb_full_def)
-  
+
+text \<open>
+  An enq does not change the \verb+CleanQ_RB_list_ring+ assuming we still take the old head + tail.
+\<close>
+
+lemma rb_enq_list_ring_same:
+  assumes "rb_can_enq rb" and
+          "rb = rb_enq b rb'"
+  shows "CleanQ_RB_list_ring rb' (ring rb) = CleanQ_RB_list_ring rb' (ring rb')"
+  by (metis CleanQ_RB_list_ring_def assms(2) rb_enq_ring_write_head rb_enq_write_same 
+      rb_list_list_ring_equiv rb_write_perserves_valid_entries)
+
+
 (* ==================================================================================== *)
 subsection \<open>Frame condition under concurrent operation of two sides\<close>
 (* ==================================================================================== *)  
@@ -2126,7 +2147,6 @@ lemma rb_delta_helper2:
   shows "rb_valid_entries rb = rb_incr_tail_n_delta n rb @ drop n (rb_valid_entries rb)"
   unfolding rb_incr_tail_n_delta_def
   by simp
-  
 
 text \<open>
   This next lemma shows properties about the definition of \verb+ rb_delta_tail+
@@ -2197,6 +2217,7 @@ lemma rb_delta_tail_head_notin:
   shows "head st' \<notin> set (rb_incr_tail_n_delta (rb_delta_tail st' st) st')"
   using assms unfolding rb_can_incr_tail_n_max_def
   by (metis in_set_takeD rb_incr_tail_n_delta_def rb_valid_entries_head_not_member) 
+
 
 text \<open>
   Now, similar the left side, we also need the frame condition for the right side i.e. tail is fixed

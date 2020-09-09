@@ -143,6 +143,34 @@ lemma frame_weak_y_sy:
   using frame unfolding CleanQ_RB_frame_weak_y_def
   by blast
 
+lemma frame_weak_dealt_head_incr_head_max_not_enq:
+  assumes frame: "frame_rb_weak_right rb' rb" and
+          valid: "rb_valid rb" and
+          max: "rb_delta_head rb' rb = rb_can_incr_head_n_max rb'"
+  shows "\<not> rb_can_enq rb"
+  using assms
+  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(2) diff_self_eq_0 
+      frame_rb_weak_right_def rb_can_enq_def rb_can_incr_head_n_exceeds rb_can_incr_head_n_lt_max 
+      rb_delta_head_def rb_delta_head_st_incr_head rb_full_def rb_incr_head_n_def rb_incr_head_n_max_full 
+      rb_valid_implies_ptr_valid)
+
+lemma frame_weak_dealt_not_enq_head_incr_max:
+  assumes frame: "frame_rb_weak_right rb' rb" and
+          valid: "rb_valid rb" and
+          not_enq: "\<not> rb_can_enq rb"
+   shows "rb_delta_head rb' rb = rb_can_incr_head_n_max rb'"
+  using assms rb_full_incr_head_max_eq_zero
+  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(2) dual_order.order_iff_strict 
+      frame_rb_weak_right_def rb_can_enq_def rb_can_incr_head_n_lt_max rb_delta_head_st_incr_head 
+      rb_full_def rb_incr_head_n_def rb_incr_head_n_not_full rb_valid_implies_ptr_valid) 
+
+lemma frame_rb_enq_delta_head_less_head_incr_max:
+  assumes frame: "frame_rb_weak_right rb' rb" and
+          valid: "rb_valid rb" and
+          not_enq: "rb_can_enq rb"
+   shows "rb_delta_head rb' rb < rb_can_incr_head_n_max rb'"
+  using frame frame_rb_weak_right_def frame_weak_dealt_head_incr_head_max_not_enq le_neq_implies_less not_enq by blast
+  
 
 text \<open>Finally we show that the RB weak frame condition refines the List weak frame condition.\<close>
 
@@ -1045,6 +1073,64 @@ lemma CleanQ_RB_can_deq_y_implies2[simp]:
   by simp
 *) 
 (*<*)
+
+
+text \<open>
+  Enq/Deq do not invalidate the frame condition assuming we can execute the operation
+\<close>
+
+lemma CleanQ_RB_frame_weak_left_unchanged_enq_x:
+  assumes enq: "CleanQ_RB_enq_x_possible rb" and
+          frame: "CleanQ_RB_frame_weak_y rb' rb"
+  shows "frame_rb_weak_left (rTYX rb') (rTYX (CleanQ_RB_enq_x b rb)) = frame_rb_weak_left (rTYX rb') (rTYX rb)"
+  using assms unfolding CleanQ_RB_frame_weak_y_def frame_rb_weak_left_def CleanQ_RB_enq_x_def
+  by simp 
+
+lemma CleanQ_RB_frame_weak_left_unchanged_enq_y:
+  assumes enq: "CleanQ_RB_enq_y_possible rb" and
+          frame: "CleanQ_RB_frame_weak_x rb' rb"
+  shows "frame_rb_weak_left (rTXY rb') (rTXY (CleanQ_RB_enq_y b rb)) = frame_rb_weak_left (rTXY rb') (rTXY rb)"
+  using assms unfolding CleanQ_RB_frame_weak_x_def frame_rb_weak_left_def CleanQ_RB_enq_y_def
+  by simp
+
+
+lemma CleanQ_RB_frame_weak_left_helper :
+  assumes frame: "CleanQ_RB_frame_weak_y rb' rb" and
+          enq: "CleanQ_RB_enq_x_possible rb"
+  shows "CleanQ_RB_list_ring (rTXY rb') (ring (rTXY rb)) = CleanQ_RB_list_ring (rTXY rb') (ring (rb_enq b (rTXY rb)))"
+  by (smt CleanQ_RB.select_convs(1) CleanQ_RB.select_convs(2) CleanQ_RB.surjective CleanQ_RB.update_convs(1) 
+      CleanQ_RB.update_convs(2) CleanQ_RB_frame_weak_y_def CleanQ_RB_list_ring_def UnCI frame 
+      frame_rb_weak_right_def map_fun_upd map_map rb_can_incr_head_max_implies_can_incr rb_delta_head_st_incr_head 
+      rb_enq_ring_write_head rb_incr_head_n_def rb_incr_head_n_delta_valid_entries rb_valid_entries_head_not_member 
+      rb_valid_implies_ptr_valid rb_write_head_def set_append)
+
+lemma CleanQ_RB_frame_weak_right_helper2: 
+  assumes frame: "CleanQ_RB_frame_weak_y rb' rb" and
+          enq: "CleanQ_RB_enq_x_possible rb"
+  shows "rb_delta_head (rTXY rb') (rTXY rb) < rb_can_incr_head_n_max (rTXY rb')"
+  using assms unfolding CleanQ_RB_enq_x_possible_def rb_can_enq_def
+  by (simp add: CleanQ_RB_frame_weak_y_def frame_rb_enq_delta_head_less_head_incr_max 
+      frame_rb_weak_right_def rb_can_enq_def)
+
+lemma CleanQ_RB_frame_weak_right_helper3: 
+  assumes frame: "CleanQ_RB_frame_weak_y rb' rb" and
+          enq: "CleanQ_RB_enq_x_possible rb"
+  shows "rb_delta_head (rTXY rb') (rb_enq b (rTXY rb)) \<le> rb_can_incr_head_n_max (rTXY rb')"
+  unfolding rb_enq_def rb_incr_head_def rb_write_head_def 
+  apply simp 
+  sorry
+  
+lemma CleanQ_RB_frame_weak_right_unchanged_enq_x:
+  assumes enq: "CleanQ_RB_enq_x_possible rb" and
+          frame: "CleanQ_RB_frame_weak_y rb' rb"
+  shows "frame_rb_weak_right (rTXY rb') (rTXY (CleanQ_RB_enq_x b rb)) = frame_rb_weak_right (rTXY rb') (rTXY rb)"
+  using assms unfolding CleanQ_RB_frame_weak_y_def frame_rb_weak_right_def CleanQ_RB_enq_x_def apply auto
+  apply (simp add: CleanQ_RB_frame_weak_left_helper frame)
+  apply (simp add: CleanQ_RB_enq_x_possible_def)
+  by (simp add: CleanQ_RB_frame_weak_right_helper3 frame) 
+  
+  
+
 end 
 
 (*>*)
