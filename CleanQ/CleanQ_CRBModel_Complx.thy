@@ -6327,30 +6327,6 @@ lemma CleanQ_RB_conc_mult_cond_check:
   
   oops
 
-lemma "CleanQ_RB_Invariants K rb \<Longrightarrow> CleanQ_RB_read_tail_tx_y (CleanQ_RB_deq_x rb) = (CleanQ_RB_read_tail_tx_y rb + 1) mod CleanQ_RB_read_size_tx_y rb"
-  unfolding CleanQ_RB_read_tail_tx_y_def CleanQ_RB_deq_x_def CleanQ_RB_read_size_tx_y_def rb_deq_def rb_incr_tail_def
-  by(auto)
-
-lemma "(tail_y x + \<delta>) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_tail_tx_y rb \<Longrightarrow> \<exists>\<delta>. (tail_y x + \<delta>) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_tail_tx_y (CleanQ_RB_enq_x b rb)"
-  unfolding  CleanQ_RB_read_size_tx_y_def by(auto)
-
-
-lemma "CleanQ_RB_Invariants K st \<Longrightarrow> CleanQ_RB_Invariants K st' 
-        \<Longrightarrow> CleanQ_RB_frame_weak_x st' st 
-        \<Longrightarrow> CleanQ_RB_read_tail_rx_x st' \<noteq> CleanQ_RB_read_head_rx_x st' 
-        \<Longrightarrow> CleanQ_RB_read_tail_rx_x st \<noteq> CleanQ_RB_read_head_rx_x st"
-  unfolding CleanQ_RB_read_tail_rx_x_def CleanQ_RB_read_head_rx_x_def
-            CleanQ_RB_frame_weak_x_def frame_rb_weak_left_def frame_rb_weak_right_def
-            rb_delta_head_def rb_delta_head_st_def
-  apply(auto)
-  sledgehammer
-
-lemma "CleanQ_RB_read_head_rx_x rb = CleanQ_RB_read_head_rx_x (CleanQ_RB_enq_y b rb)"
-  oops
-
-lemma "CleanQ_RB_read_head_rx_y rb = CleanQ_RB_read_head_rx_y (CleanQ_RB_enq_x b rb)"
-  oops
-
 
 
 (* ------------------------------------------------------------------------------------ *)
