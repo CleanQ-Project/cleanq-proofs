@@ -6127,73 +6127,244 @@ lemma CleanQ_RB_conc_non_atomic_head_tail_updates:
 subsubsection \<open>Lemmas around weak frame condition\<close>
 (* ------------------------------------------------------------------------------------ *)
 
-lemma frame_rb_write_head_x_frame_left_unchaged:
-  assumes "CleanQ_RB_frame_weak_x rb' rb"
-  shows "frame_rb_weak_left (rTXY (CleanQ_RB_write_head_x b rb')) (rTXY (CleanQ_RB_write_head_x b rb))"
-  using assms unfolding frame_rb_weak_left_def CleanQ_RB_write_head_x_def rb_write_head_def 
-    CleanQ_RB_frame_weak_x_def apply(auto)
-  using rb_write_head_valid apply (metis rb_write_head_def) 
-  using rb_write_head_valid apply (metis rb_write_head_def) 
-  using frame_rb_weak_delta_incr_eq_write_head_unchanged
-  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) 
-      rb_can_incr_tail_n_max_def rb_delta_tail_def rb_valid_entries_def) 
+lemma frame_rb_write_head_x_frame_left_unchanged:
+  assumes "CleanQ_RB_frame_weak_y rb' rb"
+  shows "frame_rb_weak_left (rTYX rb') (rTYX (CleanQ_RB_write_head_x b rb))"
+  using assms unfolding  CleanQ_RB_frame_weak_x_def frame_rb_weak_left_def CleanQ_RB_write_head_x_def
+  by (simp add: CleanQ_RB_frame_weak_y_def frame_rb_weak_left_def)
+  
+  
 
-lemma frame_rb_write_head_x_frame_right_unchaged:
+lemma frame_rb_write_head_y_frame_left_unchanged:
   assumes "CleanQ_RB_frame_weak_x rb' rb"
-  shows "frame_rb_weak_right (rTYX (CleanQ_RB_write_head_x b rb')) (rTYX (CleanQ_RB_write_head_x b rb))"
+  shows "frame_rb_weak_left (rTXY rb') (rTXY (CleanQ_RB_write_head_y b rb))"
+  using assms unfolding CleanQ_RB_frame_weak_y_def frame_rb_weak_left_def CleanQ_RB_write_head_y_def rb_write_head_def
+  by (simp add: CleanQ_RB_frame_weak_x_def frame_rb_weak_left_def) 
+    
+  
+lemma frame_rb_write_head_x_frame_right_unchanged:
+  assumes "CleanQ_RB_frame_weak_x rb' rb"
+  shows "frame_rb_weak_right (rTYX rb') (rTYX (CleanQ_RB_write_head_x b rb))"
   using assms unfolding frame_rb_weak_right_def CleanQ_RB_write_head_x_def rb_write_head_def 
     CleanQ_RB_frame_weak_x_def 
   by(auto)
+
+  
+lemma frame_rb_write_head_y_frame_right_unchanged2:
+  assumes "CleanQ_RB_frame_weak_y rb' rb"
+  shows "frame_rb_weak_right (rTXY rb') (rTXY (CleanQ_RB_write_head_x b rb))"
+  using assms unfolding CleanQ_RB_frame_weak_y_def frame_rb_weak_right_def frame_rb_weak_left_def 
+    CleanQ_RB_write_head_x_def
+  apply(auto)
+  apply (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) CleanQ_RB.update_convs(2) 
+         CleanQ_RB_list_ring_def UnCI map_fun_upd map_map rb_can_incr_head_max_implies_can_incr 
+         rb_delta_head_st_incr_head rb_incr_head_n_def rb_incr_head_n_delta_valid_entries 
+         rb_valid_entries_head_not_member rb_valid_implies_ptr_valid rb_write_head_def set_append)
+  by (metis rb_delta_head_def rb_write_head_head_const)
+  
+
+lemma frame_rb_write_head_y_frame_right_unchanged:
+  assumes "CleanQ_RB_frame_weak_x rb' rb"
+  shows "frame_rb_weak_right (rTYX rb') (rTYX (CleanQ_RB_write_head_y b rb))"
+  unfolding frame_rb_weak_right_def CleanQ_RB_write_head_y_def
+  using assms unfolding CleanQ_RB_frame_weak_x_def frame_rb_weak_right_def apply auto
+  apply (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) CleanQ_RB.update_convs(2) 
+          CleanQ_RB_list_ring_def UnCI map_fun_upd map_map rb_can_incr_head_max_implies_can_incr 
+          rb_delta_head_st_incr_head rb_incr_head_n_def rb_incr_head_n_delta_valid_entries rb_valid_entries_head_not_member 
+          rb_valid_implies_ptr_valid rb_write_head_def set_append)
+  by (metis (no_types, lifting) CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) rb_delta_head_def rb_write_head_def) 
+  
 
 lemma frame_rb_write_head_x_delta_tail_same:
   shows "rb_delta_tail_st (rTYX rb) = rb_delta_tail_st (rTYX (CleanQ_RB_write_head_x b rb))"
   by (simp add: CleanQ_RB_write_head_x_def)
 
+lemma frame_rb_write_head_y_delta_tail_same:
+  shows "rb_delta_tail_st (rTXY rb) = rb_delta_tail_st (rTXY (CleanQ_RB_write_head_y b rb))"
+  by (simp add: CleanQ_RB_write_head_y_def)
+
 lemma frame_rb_write_head_x_delta_tail_same2:
   assumes "rb_delta_tail (rTXY rb') (rTXY rb) \<le> rb_can_incr_tail_n_max (rTXY rb')"
-  shows "set (rb_delta_tail_st (rTXY rb') (rTXY rb)) = set (rb_delta_tail_st (rTXY (CleanQ_RB_write_head_x b rb')) (rTXY (CleanQ_RB_write_head_x b rb)))"
+  shows "set (rb_delta_tail_st (rTXY rb') (rTXY rb)) = set (rb_delta_tail_st (rTXY rb') (rTXY (CleanQ_RB_write_head_x b rb)))"
   using assms unfolding CleanQ_RB_write_head_x_def rb_write_head_def rb_delta_tail_st_def 
    rb_incr_tail_n_delta_map_def
   using rb_delta_tail_head_notin apply(auto)
   apply (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) image_eqI rb_delta_tail_def 
       rb_incr_tail_n_delta_def rb_valid_entries_head_not_member rb_write_head_def rb_write_perserves_valid_entries 
       set_take_subset subsetD)
-  apply (smt CleanQ_RB.select_convs(2) CleanQ_RB.surjective CleanQ_RB.update_convs(1) in_set_takeD 
-        rb_incr_tail_n_delta_def rb_valid_entries_head_not_member)
-  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) image_eqI rb_delta_tail_def 
-      rb_incr_tail_n_delta_def rb_valid_entries_def)
+  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) image_iff rb_delta_tail_def)
+  
 
-lemma frame_rb_write_head_x_delta_head_xy_same:
-  shows "rb_delta_head_st (rTYX (CleanQ_RB_write_head_x b st')) (rTYX (CleanQ_RB_write_head_x b st)) = 
+lemma frame_rb_write_head_y_delta_tail_same2:
+  assumes "rb_delta_tail (rTYX rb') (rTYX rb) \<le> rb_can_incr_tail_n_max (rTYX rb')"
+  shows "set (rb_delta_tail_st (rTYX rb') (rTYX rb)) = set (rb_delta_tail_st (rTYX rb') (rTYX (CleanQ_RB_write_head_y b rb)))"
+  using assms unfolding CleanQ_RB_write_head_y_def rb_write_head_def rb_delta_tail_st_def 
+   rb_incr_tail_n_delta_map_def
+  using rb_delta_tail_head_notin apply(auto)
+  apply (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) image_eqI rb_delta_tail_def 
+      rb_incr_tail_n_delta_def rb_valid_entries_head_not_member rb_write_head_def rb_write_perserves_valid_entries 
+      set_take_subset subsetD)
+  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(1) image_iff rb_delta_tail_def)
+  
+
+lemma frame_rb_write_head_x_delta_head_yx_same:
+  shows "rb_delta_head_st (rTYX st') (rTYX (CleanQ_RB_write_head_x b st)) = 
         rb_delta_head_st (rTYX st') (rTYX st)"
   unfolding CleanQ_RB_write_head_x_def by simp 
-  
+
+lemma frame_rb_write_head_y_delta_head_xy_same:
+  shows "rb_delta_head_st (rTXY st') (rTXY (CleanQ_RB_write_head_y b st)) = 
+        rb_delta_head_st (rTXY st') (rTXY st)"
+  unfolding CleanQ_RB_write_head_y_def by simp 
+
 lemma frame_rb_write_head_x_sy_same:
   shows "rSY (CleanQ_RB_write_head_x b st) = rSY st"
   by simp 
 
-lemma frame_rb_write_head_y_delta_tail_same:
-  shows "rb_delta_tail_st (rTXY rb) = rb_delta_tail_st (rTXY (CleanQ_RB_write_head_y b rb))"
-  by (simp add: CleanQ_RB_write_head_y_def)
+lemma frame_rb_write_head_y_sy_same:
+  shows "rSY (CleanQ_RB_write_head_y b st) = rSY st"
+  by simp 
+
+lemma frame_rb_write_head_x_sx_same:
+  shows "rSX (CleanQ_RB_write_head_x b st) = rSX st"
+  by simp 
+
+lemma frame_rb_write_head_y_sx_same:
+  shows "rSX (CleanQ_RB_write_head_y b st) = rSX st"
+  by simp 
 
 lemma frame_rb_write_head_x_frame_rest_unchaged1:
   assumes "CleanQ_RB_frame_weak_x st' st"
-  shows "rSY (CleanQ_RB_write_head_x b st') \<union> 
-        set (rb_delta_tail_st (rTXY (CleanQ_RB_write_head_x b st')) (rTXY (CleanQ_RB_write_head_x b st))) = 
-       (set (rb_delta_head_st (rTYX (CleanQ_RB_write_head_x b st')) (rTYX (CleanQ_RB_write_head_x b st))) \<union> 
+  shows "rSY st' \<union> 
+        set (rb_delta_tail_st (rTXY st') (rTXY (CleanQ_RB_write_head_x b st))) = 
+       (set (rb_delta_head_st (rTYX  st') (rTYX (CleanQ_RB_write_head_x b st))) \<union> 
         rSY (CleanQ_RB_write_head_x b st))"
   using assms unfolding CleanQ_RB_frame_weak_x_def
-  by (metis (no_types, lifting) frame_rb_weak_left_def frame_rb_write_head_x_delta_head_xy_same 
-      frame_rb_write_head_x_delta_tail_same2 frame_rb_write_head_x_sy_same) 
-
-lemma frame_rb_write_head_x_frame_unchaged:
-  assumes "CleanQ_RB_frame_weak_x st' st"
-  shows "CleanQ_RB_frame_weak_x (CleanQ_RB_write_head_x b st') (CleanQ_RB_write_head_x b st)"
-  unfolding CleanQ_RB_frame_weak_x_def
-  by (smt CleanQ_RB_frame_weak_x_def CleanQ_RB_write_head_x_SX assms frame_rb_write_head_x_delta_head_xy_same 
-      frame_rb_write_head_x_frame_left_unchaged frame_rb_write_head_x_frame_rest_unchaged1 
-      frame_rb_write_head_x_frame_right_unchaged frame_rb_write_head_x_sy_same)
+  by (metis (no_types, lifting) frame_rb_weak_left_def frame_rb_write_head_x_delta_head_yx_same 
+      frame_rb_write_head_x_delta_tail_same2 frame_rb_write_head_x_sy_same)
   
+
+lemma frame_rb_write_head_y_frame_rest_unchaged1:
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "rSX st' \<union> 
+        set (rb_delta_tail_st (rTYX st') (rTYX (CleanQ_RB_write_head_y b st))) = 
+       (set (rb_delta_head_st (rTXY st') (rTXY (CleanQ_RB_write_head_y b st))) \<union> 
+        rSX (CleanQ_RB_write_head_y b st))"
+  using assms unfolding CleanQ_RB_frame_weak_y_def
+  by (metis (no_types, hide_lams) CleanQ_RB_write_head_y_SX frame_rb_weak_left_def 
+      frame_rb_write_head_y_delta_head_xy_same frame_rb_write_head_y_delta_tail_same2)
+  
+
+lemma frame_rb_write_head_x_frame_unchanged:
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x st' (CleanQ_RB_write_head_y b st)"
+  unfolding CleanQ_RB_frame_weak_x_def using assms frame_rb_write_head_y_sx_same
+  frame_rb_write_head_y_frame_left_unchanged
+  by (smt CleanQ_RB_State.ext_inject CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(4) 
+      CleanQ_RB_frame_weak_x_def CleanQ_RB_list_def CleanQ_RB_write_head_y_def CleanQ_RB_write_head_y_list 
+      frame_rb_write_head_y_frame_right_unchanged rb_delta_head_incr same_append_eq)
+  
+lemma frame_rb_write_head_y_frame_unchanged:
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "CleanQ_RB_frame_weak_y st' (CleanQ_RB_write_head_x b st)"
+  unfolding CleanQ_RB_frame_weak_y_def using assms frame_rb_write_head_x_sy_same 
+  frame_rb_write_head_x_frame_left_unchanged
+  by (smt CleanQ_RB_State.select_convs(4) CleanQ_RB_State.surjective CleanQ_RB_State.update_convs(3) 
+      CleanQ_RB_frame_weak_y_def CleanQ_RB_list_def CleanQ_RB_write_head_x_def CleanQ_RB_write_head_x_list 
+      frame_rb_write_head_x_sx_same frame_rb_write_head_y_frame_right_unchanged2 rb_delta_head_incr same_append_eq)
+
+lemmas CleanQ_RB_frame_rb_write_head_unchanged[simp] = 
+    frame_rb_write_head_x_frame_unchanged
+    frame_rb_write_head_y_frame_unchanged
+
+lemma CleanQ_RB_frame_rb_write_head_flags_y :
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x  st' (CleanQ_RB_write_head_flags_y x st)"
+  unfolding CleanQ_RB_write_head_flags_y_def
+  by (metis CleanQ_RB_write_head_y_def assms frame_rb_write_head_x_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_flags_x :
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "CleanQ_RB_frame_weak_y st' (CleanQ_RB_write_head_flags_x x st)"
+  unfolding CleanQ_RB_write_head_flags_x_def
+  by (metis CleanQ_RB_write_head_x_def assms frame_rb_write_head_y_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_region_y :
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x  st' (CleanQ_RB_write_head_region_y x st)"
+  unfolding CleanQ_RB_write_head_region_y_def
+  by (metis CleanQ_RB_write_head_y_def assms frame_rb_write_head_x_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_region_x :
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "CleanQ_RB_frame_weak_y st' (CleanQ_RB_write_head_region_x x st)"
+  unfolding CleanQ_RB_write_head_region_x_def
+  by (metis CleanQ_RB_write_head_x_def assms frame_rb_write_head_y_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_offset_y :
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x  st' (CleanQ_RB_write_head_offset_y x st)"
+  unfolding CleanQ_RB_write_head_offset_y_def
+  by (metis CleanQ_RB_write_head_y_def assms frame_rb_write_head_x_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_offset_x :
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "CleanQ_RB_frame_weak_y st' (CleanQ_RB_write_head_offset_x x st)"
+  unfolding CleanQ_RB_write_head_offset_x_def
+  by (metis CleanQ_RB_write_head_x_def assms frame_rb_write_head_y_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_length_y :
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x  st' (CleanQ_RB_write_head_length_y x st)"
+  unfolding CleanQ_RB_write_head_length_y_def
+  by (metis CleanQ_RB_write_head_y_def assms frame_rb_write_head_x_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_length_x :
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "CleanQ_RB_frame_weak_y st' (CleanQ_RB_write_head_length_x x st)"
+  unfolding CleanQ_RB_write_head_length_x_def
+  by (metis CleanQ_RB_write_head_x_def assms frame_rb_write_head_y_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_valid_length_x :
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "CleanQ_RB_frame_weak_y st' (CleanQ_RB_write_head_valid_length_x x st)"
+  unfolding CleanQ_RB_write_head_valid_length_x_def
+  by (metis CleanQ_RB_write_head_x_def assms frame_rb_write_head_y_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_valid_length_y :
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x  st' (CleanQ_RB_write_head_valid_length_y x st)"
+  unfolding CleanQ_RB_write_head_valid_length_y_def
+  by (metis CleanQ_RB_write_head_y_def assms frame_rb_write_head_x_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_valid_offset_x :
+  assumes "CleanQ_RB_frame_weak_y st' st"
+  shows "CleanQ_RB_frame_weak_y st' (CleanQ_RB_write_head_valid_offset_x x st)"
+  unfolding CleanQ_RB_write_head_valid_offset_x_def
+  by (metis CleanQ_RB_write_head_x_def assms frame_rb_write_head_y_frame_unchanged)
+
+lemma CleanQ_RB_frame_rb_write_head_valid_offset_y :
+  assumes "CleanQ_RB_frame_weak_x st' st"
+  shows "CleanQ_RB_frame_weak_x  st' (CleanQ_RB_write_head_valid_offset_y x st)"
+  unfolding CleanQ_RB_write_head_valid_offset_y_def
+  by (metis CleanQ_RB_write_head_y_def assms frame_rb_write_head_x_frame_unchanged)
+
+lemmas CleanQ_RB_frame_rb_write_head_x[simp] = 
+    CleanQ_RB_frame_rb_write_head_region_x
+    CleanQ_RB_frame_rb_write_head_offset_x
+    CleanQ_RB_frame_rb_write_head_length_x
+    CleanQ_RB_frame_rb_write_head_valid_offset_x
+    CleanQ_RB_frame_rb_write_head_valid_length_x
+    CleanQ_RB_frame_rb_write_head_flags_x
+
+lemmas CleanQ_RB_frame_rb_write_head_y[simp] = 
+    CleanQ_RB_frame_rb_write_head_region_y
+    CleanQ_RB_frame_rb_write_head_offset_y
+    CleanQ_RB_frame_rb_write_head_length_y
+    CleanQ_RB_frame_rb_write_head_valid_offset_y
+    CleanQ_RB_frame_rb_write_head_valid_length_y
+    CleanQ_RB_frame_rb_write_head_flags_y
+
 
 
 lemma CleanQ_enq_x_frame_weak_y[simp]:
