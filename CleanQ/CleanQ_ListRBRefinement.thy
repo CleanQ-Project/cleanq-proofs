@@ -64,7 +64,7 @@ lemma
 proof -
    show "\<And>sc. Semantic.xstate.Normal sc \<in> CleanQ_RB_enq_x_pre K buf \<Longrightarrow> CleanQ_RB2List (CleanQ_RB_enq_x buf sc) = CleanQ_List_enq_x buf (CleanQ_RB2List sc)" 
      using precond CleanQ_RB_enq_x_equal
-     by (simp add: CleanQ_RB_enq_x_equal CleanQ_RB_enq_x_pre_def image_iff)
+     using CleanQ_RB_enq_x_pre_def by fastforce
  next
    have core_g2: "Semantic.xstate.Normal (CleanQ_RB2List sc) \<in> CleanQ_List_enq_x_pre K buf" using precond
    proof -
@@ -74,20 +74,23 @@ proof -
      have b_notin_txy: "b \<in> (rSX sc) \<Longrightarrow> b \<notin> set (lTXY (CleanQ_RB2List sc))" 
        using precond
        unfolding CleanQ_RB_enq_x_pre_def CleanQ_RB2List_def
-       by auto
+       using CleanQ_RB_Invariants_def I2_rb_img_def by fastforce
+       
      have final: "Semantic.xstate.Normal sc \<in> CleanQ_RB_enq_x_pre K buf \<Longrightarrow> Semantic.xstate.Normal (CleanQ_RB2List sc) \<in> CleanQ_List_enq_x_pre K buf" 
        using b_in_sx b_notin_txy precond unfolding CleanQ_RB2List_def CleanQ_RB_enq_x_pre_def CleanQ_List_enq_x_pre_def
-       by (smt CleanQ_List_State.select_convs(1) CleanQ_List_State.select_convs(3) CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) 
-           CleanQ_RB_Invariants_List_Invariants I2_rb_img.elims(2) Semantic.xstate.inject(1) 
-           disjoint_insert(1) imageE image_eqI insert_absorb mem_Collect_eq)
+       by (smt CleanQ_List_State.select_convs(1) CleanQ_List_State.select_convs(3) CleanQ_RB2List_def 
+           CleanQ_RB_Invariants_List_Invariants CleanQ_RB_Invariants_def CollectD CollectI I2_rb_img_def 
+           Semantic.xstate.inject(1) Set.set_insert disjoint_insert(1) imageE imageI)
+
      show ?thesis using final precond
        by blast
    qed
    show "Semantic.xstate.case_xstate (\<lambda>sc. Semantic.xstate.Normal (CleanQ_RB2List sc)) (\<lambda>sc. Abrupt (CleanQ_RB2List sc)) (\<lambda>fc. Semantic.xstate.Fault (CleanQ_RB2List fc))
      Semantic.xstate.Stuck ` CleanQ_RB_enq_x_pre K buf \<subseteq> CleanQ_List_enq_x_pre K buf"
      using core_g2 CleanQ_RB_Invariants_List_Invariants unfolding CleanQ_RB_enq_x_pre_def CleanQ_List_enq_x_pre_def
-     by (smt CleanQ_List_State.select_convs(1) CleanQ_List_State.select_convs(3) CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) I2_rb_img.elims(2)
-         Semantic.xstate.simps(16) disjoint_iff_not_equal image_Collect_subsetI image_def mem_Collect_eq)
+     by (smt CleanQ_List_State.select_convs(1) CleanQ_List_State.select_convs(3) CleanQ_RB2List_def CleanQ_RB_Invariants_def 
+         CollectI I2_rb_img_def Semantic.xstate.simps(16) disjoint_iff_not_equal image_Collect_subsetI image_def image_image)
+    
 qed
 
 lemma
@@ -102,7 +105,7 @@ lemma
 proof -
    show "\<And>sc. Semantic.xstate.Normal sc \<in> CleanQ_RB_enq_y_pre K buf \<Longrightarrow> CleanQ_RB2List (CleanQ_RB_enq_y buf sc) = CleanQ_List_enq_y buf (CleanQ_RB2List sc)" 
      using precond CleanQ_RB_enq_y_equal
-     by (simp add: CleanQ_RB_enq_y_equal CleanQ_RB_enq_y_pre_def image_iff)
+     using CleanQ_RB_enq_y_pre_def by fastforce
  next
    have core_g2: "Semantic.xstate.Normal (CleanQ_RB2List sc) \<in> CleanQ_List_enq_y_pre K buf" using precond
    proof -
@@ -112,18 +115,24 @@ proof -
      have b_notin_tyx: "b \<in> (rSY sc) \<Longrightarrow> b \<notin> set (lTYX (CleanQ_RB2List sc))" 
        using precond
        unfolding CleanQ_RB_enq_y_pre_def CleanQ_RB2List_def
-       by auto
+       using CleanQ_RB_Invariants_def I2_rb_img_def by fastforce
+      
      have final: "Semantic.xstate.Normal sc \<in> CleanQ_RB_enq_y_pre K buf \<Longrightarrow> Semantic.xstate.Normal (CleanQ_RB2List sc) \<in> CleanQ_List_enq_y_pre K buf" 
        using b_in_sx b_notin_tyx precond unfolding CleanQ_RB2List_def CleanQ_RB_enq_y_pre_def CleanQ_List_enq_y_pre_def
-       by fastforce
+       by (smt CleanQ_List_State.select_convs(2) CleanQ_List_State.select_convs(4) CleanQ_RB2List_def
+           CleanQ_RB_Invariants_List_Invariants CleanQ_RB_Invariants_def CollectD CollectI I2_rb_img_def 
+           Semantic.xstate.inject(1) Set.set_insert disjoint_insert(1) imageE imageI)
+
      show ?thesis using final precond
        by simp
    qed
    show "Semantic.xstate.case_xstate (\<lambda>sc. Semantic.xstate.Normal (CleanQ_RB2List sc)) (\<lambda>sc. Abrupt (CleanQ_RB2List sc)) (\<lambda>fc. Semantic.xstate.Fault (CleanQ_RB2List fc))
      Semantic.xstate.Stuck ` CleanQ_RB_enq_y_pre K buf \<subseteq> CleanQ_List_enq_y_pre K buf"
      using core_g2 CleanQ_RB_Invariants_List_Invariants unfolding CleanQ_RB_enq_y_pre_def CleanQ_List_enq_y_pre_def
-     by (smt CleanQ_List_State.select_convs(2) CleanQ_List_State.select_convs(4) CleanQ_RB2List_def CleanQ_RB_Invariants.elims(2) I2_rb_img.elims(2)
-         Semantic.xstate.simps(16) disjoint_iff_not_equal image_Collect_subsetI image_def mem_Collect_eq)
+     by (smt CleanQ_List_State.select_convs(2) CleanQ_List_State.select_convs(4) CleanQ_RB2List_def 
+         CleanQ_RB_Invariants_def CollectD CollectI I2_rb_img_def Semantic.xstate.simps(16) 
+         disjoint_iff_not_equal image_iff image_subsetI)
+    
 qed
 
 (* ------------------------------------------------------------------------------------ *)
@@ -142,9 +151,9 @@ lemma
   shows "buf = the (ring (rTYX sc) (tail (rTYX sc))) \<Longrightarrow> buf = hd (lTYX (CleanQ_RB2List sc))"
   using precond unfolding CleanQ_RB2List_def 
   apply auto
-  by (metis (mono_tags, lifting) CleanQ_RB_Invariants.elims(2) CleanQ_RB_deq_x_possible_def 
-      CleanQ_RB_deq_x_pre_def CollectD I4_rb_valid.elims(2) imageE prod.sel(1) rb_deq_def 
-      rb_deq_list_was_head rb_valid_def state_simps(1))
+  by (metis (mono_tags, lifting) CleanQ_RB_Invariants_def CleanQ_RB_deq_x_possible_def CleanQ_RB_deq_x_pre_def 
+      CollectD I4_rb_valid_def imageE prod.sel(1) rb_deq_def rb_deq_list_was_head state_simps(1))
+  
   
   
 
@@ -155,10 +164,9 @@ lemma
   shows "buf = the (ring (rTXY sc) (tail (rTXY sc))) \<Longrightarrow> buf = hd (lTXY (CleanQ_RB2List sc))"
   using precond unfolding CleanQ_RB2List_def CleanQ_RB_deq_y_pre_def
   apply auto
-  by (metis CleanQ_RB_deq_y_possible_def prod.sel(1) rb_deq_def rb_deq_list_was_head rb_valid_def)
+  by (metis (no_types) CleanQ_RB_Invariants_def CleanQ_RB_deq_y_possible_def I4_rb_valid_def prod.sel(1) 
+      rb_deq_def rb_deq_list_was_head)
   
-
-
 lemma 
   deq_x_rb_pre_implies_list_pre:
   assumes precond: "Semantic.xstate.Normal sc \<in> CleanQ_RB_deq_x_pre K buf"
@@ -171,9 +179,8 @@ proof -
         
    have non_empty: "CleanQ_RB_deq_x_possible sc \<Longrightarrow> lTYX (CleanQ_RB2List sc) \<noteq> []" 
      using precond unfolding CleanQ_RB_deq_x_possible_def CleanQ_RB2List_def CleanQ_RB_deq_x_pre_def
-     using I4_rb_valid.elims(2) rb_deq_not_empty by auto
-     
-      
+     using CleanQ_RB_Invariants_def I4_rb_valid_def rb_deq_not_empty by fastforce
+    
    show ?thesis  using non_empty precond_buf CleanQ_RB_Invariants_List_Invariants      
      using precond non_empty refine_hd_list_tl_ring_tyx precond_buf 
      unfolding CleanQ_RB2List_def CleanQ_RB_deq_x_pre_def CleanQ_List_deq_x_pre_def
@@ -193,9 +200,8 @@ proof -
      
    have non_empty: "CleanQ_RB_deq_y_possible sc \<Longrightarrow> lTXY (CleanQ_RB2List sc) \<noteq> []" 
      using precond unfolding CleanQ_RB_deq_y_possible_def
-     by (smt CleanQ_List_State.select_convs(3) CleanQ_RB2List_def CleanQ_RB_Invariants.simps 
-         CleanQ_RB_deq_y_pre_def CollectD I4_rb_valid.simps Semantic.xstate.inject(1) image_def 
-         rb_deq_not_empty)
+     by (smt CleanQ_List_State.select_convs(3) CleanQ_RB2List_def CleanQ_RB_Invariants_def 
+         CleanQ_RB_deq_y_pre_def CollectD I4_rb_valid_def image_def rb_deq_not_empty state_simps(1))
       
    show ?thesis  using non_empty precond_buf CleanQ_RB_Invariants_List_Invariants      
      using precond non_empty refine_hd_list_tl_ring_txy precond_buf 
@@ -258,8 +264,7 @@ next
        using deq_y_rb_pre_implies_list_pre precond CleanQ_RB_Invariants_List_Invariants 
        unfolding CleanQ_RB_deq_y_pre_def CleanQ_List_deq_y_pre_def CleanQ_RB_deq_y_possible_def
                  rb_can_deq_def rb_read_tail_def
-       by (smt CleanQ_RB_deq_y_pre_def CollectD CollectI imageE image_eqI rb_can_deq_def rb_read_tail_def state_simps(1))
-       
+       by (smt CleanQ_RB_deq_y_pre_def CollectD CollectI imageE image_eqI rb_can_deq_def rb_read_tail_def state_simps(1))   
 
    show "\<And>xa. xa \<in> CleanQ_RB_deq_y_pre K buf \<Longrightarrow>
           (case xa of Semantic.xstate.Normal sc \<Rightarrow> Semantic.xstate.Normal (CleanQ_RB2List sc) | Abrupt sc \<Rightarrow> Abrupt (CleanQ_RB2List sc) | Semantic.xstate.Fault fc \<Rightarrow> Semantic.xstate.Fault (CleanQ_RB2List fc)
