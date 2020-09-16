@@ -929,6 +929,18 @@ definition rb_can_incr_tail_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
 definition rb_can_incr_head_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
   where "rb_can_incr_head_n_max rb = length (rb_invalid_entries rb) - 1"
 
+text \<open>
+  The maximum to increment is always less than the size.
+\<close>
+
+lemma rb_can_incr_tail_n_max_size:
+  "rb_valid_ptr rb \<Longrightarrow> rb_can_incr_tail_n_max rb < size rb"
+  by (simp add: rb_can_incr_tail_n_max_def)
+
+lemma rb_can_incr_head_n_max_size:
+  "rb_valid_ptr rb \<Longrightarrow> rb_can_incr_head_n_max rb < size rb"
+  by (metis One_nat_def Suc_le_lessD Suc_pred le_add2 rb_can_incr_head_n_max_def 
+            rb_invalid_entries_size_min rb_valid_invalid_entries_lengths)
 
 text \<open>
   We can now define the delta sets when the tail or head pointer is increased in terms
