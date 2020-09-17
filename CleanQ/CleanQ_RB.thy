@@ -929,6 +929,13 @@ definition rb_can_incr_tail_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
 definition rb_can_incr_head_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
   where "rb_can_incr_head_n_max rb = length (rb_invalid_entries rb) - 1"
 
+definition rb_can_incr_head_n_max2 :: "'a CleanQ_RB \<Rightarrow> nat"
+  where "rb_can_incr_head_n_max2 rb = (if head rb < tail rb then (tail rb - head rb) -1 else ((size rb - head rb) + tail rb) -1)"
+
+lemma eqiv:
+ "rb_can_incr_head_n_max2 rb = rb_can_incr_head_n_max rb"
+  by (simp add: rb_can_incr_head_n_max2_def rb_can_incr_head_n_max_def rb_invalid_entries_def)
+
 text \<open>
   The maximum to increment is always less than the size.
 \<close>
