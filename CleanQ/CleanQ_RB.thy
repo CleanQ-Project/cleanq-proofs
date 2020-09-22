@@ -932,10 +932,22 @@ definition rb_can_incr_head_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
 definition rb_can_incr_head_n_max2 :: "'a CleanQ_RB \<Rightarrow> nat"
   where "rb_can_incr_head_n_max2 rb = (if head rb < tail rb then (tail rb - head rb) -1 else ((size rb - head rb) + tail rb) -1)"
 
+definition rb_can_incr_head_n_max3 :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat"
+  where "rb_can_incr_head_n_max3 h t sz = (if h < t then (t - h) -1 else ((sz - h) + t) -1)"
+
 lemma eqiv:
  "rb_can_incr_head_n_max2 rb = rb_can_incr_head_n_max rb"
   by (simp add: rb_can_incr_head_n_max2_def rb_can_incr_head_n_max_def rb_invalid_entries_def)
 
+lemma eqiv2:
+ "rb_can_incr_head_n_max3 (head rb) (tail rb) (size rb) = rb_can_incr_head_n_max2 rb"
+  by (simp add: rb_can_incr_head_n_max2_def rb_can_incr_head_n_max3_def)
+
+lemma incr_head_max_less_n :
+  assumes "h < sz \<and> t < sz" 
+  shows "rb_can_incr_head_n_max3 h t sz < sz"
+  using assms nat_le_linear rb_can_incr_head_n_max3_def by auto
+  
 text \<open>
   The maximum to increment is always less than the size.
 \<close>

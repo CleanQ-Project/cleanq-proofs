@@ -5602,7 +5602,8 @@ abbreviation "CleanQ_CRB_deq_mult_cond_check_x \<delta> \<equiv>
    \<acute>head_x := CleanQ_RB_read_head_rx_x \<acute>CRB ;; 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and>
      \<acute>tail_x = CleanQ_RB_read_tail_rx_x \<acute>CRB \<and> 
-     (\<exists>d. (\<acute>head_x + d) mod  CleanQ_RB_read_size_rx_x \<acute>CRB  = CleanQ_RB_read_head_rx_x \<acute>CRB)
+     (\<exists>d. (\<acute>head_x + d) mod  CleanQ_RB_read_size_rx_x \<acute>CRB  = CleanQ_RB_read_head_rx_x \<acute>CRB \<and> 
+      d \<le> rb_can_incr_head_n_max3 (\<acute>head_x) (CleanQ_RB_read_tail_rx_x \<acute>CRB) (CleanQ_RB_read_size_rx_x \<acute>CRB))
   \<rbrace>
     IF (\<acute>tail_x \<noteq> \<acute>head_x)
     THEN
@@ -5626,7 +5627,8 @@ abbreviation "CleanQ_CRB_deq_mult_cond_check_y \<delta> \<equiv>
    \<acute>head_y := CleanQ_RB_read_head_rx_y \<acute>CRB;; 
  \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and>
     \<acute>tail_y = CleanQ_RB_read_tail_rx_y \<acute>CRB  \<and> 
-    (\<exists>d. (\<acute>head_y + d) mod   CleanQ_RB_read_size_rx_y \<acute>CRB  = CleanQ_RB_read_head_rx_y \<acute>CRB)
+     (\<exists>d. (\<acute>head_y + d) mod  CleanQ_RB_read_size_rx_y \<acute>CRB  = CleanQ_RB_read_head_rx_y \<acute>CRB \<and> 
+      d \<le> rb_can_incr_head_n_max3 (\<acute>head_y) (CleanQ_RB_read_tail_rx_y \<acute>CRB) (CleanQ_RB_read_size_rx_y \<acute>CRB))
   \<rbrace>
     IF (\<acute>tail_y \<noteq> \<acute>head_y)  
     THEN
@@ -6584,6 +6586,253 @@ lemma CleanQ_RB_enq_y_read_head_tx_y2[simp]:
   by (metis CleaQ_RB_enq_y_read_head_rx_y Suc_eq_plus1 add_Suc_right inv mod_Suc_eq prev)
 
 
+
+lemma helper2:
+  "CleanQ_RB_Invariants (uni x) rb \<Longrightarrow>
+      (head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb \<Longrightarrow> 
+        head_y x = (if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then CleanQ_RB_read_head_tx_x rb - d
+                   else CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d))"
+  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_read_size_tx_x_def CleanQ_RB_Invariants_def
+            I4_rb_valid_def rb_valid_def rb_valid_ptr_def
+  apply(auto, simp add: mod_if)
+  oops
+
+
+
+lemma helper3_x:
+  "CleanQ_RB_read_size_tx_x rb > 1 \<Longrightarrow> head_y x < CleanQ_RB_read_size_tx_x rb 
+        \<Longrightarrow> CleanQ_RB_read_head_tx_x rb < CleanQ_RB_read_size_tx_x rb \<Longrightarrow> d < CleanQ_RB_read_size_tx_x rb 
+        \<Longrightarrow> (head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb
+        \<Longrightarrow> head_y x = (if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d)))"
+  apply(auto, simp add: mod_if)
+  using linordered_semidom_class.add_diff_inverse by fastforce
+
+
+lemma helper3_y:
+  "CleanQ_RB_read_size_tx_y rb > 1 \<Longrightarrow> head_x x < CleanQ_RB_read_size_tx_y rb 
+        \<Longrightarrow> CleanQ_RB_read_head_tx_y rb < CleanQ_RB_read_size_tx_y rb \<Longrightarrow> d < CleanQ_RB_read_size_tx_y rb 
+        \<Longrightarrow> (head_x x + d) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_head_tx_y rb
+        \<Longrightarrow> head_x x = (if (head_x x + d) < CleanQ_RB_read_size_tx_y rb then (CleanQ_RB_read_head_tx_y rb - d) else (CleanQ_RB_read_head_tx_y rb + (CleanQ_RB_read_size_tx_y rb - d)))"
+  apply(auto, simp add: mod_if)
+  using linordered_semidom_class.add_diff_inverse by fastforce
+
+lemma "rb_valid rb \<Longrightarrow> \<not> rb_empty rb \<Longrightarrow> \<forall>d \<in> set (rb_invalid_entries rb).  d \<noteq> tail rb"
+  using rb_invalid_entries_empty_tail_member rb_valid_def by blast
+
+lemma helper_hd_gt_tail:
+  assumes tlhd: "tail rb \<le> head rb" and
+          ineq: "(head_z + d) mod (size rb) = (head rb)" and
+         valid: "rb_valid rb" and
+         dless: "d \<le> rb_can_incr_head_n_max3 head_z (tail rb) (size rb)" and
+         valid_hdz: "head_z < size rb"
+  shows "tail rb \<le> head_z \<and> head_z \<le> (head rb)"
+  using assms unfolding rb_can_incr_head_n_max3_def apply auto
+proof -
+  show gttl: "tail rb \<le> head_z" using assms unfolding rb_can_incr_head_n_max3_def
+    by (smt One_nat_def Suc_pred le_add_diff_inverse le_trans less_eq_Suc_le less_imp_le_nat 
+        mod_less_eq_dividend nat_add_left_cancel_le not_less_eq_eq zero_less_diff)
+
+  from valid have hd_valid: "head rb < size rb"
+    by (simp add: rb_valid_def rb_valid_ptr_def)
+
+  from gttl dless have d_const: "d \<le> ((size rb - head_z) + tail rb) -1"
+    by (simp add: rb_can_incr_head_n_max3_def)
+
+  from d_const have d_less_size: "d < size rb"
+    using gttl valid_hdz by linarith
+
+  from tlhd gttl assms have zero: "tail rb = head rb \<Longrightarrow> head rb = head_z"
+    unfolding rb_can_incr_head_n_max3_def
+    by (smt One_nat_def Suc_pred ab_semigroup_add_class.add_ac(1) add_diff_inverse_nat d_less_size 
+        diff_add dless dual_order.strict_trans1 hd_valid le_add1 less_Suc_eq_le less_add_eq_less 
+        less_diff_conv less_or_eq_imp_le mod_add_right_eq mod_add_self1 mod_if nat_neq_iff not_less 
+        order.asym rb_can_incr_head_n_max3_def zero_less_diff)
+
+  from zero have zero2: "tail rb = head rb \<Longrightarrow> d = 0"
+    by (smt ab_semigroup_add_class.add_ac(1) add_diff_cancel_left' d_less_size diff_is_0_eq' ineq 
+        le_add_diff_inverse less_imp_le_nat mod_add_left_eq mod_if mod_self semiring_normalization_rules(24) valid_hdz)
+    
+  from tlhd gttl zero2 have zero3: "tail rb = head rb \<Longrightarrow> (head_z + d) mod (size rb) = head_z + d"
+    using ineq zero by linarith
+    
+  from valid dless hd_valid valid_hdz ineq d_const zero3 gttl have head: "(head_z + d) mod (size rb) = head_z + d" 
+    apply auto
+  proof -
+    assume a1: "head_z < CleanQ_RB.size rb"
+    assume a2: "tail rb \<le> head_z"
+    assume a3: "tail rb = head rb \<Longrightarrow> head rb = head_z + d"
+    have f4: "\<forall>n na. (n::nat) \<le> na \<or> na \<le> n"
+      by (meson less_imp_le_nat not_le)
+      have f5: "head_z \<le> CleanQ_RB.size rb"
+    using a1 by simp
+    have f6: "\<forall>n na. (na::nat) - n \<le> na"
+      by simp
+      have f7: "tail rb - (tail rb + (CleanQ_RB.size rb - head_z) - d) = d - (CleanQ_RB.size rb - head_z)"
+        using d_const by force
+      have f8: "\<forall>n. head_z + n - CleanQ_RB.size rb = n - (CleanQ_RB.size rb - head_z)"
+        using f5 by (simp add: semiring_normalization_rules(24))
+      moreover
+      { assume "CleanQ_RB.size rb - d \<noteq> 0"
+        moreover
+        { assume "\<not> head rb \<le> tail rb \<and> \<not> CleanQ_RB.size rb \<le> d"
+          then have "CleanQ_RB.size rb \<le> head_z + d \<longrightarrow> d - (CleanQ_RB.size rb - head_z) \<noteq> head_z - (CleanQ_RB.size rb - d) \<and> \<not> CleanQ_RB.size rb \<le> d"
+    using f8 f7 f6 by (metis (no_types) ineq less_imp_diff_less mod_if not_le)
+    then have "head_z + d - (head_z + d - CleanQ_RB.size rb) \<noteq> CleanQ_RB.size rb \<or> \<not> CleanQ_RB.size rb \<le> head_z + d"
+      using f8 f4 by (metis Nat.diff_diff_right) }
+      ultimately have "CleanQ_RB.size rb \<le> head_z + d \<and> head_z + d - (head_z + d - CleanQ_RB.size rb) = CleanQ_RB.size rb \<longrightarrow> head rb = tail rb"
+        by (metis (no_types) diff_diff_cancel diff_is_0_eq' diff_zero tlhd) }
+      ultimately have "CleanQ_RB.size rb \<le> head_z + d \<longrightarrow> head rb = head_z + d"
+        using f7 a3 a2 a1 ineq mod_if by force
+      then show "head rb = head_z + d"
+        by (metis ineq mod_if not_le)
+  qed
+        
+  show "head_z \<le> head rb"
+    using head ineq by linarith
+
+qed
+
+  
+lemma helper_hd_lt_tail:
+  assumes tlhd: "head rb < tail rb" and
+          ineq: "(head_z + d) mod (size rb) = (head rb)" and
+         valid: "rb_valid rb" and
+         dless: "d \<le> rb_can_incr_head_n_max3 head_z (tail rb) (size rb)" and
+         valid_hdz: "head_z < size rb"
+  shows "(head_z \<ge> tail rb \<and> head_z > head rb) \<or> (head_z < tail rb \<and> head_z \<le> head rb)"
+  using assms unfolding rb_can_incr_head_n_max3_def apply auto
+  by (smt add_diff_cancel_left' diff_commute diff_less_mono leD leI less_eq_Suc_le less_iff_Suc_add 
+      less_trans mod_less plus_1_eq_Suc rb_valid_implies_ptr_valid rb_valid_ptr_def)  
+
+
+lemma CleanQ_frame_cond_to_deq_possible_x [simp]:
+  assumes inv: "CleanQ_RB_Invariants (uni x) rb" 
+      and ineq: "(head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb"
+      and neq: "CleanQ_RB_read_tail_tx_x rb \<noteq> head_y x"
+      and headless: "head_y x < CleanQ_RB_read_size_tx_x rb"
+      and dless: "d \<le> rb_can_incr_head_n_max3 (head_y x) (CleanQ_RB_read_tail_tx_x rb) (CleanQ_RB_read_size_tx_x rb)"
+    shows "CleanQ_RB_read_tail_tx_x rb \<noteq> CleanQ_RB_read_head_tx_x rb"
+proof -
+  from dless inv have dless2:
+    "d < CleanQ_RB_read_size_tx_x rb"
+    unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_read_tail_tx_x_def rb_can_incr_head_n_max3_def
+    by (metis (full_types) CleanQ_RB_Invariants_def CleanQ_RB_read_size_tx_x_def CleanQ_RB_read_tail_tx_x_def 
+        I4_rb_valid_def dless headless incr_head_max_less_n le_less_trans rb_valid_def rb_valid_ptr_def)
+  
+  from inv have szlt: "CleanQ_RB_read_size_tx_x rb > 1"
+    unfolding CleanQ_RB_read_size_tx_x_def 
+    by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_valid_def rb_valid_ptr_def)
+
+  from inv have hdlt:
+    "CleanQ_RB_read_head_tx_x rb < CleanQ_RB_read_size_tx_x rb"
+    unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_read_head_tx_x_def
+    by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_valid_def rb_valid_ptr_def)
+
+
+  (* we know this: CleanQ_RB_read_tail_tx_x rb \<noteq> head_y x *)
+  from neq headless hdlt szlt dless2 ineq have neqexp:
+    "CleanQ_RB_read_tail_tx_x rb \<noteq> (if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) 
+                                    else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d)))"
+    using helper3_x by fastforce
+
+
+  have mod_equiv:
+    "(head_y x + d) mod CleanQ_RB_read_size_tx_x rb = ((if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) 
+                                                        else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d))) + d) mod CleanQ_RB_read_size_tx_x rb"
+    using dless2 hdlt ineq by auto
+
+
+  have rewritesz:
+    "(CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d) + d) = CleanQ_RB_read_head_tx_x rb + CleanQ_RB_read_size_tx_x rb"
+    using dless2 by auto    
+
+  from inv have rewritehd: 
+    "CleanQ_RB_read_head_tx_x rb mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb"
+    by (simp add: hdlt)
+
+  from neqexp ineq dless assms have X5:
+    "CleanQ_RB_read_tail_tx_x rb \<noteq> (head_y x + d) mod CleanQ_RB_read_size_tx_x rb"
+    apply auto
+    by (metis CleanQ_RB_Invariants_def CleanQ_RB_Invariants_simp(1) CleanQ_RB_read_head_tail_deq_x_possible2 
+        CleanQ_RB_read_head_tx_x_def CleanQ_RB_read_size_tx_x_def CleanQ_RB_read_tail_tx_x_def 
+        helper_hd_gt_tail nat_neq_iff not_le) 
+
+  from X5 assms show ?thesis    
+    by (simp add: ineq)
+qed
+
+
+lemma CleanQ_frame_cond_to_deq_possible_y [simp]:
+  assumes inv: "CleanQ_RB_Invariants (uni x) rb" 
+      and ineq: "(head_x x + d) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_head_tx_y rb"
+      and neq: "CleanQ_RB_read_tail_tx_y rb \<noteq> head_x x"
+      and headless: "head_x x < CleanQ_RB_read_size_tx_y rb"
+      and dless: "d \<le> rb_can_incr_head_n_max3 (head_x x) (CleanQ_RB_read_tail_tx_y rb) (CleanQ_RB_read_size_tx_y rb)"
+    shows "CleanQ_RB_read_tail_tx_y rb \<noteq> CleanQ_RB_read_head_tx_y rb"
+proof -
+  from dless inv have dless2:
+    "d < CleanQ_RB_read_size_tx_y rb"
+    unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_read_tail_tx_y_def rb_can_incr_head_n_max3_def
+    by (smt CleanQ_RB_Invariants_def CleanQ_RB_read_size_tx_y_def CleanQ_RB_read_tail_tx_y_def I4_rb_valid_def 
+        add.commute add.right_neutral diff_is_0_eq' dless incr_head_max_less_n le_less_trans less_imp_diff_less 
+        not_le rb_valid_def rb_valid_ptr_def)
+
+  from inv have szlt: "CleanQ_RB_read_size_tx_y rb > 1"
+    unfolding CleanQ_RB_read_size_tx_y_def 
+    by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_valid_def rb_valid_ptr_def)
+
+  from inv have hdlt:
+    "CleanQ_RB_read_head_tx_y rb < CleanQ_RB_read_size_tx_y rb"
+    unfolding CleanQ_RB_read_size_tx_y_def CleanQ_RB_read_head_tx_y_def
+    by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_valid_def rb_valid_ptr_def)
+
+
+  (* we know this: CleanQ_RB_read_tail_tx_x rb \<noteq> head_y x *)
+  from neq hdlt szlt dless2 ineq headless have neqexp:
+    "CleanQ_RB_read_tail_tx_y rb \<noteq> (if (head_x x + d) < CleanQ_RB_read_size_tx_y rb then (CleanQ_RB_read_head_tx_y rb - d) 
+                                    else (CleanQ_RB_read_head_tx_y rb + (CleanQ_RB_read_size_tx_y rb - d)))" 
+    using helper3_y by fastforce 
+
+  have mod_equiv:
+    "(head_x x + d) mod CleanQ_RB_read_size_tx_y rb = ((if (head_x x + d) < CleanQ_RB_read_size_tx_y rb then (CleanQ_RB_read_head_tx_y rb - d) 
+                                                        else (CleanQ_RB_read_head_tx_y rb + (CleanQ_RB_read_size_tx_y rb - d))) + d) mod CleanQ_RB_read_size_tx_y rb"
+    using dless2 hdlt ineq headless by auto
+
+  have rewritesz:
+    "(CleanQ_RB_read_head_tx_y rb + (CleanQ_RB_read_size_tx_y rb - d) + d) = CleanQ_RB_read_head_tx_y rb + CleanQ_RB_read_size_tx_y rb"
+    using dless2 by auto    
+
+  from inv have rewritehd: 
+    "CleanQ_RB_read_head_tx_y rb mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_head_tx_y rb"
+    by (simp add: hdlt)
+
+  from neqexp ineq dless assms have X5:
+    "CleanQ_RB_read_tail_tx_y rb \<noteq> (head_x x + d) mod CleanQ_RB_read_size_tx_y rb"
+    apply auto
+    by (metis CleanQ_RB_Invariants_def CleanQ_RB_Invariants_simp(1) CleanQ_RB_read_head_tail_deq_y_possible2 
+        CleanQ_RB_read_head_tx_y_def CleanQ_RB_read_size_tx_y_def CleanQ_RB_read_tail_tx_y_def 
+        helper_hd_gt_tail nat_neq_iff not_le) 
+
+  from X5 assms show ?thesis    
+    by (simp add: ineq)
+qed
+
+lemma CleanQ_RB_test3[simp]: 
+  assumes prev: " (tail_y x + d) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_tail_tx_y rb"
+  shows "\<exists>dt. (tail_y x + dt) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_tail_tx_y (CleanQ_RB_deq_x rb)"
+  apply(simp add:CleaQ_RB_deq_x_read_tail_tx_y)
+  apply(rule exI [where x="d+1"])
+  apply(subst prev[symmetric])
+  apply(auto simp:CleanQ_RB_read_size_tx_y_def)
+  by (simp add: mod_Suc_eq)
+
+(*
+lemma CleanQ_RB_head_x_less_than_size:
+  assumes hd_sz: "(head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb" and
+          inv: "CleanQ_RB_Invariants K rb"
+  shows "head_y x < CleanQ_RB_read_size_tx_x rb"
+  using assms unfolding CleanQ_RB_Invariants_def 
+*)
 lemma CleanQ_RB_conc_mult_cond_check:
    "\<Gamma>, \<Theta> |\<turnstile>\<^bsub>/{True}\<^esub>   
     COBEGIN
@@ -6614,169 +6863,6 @@ lemma CleanQ_RB_conc_mult_cond_check:
 
   oops
 
-lemma helper2:
-  "CleanQ_RB_Invariants (uni x) rb \<Longrightarrow>
-      (head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb \<Longrightarrow> 
-        head_y x = (if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then CleanQ_RB_read_head_tx_x rb - d
-                   else CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d))"
-  unfolding CleanQ_RB_read_head_tx_x_def CleanQ_RB_read_size_tx_x_def CleanQ_RB_Invariants_def
-            I4_rb_valid_def rb_valid_def rb_valid_ptr_def
-  apply(auto, simp add: mod_if)
-  oops
-
-
-
-lemma helper3:
-  "CleanQ_RB_read_size_tx_x rb > 1 \<Longrightarrow> head_y x < CleanQ_RB_read_size_tx_x rb 
-        \<Longrightarrow> CleanQ_RB_read_head_tx_x rb < CleanQ_RB_read_size_tx_x rb \<Longrightarrow> d < CleanQ_RB_read_size_tx_x rb 
-        \<Longrightarrow> (head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb
-        \<Longrightarrow> head_y x = (if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d)))"
-  apply(auto, simp add: mod_if)
-  using linordered_semidom_class.add_diff_inverse by fastforce
-
-
-lemma "rb_valid rb \<Longrightarrow> \<not> rb_empty rb \<Longrightarrow> \<forall>d \<in> set (rb_invalid_entries rb).  d \<noteq> tail rb"
-  using rb_invalid_entries_empty_tail_member rb_valid_def by blast
-
-
-
-lemma helper1:
-  assumes inv: "CleanQ_RB_Invariants (uni x) rb" 
-      and ineq: "(head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb"
-      and neq: "CleanQ_RB_read_tail_tx_x rb \<noteq> head_y x"
-      and headless: "head_y x < CleanQ_RB_read_size_tx_x rb"
-      and dless: "d \<le> rb_can_incr_head_n_max (rTXY rb)"
-    shows "CleanQ_RB_read_tail_tx_x rb \<noteq> CleanQ_RB_read_head_tx_x rb"
-
-proof -
-  from dless inv  have dless2:
-    "d < CleanQ_RB_read_size_tx_x rb"
-    unfolding CleanQ_RB_read_size_tx_x_def 
-    using CleanQ_RB_Invariants_def I4_rb_valid_def le_less_trans rb_can_incr_head_n_max_size rb_valid_def 
-    by blast
-
-  from inv have szlt: "CleanQ_RB_read_size_tx_x rb > 1"
-    unfolding CleanQ_RB_read_size_tx_x_def 
-    by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_valid_def rb_valid_ptr_def)
-
-  from inv have hdlt:
-    "CleanQ_RB_read_head_tx_x rb < CleanQ_RB_read_size_tx_x rb"
-    unfolding CleanQ_RB_read_size_tx_x_def CleanQ_RB_read_head_tx_x_def
-    by (simp add: CleanQ_RB_Invariants_def I4_rb_valid_def rb_valid_def rb_valid_ptr_def)
-
-
-  (* we know this: CleanQ_RB_read_tail_tx_x rb \<noteq> head_y x *)
-  from neq headless hdlt szlt dless2 ineq have neqexp:
-    "CleanQ_RB_read_tail_tx_x rb \<noteq> (if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) 
-                                    else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d)))"
-    using helper3 by fastforce
-
-
-  have mod_equiv:
-    "(head_y x + d) mod CleanQ_RB_read_size_tx_x rb = ((if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) 
-                                                        else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d))) + d) mod CleanQ_RB_read_size_tx_x rb"
-    using dless2 hdlt ineq by auto
-
-
-  have rewritesz:
-    "(CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d) + d) = CleanQ_RB_read_head_tx_x rb + CleanQ_RB_read_size_tx_x rb"
-    using dless2 by auto    
-
-  from inv have rewritehd: 
-    "CleanQ_RB_read_head_tx_x rb mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb"
-    by (simp add: hdlt)
-
-  have case0:
-    "head_y x + d < CleanQ_RB_read_size_tx_x rb \<Longrightarrow> CleanQ_RB_read_head_tx_x rb - d = (CleanQ_RB_read_head_tx_x rb - d + d) mod CleanQ_RB_read_size_tx_x rb"
-    apply(auto)
-    sorry
-
-
-
-  have case1:
-    " \<not> head_y x + d < CleanQ_RB_read_size_tx_x rb \<Longrightarrow> CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d) = (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d) + d) mod CleanQ_RB_read_size_tx_x rb"
-    apply(subst rewritesz)
-    apply(auto simp:rewritehd)
-    sledgehammer
-    sorry
-
-  (* now we somehow need to show that this is the same as (head_y x + d) mod CleanQ_RB_read_size_tx_x rb *)
-  have hdif: 
-      "(if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) 
-                                    else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d))) = 
-          (head_y x + d) mod CleanQ_RB_read_size_tx_x rb"
-    apply(subst mod_equiv)
-    using case0 case1 by auto
-
-
-  from hdif neqexp  have X5:
-    "CleanQ_RB_read_tail_tx_x rb \<noteq> (head_y x + d) mod CleanQ_RB_read_size_tx_x rb"
-     by auto
-
-  from X5 show ?thesis    
-    by (simp add: ineq)
-
-
-(*   from dless2 have sizesimp:
-    "(CleanQ_RB_read_size_tx_x rb - d) + d = CleanQ_RB_read_size_tx_x rb"
-    by(auto)
-
-  from sizesimp have X0:
-    "(CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d) + d) mod CleanQ_RB_read_size_tx_x rb = 
-       (CleanQ_RB_read_head_tx_x rb + CleanQ_RB_read_size_tx_x rb) mod CleanQ_RB_read_size_tx_x rb"
-    by(auto)
-
-  have X4: 
-    "CleanQ_RB_read_tail_tx_x rb \<noteq> (((if (head_y x + d) < CleanQ_RB_read_size_tx_x rb then (CleanQ_RB_read_head_tx_x rb - d) 
-                                      else (CleanQ_RB_read_head_tx_x rb + (CleanQ_RB_read_size_tx_x rb - d)))) + d) mod CleanQ_RB_read_size_tx_x rb"
-    sledgehammer    
-    sorry
- *)
-qed
-
-  
-   
-
-
-
-lemma helper1:
-  assumes inv: "CleanQ_RB_Invariants (uni x) rb" 
-      and ineq: "(head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb"
-      and neq: "CleanQ_RB_read_tail_tx_x rb \<noteq> head_y x"
-    shows "CleanQ_RB_read_tail_tx_x rb \<noteq> CleanQ_RB_read_head_tx_x rb"
-  apply(subst ineq[symmetric])
-  using inv neq sledgehammer
-  
-  sorry
-
-
-
-
-lemma "CleanQ_RB_Invariants (uni x) rb \<Longrightarrow>
-      (head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb \<Longrightarrow> 
-      CleanQ_RB_read_tail_tx_x rb \<noteq> head_y x \<Longrightarrow> CleanQ_RB_deq_y_possible rb"
-  using CleanQ_RB_read_head_tail_deq_x_possible2 helper1 by blast
-
-(* 
-  head_y x = CleanQ_RB_read_head_tx_y rb \<Longrightarrow>
-       CleanQ_RB_deq_x_possible rb \<Longrightarrow>
-       size_y x = CleanQ_RB_read_size_tx_y rb \<Longrightarrow>
-       buf_x x = CleanQ_RB_read_tail_x rb \<Longrightarrow>
-       CleanQ_RB_frame_weak_x (CRB_prev_x x) rb \<Longrightarrow>
-       CleanQ_RB_frame_weak_y (CRB_prev_y x) rb \<Longrightarrow>
-*)
-
-
-
-lemma CleanQ_RB_test3[simp]: 
-  assumes prev: " (tail_y x + d) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_tail_tx_y rb"
-  shows "\<exists>dt. (tail_y x + dt) mod CleanQ_RB_read_size_tx_y rb = CleanQ_RB_read_tail_tx_y (CleanQ_RB_deq_x rb)"
-  apply(simp add:CleaQ_RB_deq_x_read_tail_tx_y)
-  apply(rule exI [where x="d+1"])
-  apply(subst prev[symmetric])
-  apply(auto simp:CleanQ_RB_read_size_tx_y_def)
-  by (simp add: mod_Suc_eq)
-  
 
 (* ------------------------------------------------------------------------------------ *)
 subsubsection \<open>Final Concurrency Proofs\<close>
