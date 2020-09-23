@@ -926,6 +926,9 @@ text \<open>
 definition rb_can_incr_tail_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
   where "rb_can_incr_tail_n_max rb = length (rb_valid_entries rb)"
 
+definition rb_can_incr_tail_n_max2 ::  "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat"
+  where "rb_can_incr_tail_n_max2 h t sz = (if t \<le> h then h - t else (sz - t) + h)"
+
 definition rb_can_incr_head_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
   where "rb_can_incr_head_n_max rb = length (rb_invalid_entries rb) - 1"
 
@@ -943,6 +946,10 @@ lemma eqiv2:
  "rb_can_incr_head_n_max3 (head rb) (tail rb) (size rb) = rb_can_incr_head_n_max2 rb"
   by (simp add: rb_can_incr_head_n_max2_def rb_can_incr_head_n_max3_def)
 
+lemma eqiv_tail:
+ "rb_can_incr_tail_n_max2 (head rb) (tail rb) (size rb) = rb_can_incr_tail_n_max rb"
+  by (simp add: rb_can_incr_tail_n_max2_def rb_can_incr_tail_n_max_def rb_valid_entries_def)
+  
 lemma incr_head_max_less_n :
   assumes "h < sz \<and> t < sz" 
   shows "rb_can_incr_head_n_max3 h t sz < sz"
