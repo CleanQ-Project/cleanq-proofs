@@ -5044,7 +5044,7 @@ text \<open>
   We now use this definition in the enqueue operation:
 \<close>
 
-abbreviation "CleanQ_CRB_enq_mult_cond_check_x \<delta> b \<equiv> 
+abbreviation "CleanQ_CRB_enq_mult_cond_check_x b \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> \<acute>head_enq_x < CleanQ_RB_read_size_tx_x \<acute>CRB \<and> \<acute>head_deq_x < CleanQ_RB_read_size_rx_x \<acute>CRB  \<rbrace> 
     \<acute>size_x := CleanQ_RB_read_size_tx_x \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<and>  \<acute>head_enq_x < CleanQ_RB_read_size_tx_x \<acute>CRB \<and> \<acute>head_deq_x < CleanQ_RB_read_size_rx_x \<acute>CRB  \<rbrace>
@@ -5071,7 +5071,7 @@ abbreviation "CleanQ_CRB_enq_mult_cond_check_x \<delta> b \<equiv>
         SKIP
     FI"
 
-abbreviation "CleanQ_CRB_enq_mult_cond_check_y \<delta> b \<equiv> 
+abbreviation "CleanQ_CRB_enq_mult_cond_check_y b \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_enq_y < CleanQ_RB_read_size_tx_y \<acute>CRB \<and> \<acute>head_deq_y < CleanQ_RB_read_size_rx_y \<acute>CRB   \<rbrace> 
     \<acute>size_y := CleanQ_RB_read_size_tx_y \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and>
@@ -5620,7 +5620,7 @@ text \<open>
 
 (* *)
 
-abbreviation "CleanQ_CRB_deq_mult_cond_check_x \<delta> \<equiv> 
+abbreviation "CleanQ_CRB_deq_mult_cond_check_x \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_deq_x < CleanQ_RB_read_size_rx_x \<acute>CRB \<and> \<acute>head_enq_x < CleanQ_RB_read_size_tx_x \<acute>CRB \<rbrace>
     \<acute>tail_deq_x := CleanQ_RB_read_tail_rx_x \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and>
@@ -5649,7 +5649,7 @@ abbreviation "CleanQ_CRB_deq_mult_cond_check_x \<delta> \<equiv>
       SKIP
     FI"
 
-abbreviation "CleanQ_CRB_deq_mult_cond_check_y \<delta> \<equiv> 
+abbreviation "CleanQ_CRB_deq_mult_cond_check_y \<equiv> 
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<and> \<acute>head_deq_y < CleanQ_RB_read_size_rx_y \<acute>CRB \<and> \<acute>head_enq_y < CleanQ_RB_read_size_tx_y \<acute>CRB \<rbrace>
     \<acute>tail_deq_y := CleanQ_RB_read_tail_rx_y \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB   \<and>
@@ -6910,8 +6910,8 @@ lemma CleanQ_RB_conc_mult_cond_check:
        WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and>
                         \<acute>head_enq_x < CleanQ_RB_read_size_tx_x \<acute>CRB \<and> \<acute>head_deq_x < CleanQ_RB_read_size_rx_x \<acute>CRB \<rbrace>
        DO  
-          CleanQ_CRB_enq_mult_cond_check_x \<delta>tail_x b;;
-          CleanQ_CRB_deq_mult_cond_check_x \<delta>head_x
+          CleanQ_CRB_enq_mult_cond_check_x b;;
+          CleanQ_CRB_deq_mult_cond_check_x
        OD
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>, \<lbrace>True\<rbrace>  
        \<parallel> 
@@ -6919,8 +6919,8 @@ lemma CleanQ_RB_conc_mult_cond_check:
        WHILE True INV \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<and> 
                         \<acute>head_enq_y < CleanQ_RB_read_size_tx_y \<acute>CRB \<and> \<acute>head_deq_y < CleanQ_RB_read_size_rx_y \<acute>CRB \<rbrace>
        DO 
-          CleanQ_CRB_enq_mult_cond_check_y \<delta>tail_y b2;;
-          CleanQ_CRB_deq_mult_cond_check_y \<delta>head_y
+          CleanQ_CRB_enq_mult_cond_check_y b2;;
+          CleanQ_CRB_deq_mult_cond_check_y
        OD
        \<lbrace>  CleanQ_RB_Invariants \<acute>uni \<acute>CRB  \<rbrace>, \<lbrace>True\<rbrace>
     COEND
