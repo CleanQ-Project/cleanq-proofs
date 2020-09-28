@@ -5058,7 +5058,7 @@ abbreviation "CleanQ_CRB_enq_mult_cond_check_x b \<equiv>
     \<acute>tail_enq_x := CleanQ_RB_read_tail_tx_x \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_enq_x = CleanQ_RB_read_head_tx_x \<acute>CRB \<and> 
     \<acute>size_x = CleanQ_RB_read_size_tx_x \<acute>CRB \<and> \<acute>tail_enq_x < CleanQ_RB_read_size_tx_x \<acute>CRB \<and>
-    (\<exists>d. ((\<acute>tail_enq_x + d) mod (CleanQ_RB_read_size_tx_x \<acute>CRB)) = CleanQ_RB_read_tail_tx_x \<acute>CRB \<and> d \<le> rb_can_incr_tail_n_max2 \<acute>tail_enq_x (CleanQ_RB_read_head_rx_x \<acute>CRB) (CleanQ_RB_read_size_rx_x \<acute>CRB))
+    (\<exists>d. ((\<acute>tail_enq_x + d) mod (CleanQ_RB_read_size_tx_x \<acute>CRB)) = CleanQ_RB_read_tail_tx_x \<acute>CRB \<and> d \<le> rb_can_incr_tail_n_max2 \<acute>tail_enq_x (CleanQ_RB_read_head_tx_x \<acute>CRB) (CleanQ_RB_read_size_tx_x \<acute>CRB))
   \<rbrace>
     IF  ((((\<acute>head_enq_x) + 1) mod \<acute>size_x) \<noteq> \<acute>tail_enq_x) \<and> b \<in> rSX \<acute>CRB
     THEN
@@ -5084,7 +5084,7 @@ abbreviation "CleanQ_CRB_enq_mult_cond_check_y b \<equiv>
     \<acute>tail_enq_y := CleanQ_RB_read_tail_tx_y \<acute>CRB ;;
   \<lbrace> CleanQ_RB_Invariants \<acute>uni \<acute>CRB \<and> \<acute>head_enq_y = CleanQ_RB_read_head_tx_y \<acute>CRB \<and> 
     \<acute>size_y = CleanQ_RB_read_size_tx_y \<acute>CRB \<and> \<acute>tail_enq_y < CleanQ_RB_read_size_tx_y \<acute>CRB \<and>
-    (\<exists>d. (\<acute>tail_enq_y + d) mod  \<acute>size_y  = CleanQ_RB_read_tail_tx_y \<acute>CRB \<and> d \<le> rb_can_incr_tail_n_max2 \<acute>tail_enq_y (CleanQ_RB_read_head_rx_y \<acute>CRB) (CleanQ_RB_read_size_rx_y \<acute>CRB)) \<rbrace>
+    (\<exists>d. (\<acute>tail_enq_y + d) mod  \<acute>size_y  = CleanQ_RB_read_tail_tx_y \<acute>CRB \<and> d \<le> rb_can_incr_tail_n_max2 \<acute>tail_enq_y (CleanQ_RB_read_head_tx_y \<acute>CRB) (CleanQ_RB_read_size_tx_y \<acute>CRB)) \<rbrace>
     IF  ((((\<acute>head_enq_y) + 1) mod \<acute>size_y) \<noteq> \<acute>tail_enq_y) \<and> b \<in> rSY \<acute>CRB
     THEN
       \<lbrace> CleanQ_RB_enq_y_P \<acute>uni \<acute>CRB b \<rbrace>
@@ -6890,6 +6890,68 @@ lemma CleanQ_RB_test3[simp]:
   apply(auto simp:CleanQ_RB_read_size_tx_y_def)
   by (simp add: mod_Suc_eq)
 
+lemma CleanQ_RB_helper_tail_x_less_size [simp]:
+  "CleanQ_RB_Invariants (uni x) (CRB x) \<Longrightarrow> head_enq_x x = CleanQ_RB_read_head_tx_x (CRB x) \<Longrightarrow> 
+  size_x x = CleanQ_RB_read_size_tx_x (CRB x) \<Longrightarrow> CleanQ_RB_read_tail_tx_x (CRB x) < CleanQ_RB_read_size_tx_x (CRB x)"
+  unfolding CleanQ_RB_Invariants_def CleanQ_RB_read_tail_tx_x_def CleanQ_RB_read_size_tx_x_def
+  using I4_rb_valid_def rb_valid_implies_ptr_valid rb_valid_ptr_def by blast
+
+lemma CleanQ_RB_helper_tail_y_less_size [simp]:
+  "CleanQ_RB_Invariants (uni x) (CRB x) \<Longrightarrow> head_enq_y x = CleanQ_RB_read_head_tx_y (CRB x) \<Longrightarrow> 
+   CleanQ_RB_read_tail_tx_y (CRB x) < CleanQ_RB_read_size_tx_y (CRB x)"
+  unfolding CleanQ_RB_Invariants_def CleanQ_RB_read_tail_tx_y_def CleanQ_RB_read_size_tx_y_def
+  using I4_rb_valid_def rb_valid_implies_ptr_valid rb_valid_ptr_def by blast
+
+lemma CleanQ_RB_helper_d_exists_0_head_x [simp]:
+  assumes inv: "CleanQ_RB_Invariants (uni x) (CRB x)" and
+          head: "head_enq_x x = CleanQ_RB_read_head_tx_x (CRB x)"
+  shows "\<exists>d. (CleanQ_RB_read_tail_tx_x (CRB x) + d) mod CleanQ_RB_read_size_tx_x (CRB x) = CleanQ_RB_read_tail_tx_x (CRB x) \<and> 
+  d \<le> rb_can_incr_tail_n_max2 (CleanQ_RB_read_tail_tx_x (CRB x)) (CleanQ_RB_read_head_tx_y (CRB x)) (CleanQ_RB_read_size_tx_y (CRB x))"
+  using CleaQ_RB_deq_x_read_tail_tx_x inv by force
+
+lemma CleanQ_RB_helper_d_exists_0_tail_x [simp]:
+  assumes inv: "CleanQ_RB_Invariants (uni x) (CRB x)"
+  shows "\<exists>d. (CleanQ_RB_read_tail_tx_y (CRB x) + d) mod CleanQ_RB_read_size_tx_y (CRB x) = CleanQ_RB_read_tail_tx_y (CRB x) \<and> d \<le> rb_can_incr_tail_n_max2 (CleanQ_RB_read_tail_tx_y (CRB x)) (CleanQ_RB_read_head_tx_x (CRB x)) (CleanQ_RB_read_size_tx_x (CRB x))"
+  using CleaQ_RB_deq_y_read_tail_tx_y inv by force
+
+lemma CleanQ_RB_helper_d_exist_0_tail_y [simp]:
+  assumes "CleanQ_RB_Invariants (uni x) (CRB x)"
+  shows "\<exists>d. (CleanQ_RB_read_head_tx_x (CRB x) + d) mod CleanQ_RB_read_size_tx_x (CRB x) = CleanQ_RB_read_head_tx_x (CRB x) \<and> d \<le> rb_can_incr_head_n_max3 (CleanQ_RB_read_head_tx_x (CRB x)) (CleanQ_RB_read_tail_tx_x (CRB x)) (CleanQ_RB_read_size_tx_x (CRB x))"
+  using assms by force
+lemma CleanQ_RB_helper_d_exist_0_tail_y2 [simp]:
+  assumes "CleanQ_RB_Invariants (uni x) (CRB x)"
+  shows "\<exists>d. (CleanQ_RB_read_head_tx_y (CRB x) + d) mod CleanQ_RB_read_size_tx_y (CRB x) = CleanQ_RB_read_head_tx_y (CRB x) \<and> d \<le> rb_can_incr_head_n_max3 (CleanQ_RB_read_head_tx_y (CRB x)) (CleanQ_RB_read_tail_tx_y (CRB x)) (CleanQ_RB_read_size_tx_y (CRB x))"
+  using assms by force
+
+lemma CleanQ_RB_helper_d_exists_tail_x:
+  assumes inv: "CleanQ_RB_Invariants (uni x) (CRB x)" and
+          head: "head_enq_x x = CleanQ_RB_read_head_tx_x (CRB x)" and
+          deq: "CleanQ_RB_deq_y_possible (CRB x)" and
+          buf: "buf_y x = CleanQ_RB_read_tail_y (CRB x)" and
+          size: "size_x x = CleanQ_RB_read_size_tx_x (CRB x)" and
+          tail_size: "tail_enq_x x < CleanQ_RB_read_size_tx_x (CRB x)" and
+          tail: "(tail_enq_x x + d) mod CleanQ_RB_read_size_tx_x (CRB x) = CleanQ_RB_read_tail_tx_x (CRB x)" and
+          d_const: "d \<le> rb_can_incr_tail_n_max2 (tail_enq_x x) (CleanQ_RB_read_head_tx_x (CRB x)) (CleanQ_RB_read_size_tx_x (CRB x))"
+  shows "\<exists>d2. (tail_enq_x x + d2) mod CleanQ_RB_read_size_tx_x (CRB x) = CleanQ_RB_read_tail_tx_x (CleanQ_RB_deq_y (CRB x)) \<and>
+         d2 \<le> rb_can_incr_tail_n_max2 (tail_enq_x x) (CleanQ_RB_read_head_tx_x (CRB x)) (CleanQ_RB_read_size_tx_x (CRB x))"
+  using tail d_const
+  sorry
+(*
+TODO: Somehow confused. Don't think we can proof this?
+proof -
+  from assms have tail2: "CleanQ_RB_read_tail_tx_x (CleanQ_RB_deq_y (CRB x)) = Suc (CleanQ_RB_read_tail_tx_x (CRB x)) mod CleanQ_RB_read_size_tx_x (CRB x)"
+    by (simp add: CleaQ_RB_deq_y_read_tail_tx_x)
+
+  from tail tail2 have  exists: "\<exists>d2. (tail_enq_x x + d2) mod CleanQ_RB_read_size_tx_x (CRB x) = CleanQ_RB_read_tail_tx_x (CleanQ_RB_deq_y (CRB x))"
+    by (metis add_Suc_right mod_Suc_eq)
+
+  from exists assms have "\<exists>d2. (tail_enq_x x + d2) mod CleanQ_RB_read_size_tx_x (CRB x) = CleanQ_RB_read_tail_tx_x (CleanQ_RB_deq_y (CRB x)) \<and> 
+                           d2 \<le> rb_can_incr_tail_n_max2 (tail_enq_x x) (CleanQ_RB_read_head_tx_x (CRB x)) (CleanQ_RB_read_size_tx_x (CRB x))"
+  
+  
+qed
+*)
+
 (*
 lemma CleanQ_RB_head_x_less_than_size:
   assumes hd_sz: "(head_y x + d) mod CleanQ_RB_read_size_tx_x rb = CleanQ_RB_read_head_tx_x rb" and
@@ -6924,7 +6986,7 @@ lemma CleanQ_RB_conc_mult_cond_check:
   apply(auto)[100]
   apply(auto)[100]                
   apply(auto)[100]                
-  apply(auto) prefer 15
+  apply(auto)
   oops
 
 
