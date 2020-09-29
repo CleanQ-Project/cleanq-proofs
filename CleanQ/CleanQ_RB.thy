@@ -929,6 +929,9 @@ definition rb_can_incr_tail_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
 definition rb_can_incr_tail_n_max2 ::  "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat"
   where "rb_can_incr_tail_n_max2 h t sz = (if t \<le> h then h - t else (sz - t) + h)"
 
+definition rb_delta_incr_tail_max :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat list"
+  where "rb_delta_incr_tail_max h t sz = (if t \<le> h then [t..<h] else [t..<sz] @ [0..<h])"
+
 definition rb_can_incr_head_n_max :: "'a CleanQ_RB \<Rightarrow> nat"
   where "rb_can_incr_head_n_max rb = length (rb_invalid_entries rb) - 1"
 

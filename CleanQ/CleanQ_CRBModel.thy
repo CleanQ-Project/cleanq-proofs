@@ -61,7 +61,52 @@ definition CleanQ_RB_frame_weak_y :: "'a CleanQ_RB_State \<Rightarrow> 'a CleanQ
                                     rSX st' \<union> set (rb_delta_tail_st (rTYX st') (rTYX st)) = (set (rb_delta_head_st (rTXY st') (rTXY st)) \<union> 
                                     rSX st) \<and> distinct (rb_delta_head_st (rTXY st') (rTXY st)) \<and> 
                                     rSX st \<inter> set (rb_delta_head_st (rTXY st') (rTXY st)) = {}" 
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Alternative delta definition\<close>
+(* ------------------------------------------------------------------------------------ *)
 
+definition CleanQ_RB_frame_delta_tail :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat list"
+  where "CleanQ_RB_frame_delta_tail tail' h sz = (if tail' < h mod sz then [tail' ..< h] else [tail' ..< sz] @ [0 ..< h])"
+
+lemma CleanQ_RB_frame_delta_start_in:
+  assumes "sz > 1" and
+          "t' < sz" and
+          "h < sz"
+ shows "t' \<in> set (CleanQ_RB_frame_delta_tail t' h sz)"
+  by (simp add: CleanQ_RB_frame_delta_tail_def assms(2) assms(3))
+ 
+
+lemma CleanQ_RB_frame_delta_in:
+  assumes valid: "sz > 1 \<and> t' < sz \<and> t < sz" and
+          order: "t' \<le> t \<and> t < h"
+  shows "t \<in> set (CleanQ_RB_frame_delta_tail t' h sz)"
+  unfolding CleanQ_RB_frame_delta_tail_def
+  by (simp add: order valid) 
+
+lemma CleanQ_RB_frame_delta_in2:
+  assumes valid: "sz > 1 \<and> t' < sz \<and> t < sz" and
+          order: "t \<ge> t' \<and> t > h \<and> t' > h"
+  shows "t \<in> set (CleanQ_RB_frame_delta_tail t' h sz)"
+  unfolding CleanQ_RB_frame_delta_tail_def
+  using order valid by auto 
+
+lemma CleanQ_RB_frame_delta_in3:
+  assumes valid: "sz > 1 \<and> t' < sz \<and> t < sz" and
+          order: "t < h \<and> t' > h"
+  shows "t \<in> set (CleanQ_RB_frame_delta_tail t' h sz)"
+  unfolding CleanQ_RB_frame_delta_tail_def
+  using order valid by auto 
+(*
+lemma CleanQ_RB_frame_delta_full:
+  assumes valid: "sz > 1 \<and> t' < sz \<and> t < sz" and
+            tal: "(t' + d) mod sz = t" 
+  shows "t \<in> set (CleanQ_RB_frame_delta_tail t' h sz)"
+  *)    
+  
+
+(* ------------------------------------------------------------------------------------ *)
+subsubsection \<open>Weak frame condition lemmas\<close>
+(* ------------------------------------------------------------------------------------ *)
 
 lemma frame_rb_s_w_x:
  "frame_rb_strong st' st \<Longrightarrow> CleanQ_RB_frame_weak_x st' st"
@@ -154,15 +199,6 @@ lemma frame_weak_dealt_head_incr_head_max_not_enq:
       rb_delta_head_def rb_delta_head_st_incr_head rb_full_def rb_incr_head_n_def rb_incr_head_n_max_full 
       rb_valid_implies_ptr_valid)
 
-lemma frame_weak_dealt_not_enq_head_incr_max:
-  assumes frame: "frame_rb_weak_right rb' rb" and
-          valid: "rb_valid rb" and
-          not_enq: "\<not> rb_can_enq rb"
-   shows "rb_delta_head rb' rb = rb_can_incr_head_n_max rb'"
-  using assms rb_full_incr_head_max_eq_zero
-  by (smt CleanQ_RB.ext_inject CleanQ_RB.surjective CleanQ_RB.update_convs(2) dual_order.order_iff_strict 
-      frame_rb_weak_right_def rb_can_enq_def rb_can_incr_head_n_lt_max rb_delta_head_st_incr_head 
-      rb_full_def rb_incr_head_n_def rb_incr_head_n_not_full rb_valid_implies_ptr_valid) 
 
 lemma frame_rb_enq_delta_head_less_head_incr_max:
   assumes frame: "frame_rb_weak_right rb' rb" and
