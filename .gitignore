@@ -1,0 +1,9 @@
+syntax: glob
+*.thy~
+*.c~
+**/#*#
+**/*.swp
+**/.*.marks
+build
+cleanq-proofs.pdf
+contrib

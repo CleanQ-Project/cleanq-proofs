@@ -71,12 +71,12 @@ contrib/autocorres:
 
 # simpl dependency
 contrib/Simpl: contrib/autocorres
-	ln -s contrib/autocorres/c-parser/Simpl/ contrib/Simpl
+	ln -s autocorres/c-parser/Simpl/ contrib/Simpl
 
 # complex dependencies
 contrib/Complx:
 	wget https://www.isa-afp.org/release/afp-Complx-2019-06-11.tar.gz
 	tar -xf afp-Complx-2019-06-11.tar.gz
 	rm -rf afp-Complx-2019-06-11.tar.gz
-	mv Complx contrib/complx
+	mv Complx contrib/Complx
 
