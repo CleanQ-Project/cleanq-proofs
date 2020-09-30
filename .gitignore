@@ -7,3 +7,4 @@ syntax: glob
 build
 cleanq-proofs.pdf
 contrib
+CleanQ/CleanQ_SimpleQ
