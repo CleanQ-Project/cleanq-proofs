@@ -20,7 +20,7 @@ See the LICENSE file. For the dependencies, see their licenses.
  * [Isabelle/HOL 2019](https://isabelle.in.tum.de/website-Isabelle2019/index.html)
  * TexLive 
  * Make
- * AutoCorres / Simpl / Complex: `make deps`
+ * [AutoCorres / Simpl](https://ts.data61.csiro.au/projects/TS/autocorres/) / [Complex](https://www.isa-afp.org/entries/Complx.html): `make deps`
 
 
 ## Compiling and Running
